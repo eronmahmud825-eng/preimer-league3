@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Match Week</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        .card-radio-group {
+            display: flex;
+            gap: 16px;
+            margin: 8px 0;
+        }
+        
+        .card-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #2d3f55;
+            background: #1e2a3a;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .card-radio-label:has(input:checked) {
+            border-color: #f39c12;
+            background: #2c2210;
+        }
+        
+        .card-radio-label.yellow:has(input:checked) {
+            border-color: #f1c40f;
+            background: #2c2a10;
+        }
+        
+        .card-radio-label.red:has(input:checked) {
+            border-color: #e74c3c;
+            background: #2c1a1a;
+        }
+        
+        .card-radio-label input[type="radio"] {
+            accent-color: #f1c40f;
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Match Week — Add Result</h1>
+
+        <!-- Match Result Form -->
+        <div class="card form-card" id="matchForm">
+            <div class="form-container">
+                <label>Admin Password: 
+                    <input id="adminPass" type="password" placeholder="Enter admin password"/>
+                </label>
+                <label>Team 1: 
+                    <select id="team1">
+                        <option value="">Select</option>
+                        <option>MANCHESTER CITY</option>
+                        <option>REAL MADRID</option>
+                        <option>BAYER MUNICH</option>
+                    </select>
+                </label>
+                <label>Score 1: 
+                    <input id="score1" type="number" min="0" placeholder="0" />
+                </label>
+                <label>Team 2: 
+                    <select id="team2">
+                        <option value="">Select</option>
+                        <option>MANCHESTER CITY</option>
+                        <option>REAL MADRID</option>
+                        <option>BAYER MUNICH</option>
+                    </select>
+                </label>
+                <label>Score 2: 
+                    <input id="score2" type="number" min="0" placeholder="0" />
+                </label>
+                <label>Date: 
+                    <input id="matchDate" type="date"/>
+                </label>
+                <div class="form-actions">
+                    <button id="saveMatchBtn">💾 Save Match</button>
+                    <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Warning Form (Hidden initially) -->
+        <div class="card form-card" id="cardForm" style="display: none;">
+            <h2>Add Card Warnings</h2>
+            <p id="currentGWLabel" style="color:#7fb3d3;font-size:0.9em;margin:-4px 0 12px;"></p>
+            <div class="form-container">
+                <label>Team: 
+                    <select id="cardTeam">
+                        <option value="">Select Team</option>
+                        <option>MANCHESTER CITY</option>
+                        <option>REAL MADRID</option>
+                        <option>BAYER MUNICH</option>
+                    </select>
+                </label>
+                <label>Player: 
+                    <select id="playerSelect">
+                        <option value="">Select Player</option>
+                    </select>
+                </label>
+
+                <!-- Radio Button Card Type -->
+                <label style="display:block;margin-bottom:6px;">Card Type:</label>
+                <div class="card-radio-group">
+                    <label class="card-radio-label yellow">
+                        <input type="radio" name="cardType" value="yellow" />
+                        🟡 Yellow Card
+                    </label>
+                    <label class="card-radio-label red">
+                        <input type="radio" name="cardType" value="red" />
+                        🔴 Red Card
+                    </label>
+                </div>
+
+                <div class="form-actions" style="margin-top:16px;">
+                    <button id="addCardBtn">➕ Add Card</button>
+                    <button id="okBtn" class="ok-btn">✅ OK - Finish</button>
+                </div>
+            </div>
+        </div>
+
+        <p class="muted">Only admin can save matches and add cards.</p>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Admin Panel</h1>
+
+        <!-- Password Form -->
+        <div class="card form-card" id="passwordForm">
+            <div class="form-container">
+                <label>Admin Password: 
+                    <input id="adminPassword" type="password" placeholder="Enter admin password"/>
+                </label>
+                <button id="loginBtn">Login</button>
+            </div>
+        </div>
+
+        <!-- Admin Content (Hidden initially) -->
+        <div id="adminContent" style="display: none;">
+            <div class="card form-card">
+                <h2>Manage Teams & Players</h2>
+                <div class="form-container">
+                    <label>Team: 
+                        <select id="adminTeam">
+                            <option value="">Select Team</option>
+                            <option>MANCHESTER CITY</option>
+                            <option>REAL MADRID</option>
+                            <option>BAYER MUNICH</option>
+                        </select>
+                    </label>
+                    <label>Player Name: 
+                        <input id="adminPlayer" type="text" placeholder="Enter player name"/>
+                    </label>
+                    <button id="addPlayerBtn">Add Player</button>
+                </div>
+            </div>
+
+            <div class="card table-card">
+                <h3>Current Players</h3>
+                <div class="table-container">
+                    <table id="playersTable">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Player</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+        </div>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

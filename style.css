@@ -1,0 +1,88 @@
+            body {
+                font-family: Arial, sans-serif;
+                background: #111;
+                color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .container {
+                max-width: 1000px;
+                margin: auto;
+                padding: 20px;
+            }
+            
+            h1,
+            h2 {
+                text-align: center;
+            }
+            
+            button {
+                padding: 8px 14px;
+                margin: 5px;
+                border: none;
+                background: #00c853;
+                color: white;
+                cursor: pointer;
+                border-radius: 5px;
+            }
+            
+            button:hover {
+                background: #009624;
+            }
+            
+            input,
+            select {
+                padding: 7px;
+                margin: 5px;
+                border-radius: 5px;
+                border: none;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                background: #222;
+            }
+            
+            th,
+            td {
+                padding: 10px;
+                text-align: center;
+                border: 1px solid #333;
+            }
+            
+            th {
+                background: #00c853;
+            }
+            
+            .delete-btn {
+                background: #d50000;
+            }
+            
+            .delete-btn:hover {
+                background: #9b0000;
+            }
+            
+            @media(max-width:700px) {
+                table,
+                thead,
+                tbody,
+                tr,
+                td,
+                th {
+                    font-size: 12px;
+                }
+            }
+            /* style.css - mobile-first dark theme with stacked cards for tables */
+            /* Base */
+            
+             :root {
+                --bg1: #141427;
+                --bg2: #1e1e2f;
+                --card: #151524;
+                --accent: #00e6ac;
+                --muted: rgba(255, 255, 255, 0.6);
+                --white: #ffffff;
+            }

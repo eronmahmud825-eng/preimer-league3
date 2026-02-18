@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Match Result</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/db.js"></script>
+    <script src="js/match.js" defer></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Match Result</h1>
+
+        <div class="card">
+            <select id="teamA">
+<option>Manchester City</option>
+<option>Real Madrid</option>
+<option>Bayern Munich</option>
+</select>
+
+            <input type="number" id="scoreA" placeholder="Score">
+
+            <select id="teamB">
+<option>Real Madrid</option>
+<option>Manchester City</option>
+<option>Bayern Munich</option>
+</select>
+
+            <input type="number" id="scoreB" placeholder="Score">
+
+            <button onclick="saveMatch()">Submit</button>
+            <button onclick="location.href='index.html'">Home</button>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

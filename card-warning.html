@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Card Warnings</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        .edit-btn {
+            background: #2980b9;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 6px;
+            font-size: 0.85em;
+        }
+        
+        .edit-btn:hover {
+            background: #3498db;
+        }
+        
+        .delete-btn {
+            background: #c0392b;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        .clearban-btn {
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-left: 4px;
+        }
+        
+        .clearban-btn:hover {
+            background: #2ecc71;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">🟡🔴 Card Warnings</h1>
+        <div class="card table-card">
+            <div class="table-container">
+                <table id="cardTable" aria-label="Card warnings">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Player</th>
+                            <th>🟡 Yellow</th>
+                            <th>🔴 Red</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <p class="muted">Each player shown in one row. Use ✏️ Edit to update cards, 🗑 Delete to remove all warnings for a player.</p>
+        <div class="btn-row">
+            <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+        </div>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

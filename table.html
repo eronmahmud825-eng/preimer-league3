@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>League Table</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">League Table</h1>
+        <div class="card table-card">
+            <div class="table-container">
+                <table id="leagueTable" aria-label="League table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team</th>
+                            <th>Game</th>
+                            <th>Win</th>
+                            <th>Lose</th>
+                            <th>Draw</th>
+                            <th>GA</th>
+                            <th>GF</th>
+                            <th>Diff</th>
+                            <th>Point</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+        </div>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
