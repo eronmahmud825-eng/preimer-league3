@@ -91,7 +91,17 @@
                 <label>Player
                     <select id="injuryPlayerSelect"><option value="">Select Player</option></select>
                 </label>
-                <p class="muted" style="text-align:left;margin:0;">Player will miss the next <strong style="color:#ff6f00;">3 team matches</strong> automatically.</p>
+                <label>Injury Type</label>
+                <div class="card-radio-group">
+                    <label class="card-radio-label" style="border-color:rgba(255,193,7,0.3);">
+                        <input type="radio" name="injuryType" value="easy" />
+                        🟡 Easy — 1 Game
+                    </label>
+                    <label class="card-radio-label" style="border-color:rgba(244,67,54,0.3);">
+                        <input type="radio" name="injuryType" value="hard" />
+                        🔴 Hard — 5 Games
+                    </label>
+                </div>
                 <div class="form-actions">
                     <button id="addInjuryBtn">🏥 Add Injury</button>
                 </div>
