@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,56 +7,35 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <style>
-        .rules-box {
-            background: #1a2535;
-            border: 1px solid #2d3f55;
-            border-radius: 10px;
-            padding: 14px 18px;
-            margin-bottom: 18px;
-            font-size: 0.92em;
-            color: #aac4e0;
-        }
-        
-        .rules-box h4 {
-            margin: 0 0 8px;
-            color: #fff;
-        }
-        
-        .rules-box p {
-            margin: 4px 0;
-        }
-    </style>
 </head>
-
 <body>
     <div class="container">
-        <h1 class="title">🔍 Check Game Eligibility</h1>
+        <h1 class="title">🔍 Check Eligibility</h1>
 
-        <!-- Suspension Rules Info Box -->
         <div class="rules-box">
-            <h4>📋 Suspension Rules</h4>
-            <p>🟡 <strong>3 Yellow Cards</strong> = Suspended for <strong>1 game</strong>. After serving ban, yellow card count resets.</p>
-            <p>🔴 <strong>1 Red Card</strong> = Suspended for <strong>3 games</strong> in a row. Yellow count resets after red ban served.</p>
-            <p>🔢 Suspension is tracked by <strong>game number</strong>. Ban countdown updates automatically each game.</p>
+            <h4>📋 Rules</h4>
+            <p>🟡 <strong>3 Yellow Cards</strong> = 1 game ban → yellows reset after ban</p>
+            <p>🔴 <strong>1 Red Card</strong> = 3 game ban → yellows also reset</p>
+            <p>🏥 <strong>Injury</strong> = 3 game ban → auto countdown each team match</p>
+            <p>⚠️ Bans only count down when the <strong>player's team</strong> plays</p>
         </div>
 
-        <div class="card form-card">
+        <div class="form-card">
             <div class="form-container">
                 <label>Team 1:
                     <select id="checkTeam1">
                         <option value="">Select Team</option>
-                        <option>MANCHESTER CITY</option>
-                        <option>REAL MADRID</option>
-                        <option>BAYER MUNICH</option>
+                        <option>SPAIN</option>
+                        <option>FRANCE</option>
+                        <option>GERMANY</option>
                     </select>
                 </label>
                 <label>Team 2:
                     <select id="checkTeam2">
                         <option value="">Select Team</option>
-                        <option>MANCHESTER CITY</option>
-                        <option>REAL MADRID</option>
-                        <option>BAYER MUNICH</option>
+                        <option>SPAIN</option>
+                        <option>FRANCE</option>
+                        <option>GERMANY</option>
                     </select>
                 </label>
                 <div class="form-actions">
@@ -71,7 +49,7 @@
             <div id="bannedList"></div>
         </div>
     </div>
-
     <script src="firebase.js"></script>
     <script src="script.js"></script>
 </body>
+</html>
