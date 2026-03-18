@@ -97,8 +97,12 @@ function renderInjuryTable(injuries) {
     const tbody = document.querySelector("#injuryTable tbody"); if (!tbody) return; tbody.innerHTML = "";
     if (injuries.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No injuries recorded</td></tr>`; return; }
     injuries.filter(i => i.injuryGamesLeft > 0).forEach(inj => {
+        const isHard = inj.injuryGamesLeft > 1;
+        const typeBadge = isHard
+            ? `<span style="background:#c0392b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🔴 HARD</span>`
+            : `<span style="background:#b8860b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🟡 EASY</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td data-label="Team"><span class="value">${inj.team}</span></td><td data-label="Player"><span class="value">${inj.player} <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">🏥 INJURED</span></span></td><td data-label="Games Left"><span class="value" style="color:#e67e22;font-weight:bold;">${inj.injuryGamesLeft}</span></td><td data-label="Status"><span class="value" style="color:#e74c3c;">❌ Not Available</span></td><td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="${inj.id}" data-player="${inj.player}" data-games="${inj.injuryGamesLeft}">✏️ Edit</button><button class="delete-btn" data-id="${inj.id}" data-player="${inj.player}">🗑 Delete</button></td>`;
+        tr.innerHTML = `<td data-label="Team"><span class="value">${inj.team}</span></td><td data-label="Player"><span class="value">${inj.player} <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">🏥 INJURED</span>${typeBadge}</span></td><td data-label="Games Left"><span class="value" style="color:#e67e22;font-weight:bold;">${inj.injuryGamesLeft}</span></td><td data-label="Status"><span class="value" style="color:#e74c3c;">❌ Not Available</span></td><td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="${inj.id}" data-player="${inj.player}" data-games="${inj.injuryGamesLeft}">✏️ Edit</button><button class="delete-btn" data-id="${inj.id}" data-player="${inj.player}">🗑 Delete</button></td>`;
         tbody.appendChild(tr);
     });
     injuries.filter(i => i.injuryGamesLeft === 0).forEach(inj => {
@@ -192,13 +196,23 @@ function saveCardWarning(matchTeam1, matchTeam2) {
 }
 
 function saveInjury(matchTeam1, matchTeam2) {
-    const team = document.getElementById("injuryTeam").value, player = document.getElementById("injuryPlayerSelect").value;
+    const team = document.getElementById("injuryTeam").value;
+    const player = document.getElementById("injuryPlayerSelect").value;
+    const injuryTypeRadio = document.querySelector('input[name="injuryType"]:checked');
     if (!team || !player) { alert("❌ Please select team and player"); return; }
+    if (!injuryTypeRadio) { alert("❌ Please select Easy or Hard injury"); return; }
     if (team !== matchTeam1 && team !== matchTeam2) { alert("❌ Only " + matchTeam1 + " or " + matchTeam2 + " players"); return; }
     if (!window.db) { alert("Database not initialized"); return; }
-    getOrCreatePlayerInjury(team, player).then(inj => window.db.collection("playerInjuries").doc(inj.id).update({ injuryGamesLeft: 3 })).then(() => {
-        alert("✅ 🏥 " + player + " injured — out for 3 " + team + " matches");
-        document.getElementById("injuryTeam").value = ""; document.getElementById("injuryPlayerSelect").innerHTML = '<option value="">Select Player</option>';
+    const injuryType = injuryTypeRadio.value;
+    const gamesLeft = injuryType === "easy" ? 1 : 5;
+    getOrCreatePlayerInjury(team, player).then(inj => {
+        return window.db.collection("playerInjuries").doc(inj.id).update({ injuryGamesLeft: gamesLeft });
+    }).then(() => {
+        const label = injuryType === "easy" ? "🟡 Easy Injury — out for 1 " + team + " match" : "🔴 Hard Injury — out for 5 " + team + " matches";
+        alert("✅ 🏥 " + player + " — " + label);
+        document.getElementById("injuryTeam").value = "";
+        document.getElementById("injuryPlayerSelect").innerHTML = '<option value="">Select Player</option>';
+        document.querySelectorAll('input[name="injuryType"]').forEach(r => r.checked = false);
     }).catch(err => { console.error(err); alert("❌ Error saving injury"); });
 }
 
@@ -228,7 +242,13 @@ function checkGameEligibility() {
         }
         if (injured.length > 0) {
             html += `<h4 style="color:#e67e22;margin:14px 0 8px;">🏥 Injured:</h4>`;
-            injured.forEach(inj => { html += `<div style="background:#1e1200;border-left:4px solid #e67e22;padding:12px;margin:6px 0;border-radius:8px;"><strong>${inj.player}</strong> <span style="color:#999;font-size:0.85em;">(${inj.team})</span><br/><span style="font-size:0.92em;">🏥 Injury — <strong>${inj.injuryGamesLeft} ${inj.team} match(es) left</strong></span><br/><span style="font-size:0.82em;color:#2ecc71;">✅ Available after ${inj.injuryGamesLeft} more ${inj.team} match(es)</span></div>`; });
+            injured.forEach(inj => {
+                const isHard = inj.injuryGamesLeft > 1;
+                const typeLabel = isHard ? '🔴 Hard Injury' : '🟡 Easy Injury';
+                const borderColor = isHard ? '#e74c3c' : '#f39c12';
+                const bgColor = isHard ? '#1e0a0a' : '#1e1200';
+                html += `<div style="background:${bgColor};border-left:4px solid ${borderColor};padding:12px;margin:6px 0;border-radius:8px;"><strong>${inj.player}</strong> <span style="color:#999;font-size:0.85em;">(${inj.team})</span><br/><span style="font-size:0.92em;">${typeLabel} — <strong>${inj.injuryGamesLeft} ${inj.team} match(es) left</strong></span><br/><span style="font-size:0.82em;color:#2ecc71;">✅ Available after ${inj.injuryGamesLeft} more ${inj.team} match(es)</span></div>`;
+            });
         }
         if (warnings.length > 0) {
             html += `<h4 style="color:#f39c12;margin:14px 0 8px;">⚠️ Yellow Warning:</h4>`;
