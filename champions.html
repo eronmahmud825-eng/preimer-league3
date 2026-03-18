@@ -1,1 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Champions</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600&family=Barlow+Condensed:wght@400;700&display=swap');
 
+        body { background: #04080f; overflow-x: hidden; }
+
+        /* Stars background */
+        .stars {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,214,0,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 30% at 20% 80%, rgba(0,200,83,0.05) 0%, transparent 50%);
+        }
+
+        .container { position: relative; z-index: 1; max-width: 700px; padding: 30px 16px 60px; }
+
+        /* Trophy header */
+        .trophy-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeDown 0.7s ease both;
+        }
+        .trophy-icon {
+            font-size: 64px;
+            line-height: 1;
+            display: block;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 24px rgba(255,214,0,0.5));
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { filter: drop-shadow(0 0 16px rgba(255,214,0,0.4)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255,214,0,0.8)); }
+        }
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.4rem, 8vw, 4rem);
+            letter-spacing: 0.1em;
+            color: #ffd600;
+            text-shadow: 0 0 60px rgba(255,214,0,0.4);
+            margin: 0;
+        }
+        .page-subtitle {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #4d6a85;
+            margin-top: 6px;
+        }
+
+        /* Champions list */
+        .champions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Individual champion card */
+        .champion-card {
+            position: relative;
+            background: linear-gradient(135deg, #0d1a2a 0%, #101e30 60%, #0d1620 100%);
+            border: 1px solid rgba(255,214,0,0.2);
+            border-radius: 16px;
+            padding: 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            overflow: hidden;
+            animation: slideIn 0.5s ease both;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .champion-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,214,0,0.5);
+            box-shadow: 0 8px 40px rgba(255,214,0,0.12);
+        }
+        .champion-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffd600, transparent);
+            opacity: 0.6;
+        }
+        .champion-card::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(255,214,0,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Rank / number badge */
+        .rank-badge {
+            flex-shrink: 0;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(255,214,0,0.08);
+            border: 1.5px solid rgba(255,214,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: #ffd600;
+            letter-spacing: 0.05em;
+        }
+
+        /* Trophy small icon */
+        .card-trophy {
+            flex-shrink: 0;
+            font-size: 28px;
+            filter: drop-shadow(0 0 8px rgba(255,214,0,0.4));
+        }
+
+        /* Card content */
+        .card-content { flex: 1; min-width: 0; }
+
+        .champion-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.4rem, 4vw, 1.9rem);
+            letter-spacing: 0.06em;
+            color: #fff;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .champion-date {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #ffd600;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        /* Staggered animation */
+        .champion-card:nth-child(1) { animation-delay: 0.1s; }
+        .champion-card:nth-child(2) { animation-delay: 0.2s; }
+        .champion-card:nth-child(3) { animation-delay: 0.3s; }
+        .champion-card:nth-child(4) { animation-delay: 0.4s; }
+        .champion-card:nth-child(5) { animation-delay: 0.5s; }
+        .champion-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #2d4a65;
+            animation: fadeDown 0.5s ease both;
+        }
+        .empty-state .empty-icon { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state p {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Count badge */
+        .total-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,214,0,0.08);
+            border: 1px solid rgba(255,214,0,0.2);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ffd600;
+            margin-bottom: 24px;
+        }
+
+        /* Back btn override */
+        .back-btn {
+            background: transparent !important;
+            border: 1.5px solid rgba(255,214,0,0.2) !important;
+            color: #4d6a85 !important;
+            font-family: 'Barlow Condensed', sans-serif !important;
+            font-size: 0.85rem !important;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 10px 22px !important;
+            border-radius: 8px !important;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { border-color: rgba(255,214,0,0.5) !important; color: #ffd600 !important; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .champion-card { padding: 16px 14px; gap: 12px; }
+            .card-trophy { font-size: 22px; }
+            .rank-badge { width: 36px; height: 36px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="container">
+
+        <div class="trophy-header">
+            <span class="trophy-icon">🏆</span>
+            <h1 class="page-title">Hall of Champions</h1>
+            <p class="page-subtitle">League Winners — All Time</p>
+        </div>
+
+        <div style="text-align:center;">
+            <div class="total-badge" id="totalBadge">⭐ Loading...</div>
+        </div>
+
+        <div class="champions-list" id="championsList">
+            <!-- loaded by JS -->
+        </div>
+
+        <div class="btn-row" style="margin-top:32px;">
+            <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="firebase.js"></script>
+    <script>
+        // Hardcoded champions list (add new winners here manually)
+        // Format: { date: "MM/YYYY", name: "Winner Name" }
+        const CHAMPIONS = [
+            { date: "12/2025", name: "ERON MAHMOOD" },
+            { date: "3/2026",  name: "ARIN MAHMOOD" }
+        ];
+
+        function render() {
+            const list = document.getElementById("championsList");
+            const badge = document.getElementById("totalBadge");
+
+            badge.textContent = "⭐ " + CHAMPIONS.length + " Champion" + (CHAMPIONS.length !== 1 ? "s" : "");
+
+            if (CHAMPIONS.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">🏆</span>
+                        <p>No champions recorded yet</p>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            // Show most recent first
+            [...CHAMPIONS].reverse().forEach((c, i) => {
+                const card = document.createElement("div");
+                card.className = "champion-card";
+                card.innerHTML = `
+                    <div class="rank-badge">${CHAMPIONS.length - i}</div>
+                    <div class="card-trophy">🥇</div>
+                    <div class="card-content">
+                        <div class="champion-name">${c.name}</div>
+                        <div class="champion-date">🗓 ${c.date}</div>
+                    </div>`;
+                list.appendChild(card);
+            });
+        }
+
+        render();
+    </script>
+</body>
+</html>
