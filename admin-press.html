@@ -1,1 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Press</title>
+    <link rel="stylesheet" href="style.css"/>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <style>
+        body{background:#04080f;}
+        .container{max-width:680px;padding:28px 16px 60px;}
 
+        .page-header{text-align:center;margin-bottom:32px;}
+        .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,3rem);letter-spacing:0.1em;color:#fff;margin:0;}
+        .page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.18em;text-transform:uppercase;color:#4d6a85;margin-top:5px;}
+
+        /* Gate */
+        .gate-card{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:360px;margin:0 auto 28px;text-align:center;}
+        .gate-card h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;letter-spacing:0.12em;text-transform:uppercase;color:#4d6a85;margin-bottom:16px;}
+        .gate-card input{width:100%;padding:12px 16px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1rem;font-family:inherit;text-align:center;letter-spacing:0.15em;outline:none;transition:border-color 0.2s;}
+        .gate-card input:focus{border-color:#00c853;}
+        .gate-btn{margin-top:12px;width:100%;padding:12px;background:#00c853;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;}
+        .gate-btn:hover{background:#00a844;}
+
+        /* Upload form */
+        .upload-card{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:24px 20px;margin-bottom:20px;position:relative;overflow:hidden;}
+        .upload-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00c853,transparent);opacity:0.4;}
+        .upload-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00c853;margin-bottom:18px;}
+
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+
+        /* Upload zones */
+        .upload-zone{
+            border:2px dashed #1e3048;border-radius:12px;padding:20px;text-align:center;
+            cursor:pointer;transition:all 0.2s;position:relative;margin-top:4px;
+            background:#070d14;
+        }
+        .upload-zone:hover,.upload-zone.drag{border-color:#00c853;background:rgba(0,200,83,0.04);}
+        .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+        .upload-icon{font-size:28px;display:block;margin-bottom:6px;}
+        .upload-label{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:#4d6a85;}
+        .upload-name{font-size:0.78rem;color:#00c853;margin-top:6px;word-break:break-all;}
+
+        /* Progress bar */
+        .prog-wrap{display:none;margin-top:10px;}
+        .prog-bar{height:5px;background:#1e3048;border-radius:3px;overflow:hidden;}
+        .prog-fill{height:100%;background:#00c853;width:0%;transition:width 0.3s;border-radius:3px;}
+        .prog-text{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;color:#4d6a85;text-align:center;margin-top:4px;}
+
+        /* Submit btn */
+        .submit-btn{width:100%;padding:14px;background:#00c853;color:#000;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+        .submit-btn:hover{background:#00a844;transform:translateY(-1px);}
+        .submit-btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+        /* History list */
+        .history-section h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;letter-spacing:0.12em;text-transform:uppercase;color:#4d6a85;margin-bottom:14px;border-bottom:1px solid #1e3048;padding-bottom:8px;}
+        .hist-item{background:#0a1320;border:1px solid #1e3048;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+        .hist-gw{font-family:'Bebas Neue',sans-serif;font-size:0.95rem;color:#1e88e5;background:rgba(30,136,229,0.1);border:1px solid rgba(30,136,229,0.2);border-radius:16px;padding:2px 10px;}
+        .hist-team{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#00c853;}
+        .hist-media{font-size:0.75rem;color:#4d6a85;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;}
+        .del-btn{margin-left:auto;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;text-transform:uppercase;}
+        .del-btn:hover{background:#b71c1c;}
+
+        .back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#4d6a85!important;}
+        .back-btn:hover{border-color:#1e88e5!important;color:#1e88e5!important;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">🎙️ Admin Press</h1>
+        <p class="page-sub">Press Conference Management</p>
+    </div>
+
+    <!-- Password Gate -->
+    <div class="gate-card" id="gateCard">
+        <h3>🔐 Admin Password</h3>
+        <input id="gatePass" type="password" placeholder="••••••" maxlength="20"/>
+        <button class="gate-btn" onclick="checkGate()">Login</button>
+        <p id="gateErr" style="color:#f44336;font-size:0.82rem;margin-top:10px;display:none;">❌ Wrong password</p>
+    </div>
+
+    <!-- Admin Content -->
+    <div id="adminContent" style="display:none;">
+
+        <!-- Upload Form -->
+        <div class="upload-card">
+            <h3>➕ Add Press Conference</h3>
+            <div class="form-container">
+                <div class="form-row">
+                    <label>Gameweek
+                        <input id="gwInput" type="number" min="1" max="99" placeholder="e.g. 5"/>
+                    </label>
+                    <label>Team
+                        <select id="teamInput">
+                            <option value="">Select Team</option>
+                            <option value="SPAIN">SPAIN</option>
+                            <option value="FRANCE">FRANCE</option>
+                            <option value="GERMANY">GERMANY</option>
+                        </select>
+                    </label>
+                </div>
+
+                <!-- Voice upload -->
+                <label>🎙️ Voice Message (MP3 / M4A / WAV)
+                    <div class="upload-zone" id="audioZone">
+                        <input type="file" id="audioFile" accept="audio/*" onchange="fileChosen('audio')"/>
+                        <span class="upload-icon">🎙️</span>
+                        <span class="upload-label">Tap to upload voice</span>
+                        <div class="upload-name" id="audioName"></div>
+                    </div>
+                </label>
+
+                <!-- Video upload -->
+                <label>🎬 Video (MP4 / MOV)
+                    <div class="upload-zone" id="videoZone">
+                        <input type="file" id="videoFile" accept="video/*" onchange="fileChosen('video')"/>
+                        <span class="upload-icon">🎬</span>
+                        <span class="upload-label">Tap to upload video</span>
+                        <div class="upload-name" id="videoName"></div>
+                    </div>
+                </label>
+
+                <!-- Progress -->
+                <div class="prog-wrap" id="progWrap">
+                    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+                    <div class="prog-text" id="progText">Uploading...</div>
+                </div>
+
+                <button class="submit-btn" id="submitBtn" onclick="submitPress()">💾 Save Press Conference</button>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="history-section">
+            <h3>📋 All Press Conferences</h3>
+            <div id="histList"><div style="color:#2d4a65;font-size:0.85rem;text-align:center;padding:20px;">Loading...</div></div>
+        </div>
+
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+        <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+    </div>
+</div>
+
+<script src="firebase.js"></script>
+<script>
+const ADMIN_PASS = "123321";
+let db, storage;
+
+function checkGate() {
+    if (document.getElementById("gatePass").value === ADMIN_PASS) {
+        document.getElementById("gateCard").style.display = "none";
+        document.getElementById("adminContent").style.display = "block";
+        waitForFirebase();
+    } else {
+        document.getElementById("gateErr").style.display = "block";
+    }
+}
+document.getElementById("gatePass").addEventListener("keydown", e => { if (e.key === "Enter") checkGate(); });
+
+function waitForFirebase() {
+    let tries = 0;
+    const t = setInterval(() => {
+        tries++;
+        if (window.db && window.firebase && window.firebase.storage) {
+            clearInterval(t);
+            db = window.db;
+            storage = window.firebase.storage();
+            loadHistory();
+        } else if (tries > 40) {
+            clearInterval(t);
+            alert("Firebase not ready. Check firebase.js");
+        }
+    }, 100);
+}
+
+function fileChosen(type) {
+    const file = document.getElementById(type + "File").files[0];
+    const nameEl = document.getElementById(type + "Name");
+    nameEl.textContent = file ? file.name : "";
+}
+
+function setProgress(pct, text) {
+    document.getElementById("progWrap").style.display = "block";
+    document.getElementById("progFill").style.width = pct + "%";
+    document.getElementById("progText").textContent = text;
+}
+
+function uploadFile(file, path) {
+    return new Promise((resolve, reject) => {
+        if (!file) { resolve(null); return; }
+        const ref = storage.ref(path);
+        const task = ref.put(file);
+        task.on("state_changed",
+            snap => {
+                const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+                setProgress(pct, "Uploading " + file.name + "... " + pct + "%");
+            },
+            reject,
+            () => task.snapshot.ref.getDownloadURL().then(resolve)
+        );
+    });
+}
+
+async function submitPress() {
+    const gw = document.getElementById("gwInput").value;
+    const team = document.getElementById("teamInput").value;
+    const audioFile = document.getElementById("audioFile").files[0];
+    const videoFile = document.getElementById("videoFile").files[0];
+
+    if (!gw || !team) { alert("❌ Please enter Gameweek and Team"); return; }
+    if (!audioFile && !videoFile) { alert("❌ Please upload at least one voice or video file"); return; }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true; btn.textContent = "⏳ Saving...";
+
+    try {
+        const ts = Date.now();
+        const audioURL = audioFile ? await uploadFile(audioFile, "press/" + ts + "_" + audioFile.name) : null;
+        const videoURL = videoFile ? await uploadFile(videoFile, "press/" + ts + "_" + videoFile.name) : null;
+
+        setProgress(100, "Saving to database...");
+
+        await db.collection("pressConferences").add({
+            gameweek: Number(gw),
+            team,
+            audioURL: audioURL || "",
+            videoURL: videoURL || "",
+            savedAt: new Date().toISOString()
+        });
+
+        alert("✅ Press conference saved! Check the Press Conference page.");
+        document.getElementById("gwInput").value = "";
+        document.getElementById("teamInput").value = "";
+        document.getElementById("audioFile").value = "";
+        document.getElementById("videoFile").value = "";
+        document.getElementById("audioName").textContent = "";
+        document.getElementById("videoName").textContent = "";
+        document.getElementById("progWrap").style.display = "none";
+        btn.disabled = false; btn.textContent = "💾 Save Press Conference";
+
+    } catch (err) {
+        console.error(err);
+        alert("❌ Error: " + err.message);
+        btn.disabled = false; btn.textContent = "💾 Save Press Conference";
+    }
+}
+
+function loadHistory() {
+    db.collection("pressConferences").orderBy("savedAt","desc").onSnapshot(snap => {
+        const list = document.getElementById("histList");
+        if (snap.empty) { list.innerHTML = '<div style="color:#2d4a65;font-size:0.85rem;text-align:center;padding:20px;">No press conferences yet</div>'; return; }
+        list.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const date = d.savedAt ? new Date(d.savedAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) : "";
+            const media = [d.audioURL ? "🎙️ Voice" : "", d.videoURL ? "🎬 Video" : ""].filter(Boolean).join(" · ") || "No media";
+            const div = document.createElement("div");
+            div.className = "hist-item";
+            div.innerHTML = `
+                <span class="hist-gw">GW ${d.gameweek}</span>
+                <span class="hist-team">${d.team}</span>
+                <span class="hist-media">${media} · ${date}</span>
+                <button class="del-btn" onclick="deletePress('${doc.id}')">🗑 Delete</button>
+            `;
+            list.appendChild(div);
+        });
+    }, err => console.error(err));
+}
+
+function deletePress(id) {
+    if (!confirm("Delete this press conference?")) return;
+    db.collection("pressConferences").doc(id).delete()
+        .then(() => alert("✅ Deleted"))
+        .catch(err => alert("❌ " + err.message));
+}
+</script>
+</body>
+</html>
