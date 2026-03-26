@@ -11,20 +11,17 @@
     <style>
         body{background:#04080f;}
         .container{max-width:680px;padding:28px 16px 60px;}
-
-        .page-header{text-align:center;margin-bottom:32px;}
+        .page-header{text-align:center;margin-bottom:28px;}
         .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,3rem);letter-spacing:0.1em;color:#fff;margin:0;}
         .page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.18em;text-transform:uppercase;color:#4d6a85;margin-top:5px;}
 
-        /* Gate */
         .gate-card{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:360px;margin:0 auto 28px;text-align:center;}
         .gate-card h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;letter-spacing:0.12em;text-transform:uppercase;color:#4d6a85;margin-bottom:16px;}
         .gate-card input{width:100%;padding:12px 16px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1rem;font-family:inherit;text-align:center;letter-spacing:0.15em;outline:none;transition:border-color 0.2s;}
         .gate-card input:focus{border-color:#00c853;}
-        .gate-btn{margin-top:12px;width:100%;padding:12px;background:#00c853;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;}
+        .gate-btn{margin-top:12px;width:100%;padding:12px;background:#00c853;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
         .gate-btn:hover{background:#00a844;}
 
-        /* Upload form */
         .upload-card{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:24px 20px;margin-bottom:20px;position:relative;overflow:hidden;}
         .upload-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00c853,transparent);opacity:0.4;}
         .upload-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#00c853;margin-bottom:18px;}
@@ -32,40 +29,54 @@
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
         @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
 
-        /* Upload zones */
-        .upload-zone{
-            border:2px dashed #1e3048;border-radius:12px;padding:20px;text-align:center;
-            cursor:pointer;transition:all 0.2s;position:relative;margin-top:4px;
-            background:#070d14;
-        }
-        .upload-zone:hover,.upload-zone.drag{border-color:#00c853;background:rgba(0,200,83,0.04);}
+        /* Upload zone */
+        .upload-zone{border:2px dashed #1e3048;border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:#070d14;}
+        .upload-zone:hover{border-color:#00c853;background:rgba(0,200,83,0.04);}
         .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-        .upload-icon{font-size:28px;display:block;margin-bottom:6px;}
-        .upload-label{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:#4d6a85;}
-        .upload-name{font-size:0.78rem;color:#00c853;margin-top:6px;word-break:break-all;}
+        .upload-icon{font-size:26px;display:block;margin-bottom:5px;}
+        .upload-label{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;color:#4d6a85;}
+        .upload-name{font-size:0.75rem;color:#00c853;margin-top:5px;word-break:break-all;min-height:14px;}
 
-        /* Progress bar */
+        /* RECORD BUTTON */
+        .record-section{margin-top:6px;}
+        .record-btn{
+            width:100%;padding:12px;border:2px solid #e53935;border-radius:10px;
+            background:transparent;color:#e53935;
+            font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:700;
+            letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+        }
+        .record-btn:hover{background:rgba(229,57,53,0.1);}
+        .record-btn.recording{background:rgba(229,57,53,0.15);border-color:#ff1744;color:#ff1744;animation:recPulse 1s ease-in-out infinite;}
+        @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,0.4);}50%{box-shadow:0 0 0 8px rgba(229,57,53,0);}}
+        .rec-dot{width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0;}
+        .record-timer{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;color:#e53935;text-align:center;margin-top:5px;min-height:16px;letter-spacing:0.1em;}
+        .record-preview{margin-top:8px;display:none;}
+        .record-preview audio{width:100%;border-radius:8px;height:38px;}
+
+        /* Progress */
         .prog-wrap{display:none;margin-top:10px;}
         .prog-bar{height:5px;background:#1e3048;border-radius:3px;overflow:hidden;}
-        .prog-fill{height:100%;background:#00c853;width:0%;transition:width 0.3s;border-radius:3px;}
-        .prog-text{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;color:#4d6a85;text-align:center;margin-top:4px;}
+        .prog-fill{height:100%;background:#00c853;width:0%;transition:width 0.2s;border-radius:3px;}
+        .prog-text{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;color:#4d6a85;text-align:center;margin-top:4px;letter-spacing:0.06em;}
 
-        /* Submit btn */
         .submit-btn{width:100%;padding:14px;background:#00c853;color:#000;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all 0.2s;}
-        .submit-btn:hover{background:#00a844;transform:translateY(-1px);}
-        .submit-btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+        .submit-btn:hover:not(:disabled){background:#00a844;transform:translateY(-1px);}
+        .submit-btn:disabled{opacity:0.45;cursor:not-allowed;}
 
-        /* History list */
+        /* History */
         .history-section h3{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;letter-spacing:0.12em;text-transform:uppercase;color:#4d6a85;margin-bottom:14px;border-bottom:1px solid #1e3048;padding-bottom:8px;}
-        .hist-item{background:#0a1320;border:1px solid #1e3048;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+        .hist-item{background:#0a1320;border:1px solid #1e3048;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
         .hist-gw{font-family:'Bebas Neue',sans-serif;font-size:0.95rem;color:#1e88e5;background:rgba(30,136,229,0.1);border:1px solid rgba(30,136,229,0.2);border-radius:16px;padding:2px 10px;}
         .hist-team{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:#00c853;}
-        .hist-media{font-size:0.75rem;color:#4d6a85;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;}
-        .del-btn{margin-left:auto;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;text-transform:uppercase;}
+        .hist-media{font-size:0.75rem;color:#4d6a85;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.05em;}
+        .del-btn{margin-left:auto;background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:0.75rem;cursor:pointer;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;}
         .del-btn:hover{background:#b71c1c;}
 
         .back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#4d6a85!important;}
         .back-btn:hover{border-color:#1e88e5!important;color:#1e88e5!important;}
+
+        .section-label{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4d6a85;margin-bottom:8px;display:block;}
     </style>
 </head>
 <body>
@@ -75,7 +86,6 @@
         <p class="page-sub">Press Conference Management</p>
     </div>
 
-    <!-- Password Gate -->
     <div class="gate-card" id="gateCard">
         <h3>🔐 Admin Password</h3>
         <input id="gatePass" type="password" placeholder="••••••" maxlength="20"/>
@@ -83,10 +93,7 @@
         <p id="gateErr" style="color:#f44336;font-size:0.82rem;margin-top:10px;display:none;">❌ Wrong password</p>
     </div>
 
-    <!-- Admin Content -->
     <div id="adminContent" style="display:none;">
-
-        <!-- Upload Form -->
         <div class="upload-card">
             <h3>➕ Add Press Conference</h3>
             <div class="form-container">
@@ -104,27 +111,43 @@
                     </label>
                 </div>
 
-                <!-- Voice upload -->
-                <label>🎙️ Voice Message (MP3 / M4A / WAV)
-                    <div class="upload-zone" id="audioZone">
+                <!-- VOICE SECTION -->
+                <div>
+                    <span class="section-label">🎙️ Voice Message</span>
+
+                    <!-- Record live -->
+                    <div class="record-section">
+                        <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
+                            <span class="rec-dot"></span>
+                            <span id="recordBtnText">Hold to Record</span>
+                        </button>
+                        <div class="record-timer" id="recordTimer"></div>
+                        <div class="record-preview" id="recordPreview">
+                            <audio id="recordedAudio" controls></audio>
+                        </div>
+                    </div>
+
+                    <!-- OR upload file -->
+                    <div style="text-align:center;margin:8px 0;font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.1em;color:#2d4a65;text-transform:uppercase;">— or upload file —</div>
+                    <div class="upload-zone">
                         <input type="file" id="audioFile" accept="audio/*" onchange="fileChosen('audio')"/>
-                        <span class="upload-icon">🎙️</span>
-                        <span class="upload-label">Tap to upload voice</span>
+                        <span class="upload-icon">📂</span>
+                        <span class="upload-label">Upload audio file</span>
                         <div class="upload-name" id="audioName"></div>
                     </div>
-                </label>
+                </div>
 
-                <!-- Video upload -->
-                <label>🎬 Video (MP4 / MOV)
-                    <div class="upload-zone" id="videoZone">
+                <!-- VIDEO SECTION -->
+                <div>
+                    <span class="section-label">🎬 Video</span>
+                    <div class="upload-zone">
                         <input type="file" id="videoFile" accept="video/*" onchange="fileChosen('video')"/>
                         <span class="upload-icon">🎬</span>
-                        <span class="upload-label">Tap to upload video</span>
+                        <span class="upload-label">Upload video (MP4 / MOV)</span>
                         <div class="upload-name" id="videoName"></div>
                     </div>
-                </label>
+                </div>
 
-                <!-- Progress -->
                 <div class="prog-wrap" id="progWrap">
                     <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
                     <div class="prog-text" id="progText">Uploading...</div>
@@ -134,12 +157,10 @@
             </div>
         </div>
 
-        <!-- History -->
         <div class="history-section">
             <h3>📋 All Press Conferences</h3>
             <div id="histList"><div style="color:#2d4a65;font-size:0.85rem;text-align:center;padding:20px;">Loading...</div></div>
         </div>
-
     </div>
 
     <div class="btn-row" style="margin-top:20px;">
@@ -151,6 +172,12 @@
 <script>
 const ADMIN_PASS = "123321";
 let db, storage;
+let mediaRecorder = null;
+let audioChunks = [];
+let recordedBlob = null;
+let recordTimer = null;
+let recordSeconds = 0;
+let isRecording = false;
 
 function checkGate() {
     if (document.getElementById("gatePass").value === ADMIN_PASS) {
@@ -172,17 +199,82 @@ function waitForFirebase() {
             db = window.db;
             storage = window.firebase.storage();
             loadHistory();
-        } else if (tries > 40) {
+        } else if (tries > 50) {
             clearInterval(t);
             alert("Firebase not ready. Check firebase.js");
         }
     }, 100);
 }
 
+// ── RECORDING ──
+async function toggleRecord() {
+    if (!isRecording) {
+        await startRecording();
+    } else {
+        stopRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        recordedBlob = null;
+
+        // Try common MIME types
+        const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/ogg','audio/mp4',''].find(t => !t || MediaRecorder.isTypeSupported(t));
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+            stream.getTracks().forEach(t => t.stop());
+            recordedBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            const url = URL.createObjectURL(recordedBlob);
+            const audio = document.getElementById("recordedAudio");
+            audio.src = url;
+            document.getElementById("recordPreview").style.display = "block";
+            // Clear file upload if recording used
+            document.getElementById("audioFile").value = "";
+            document.getElementById("audioName").textContent = "";
+        };
+
+        mediaRecorder.start(200);
+        isRecording = true;
+        recordSeconds = 0;
+        document.getElementById("recordBtn").classList.add("recording");
+        document.getElementById("recordBtnText").textContent = "Stop Recording";
+        recordTimer = setInterval(() => {
+            recordSeconds++;
+            const m = String(Math.floor(recordSeconds/60)).padStart(2,"0");
+            const s = String(recordSeconds%60).padStart(2,"0");
+            document.getElementById("recordTimer").textContent = "🔴 Recording " + m + ":" + s;
+        }, 1000);
+    } catch (err) {
+        alert("❌ Microphone access denied. Please allow microphone permission.");
+        console.error(err);
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+    }
+    isRecording = false;
+    clearInterval(recordTimer);
+    document.getElementById("recordBtn").classList.remove("recording");
+    document.getElementById("recordBtnText").textContent = "Record Again";
+    document.getElementById("recordTimer").textContent = "✅ Recording saved";
+}
+
 function fileChosen(type) {
     const file = document.getElementById(type + "File").files[0];
-    const nameEl = document.getElementById(type + "Name");
-    nameEl.textContent = file ? file.name : "";
+    document.getElementById(type + "Name").textContent = file ? file.name : "";
+    if (type === "audio" && file) {
+        // Clear live recording if file chosen
+        recordedBlob = null;
+        document.getElementById("recordPreview").style.display = "none";
+        document.getElementById("recordTimer").textContent = "";
+    }
 }
 
 function setProgress(pct, text) {
@@ -191,15 +283,15 @@ function setProgress(pct, text) {
     document.getElementById("progText").textContent = text;
 }
 
-function uploadFile(file, path) {
+function uploadFile(fileOrBlob, path) {
     return new Promise((resolve, reject) => {
-        if (!file) { resolve(null); return; }
+        if (!fileOrBlob) { resolve(null); return; }
         const ref = storage.ref(path);
-        const task = ref.put(file);
+        const task = ref.put(fileOrBlob);
         task.on("state_changed",
             snap => {
                 const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-                setProgress(pct, "Uploading " + file.name + "... " + pct + "%");
+                setProgress(pct, "Uploading... " + pct + "%");
             },
             reject,
             () => task.snapshot.ref.getDownloadURL().then(resolve)
@@ -210,38 +302,55 @@ function uploadFile(file, path) {
 async function submitPress() {
     const gw = document.getElementById("gwInput").value;
     const team = document.getElementById("teamInput").value;
-    const audioFile = document.getElementById("audioFile").files[0];
-    const videoFile = document.getElementById("videoFile").files[0];
+    const audioFileInput = document.getElementById("audioFile").files[0];
+    const videoFileInput = document.getElementById("videoFile").files[0];
 
     if (!gw || !team) { alert("❌ Please enter Gameweek and Team"); return; }
-    if (!audioFile && !videoFile) { alert("❌ Please upload at least one voice or video file"); return; }
+
+    const audioSource = recordedBlob || audioFileInput || null;
+    if (!audioSource && !videoFileInput) { alert("❌ Please record a voice message OR upload an audio/video file"); return; }
 
     const btn = document.getElementById("submitBtn");
-    btn.disabled = true; btn.textContent = "⏳ Saving...";
+    btn.disabled = true; btn.textContent = "⏳ Uploading...";
 
     try {
         const ts = Date.now();
-        const audioURL = audioFile ? await uploadFile(audioFile, "press/" + ts + "_" + audioFile.name) : null;
-        const videoURL = videoFile ? await uploadFile(videoFile, "press/" + ts + "_" + videoFile.name) : null;
+        let audioURL = "", videoURL = "";
 
-        setProgress(100, "Saving to database...");
+        if (audioSource) {
+            const ext = recordedBlob ? "webm" : (audioFileInput.name.split(".").pop());
+            setProgress(0, "Uploading voice...");
+            audioURL = await uploadFile(audioSource, "press/audio_" + ts + "." + ext) || "";
+        }
 
+        if (videoFileInput) {
+            setProgress(0, "Uploading video...");
+            videoURL = await uploadFile(videoFileInput, "press/video_" + ts + "_" + videoFileInput.name) || "";
+        }
+
+        setProgress(100, "Saving...");
         await db.collection("pressConferences").add({
             gameweek: Number(gw),
             team,
-            audioURL: audioURL || "",
-            videoURL: videoURL || "",
+            audioURL,
+            videoURL,
             savedAt: new Date().toISOString()
         });
 
-        alert("✅ Press conference saved! Check the Press Conference page.");
+        alert("✅ Press conference saved!");
+
+        // Reset form
         document.getElementById("gwInput").value = "";
         document.getElementById("teamInput").value = "";
         document.getElementById("audioFile").value = "";
         document.getElementById("videoFile").value = "";
         document.getElementById("audioName").textContent = "";
         document.getElementById("videoName").textContent = "";
+        document.getElementById("recordPreview").style.display = "none";
+        document.getElementById("recordTimer").textContent = "";
+        document.getElementById("recordBtnText").textContent = "Hold to Record";
         document.getElementById("progWrap").style.display = "none";
+        recordedBlob = null;
         btn.disabled = false; btn.textContent = "💾 Save Press Conference";
 
     } catch (err) {
@@ -266,11 +375,11 @@ function loadHistory() {
                 <span class="hist-gw">GW ${d.gameweek}</span>
                 <span class="hist-team">${d.team}</span>
                 <span class="hist-media">${media} · ${date}</span>
-                <button class="del-btn" onclick="deletePress('${doc.id}')">🗑 Delete</button>
+                <button class="del-btn" onclick="deletePress('${doc.id}')">🗑</button>
             `;
             list.appendChild(div);
         });
-    }, err => console.error(err));
+    });
 }
 
 function deletePress(id) {
