@@ -9,63 +9,55 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
     <style>
-        body { background:#04080f; }
-        .stars {
-            position:fixed;inset:0;pointer-events:none;z-index:0;
-            background:
-                radial-gradient(ellipse 70% 40% at 50% 0%,rgba(30,136,229,0.07) 0%,transparent 60%),
-                radial-gradient(ellipse 50% 30% at 80% 80%,rgba(0,200,83,0.05) 0%,transparent 50%);
-        }
+        body{background:#04080f;}
+        .stars{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(30,136,229,0.07) 0%,transparent 60%);}
         .container{position:relative;z-index:1;max-width:760px;padding:30px 16px 60px;}
 
-        .page-header{text-align:center;margin-bottom:36px;animation:fadeDown 0.6s ease both;}
-        .mic-icon{font-size:56px;display:block;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(30,136,229,0.5));animation:micPulse 3s ease-in-out infinite;}
-        @keyframes micPulse{0%,100%{filter:drop-shadow(0 0 14px rgba(30,136,229,0.4));}50%{filter:drop-shadow(0 0 36px rgba(30,136,229,0.8));}}
+        .page-header{text-align:center;margin-bottom:32px;animation:fadeDown 0.6s ease both;}
+        .mic-icon{font-size:52px;display:block;margin-bottom:8px;animation:micPulse 3s ease-in-out infinite;}
+        @keyframes micPulse{0%,100%{filter:drop-shadow(0 0 12px rgba(30,136,229,0.4));}50%{filter:drop-shadow(0 0 32px rgba(30,136,229,0.9));}}
         @keyframes fadeDown{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);}}
-        @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+        .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,7vw,3.5rem);letter-spacing:0.1em;color:#fff;margin:0;}
+        .page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase;color:#4d6a85;margin-top:5px;}
 
-        .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,7vw,3.5rem);letter-spacing:0.1em;color:#fff;margin:0;text-shadow:0 0 40px rgba(30,136,229,0.4);}
-        .page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase;color:#4d6a85;margin-top:6px;}
-
-        /* Password gate */
         .gate-card{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:380px;margin:0 auto 30px;text-align:center;animation:fadeDown 0.5s ease both;}
         .gate-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;letter-spacing:0.12em;text-transform:uppercase;color:#4d6a85;margin-bottom:18px;}
-        .gate-card input{width:100%;padding:12px 16px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1rem;font-family:inherit;text-align:center;letter-spacing:0.15em;outline:none;transition:border-color 0.2s;}
+        .gate-card input{width:100%;padding:12px 16px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1.1rem;font-family:inherit;text-align:center;letter-spacing:0.2em;outline:none;transition:border-color 0.2s;}
         .gate-card input:focus{border-color:#1e88e5;}
         .gate-btn{margin-top:14px;width:100%;padding:12px;background:#1e88e5;color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;}
         .gate-btn:hover{background:#1565c0;}
 
-        /* Press list */
         #pressList{display:flex;flex-direction:column;gap:20px;}
 
-        .press-card{
-            background:linear-gradient(135deg,#0a1622 0%,#0d1a2a 100%);
-            border:1px solid #1e3048;border-radius:16px;padding:22px;
-            animation:slideUp 0.5s ease both;
-            transition:border-color 0.2s,box-shadow 0.2s;
-            position:relative;overflow:hidden;
-        }
-        .press-card:hover{border-color:rgba(30,136,229,0.4);box-shadow:0 6px 30px rgba(30,136,229,0.1);}
+        .press-card{background:linear-gradient(135deg,#0a1622,#0d1a2a);border:1px solid #1e3048;border-radius:16px;padding:22px;animation:slideUp 0.4s ease both;transition:border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;}
+        .press-card:hover{border-color:rgba(30,136,229,0.4);box-shadow:0 6px 28px rgba(30,136,229,0.1);}
         .press-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1e88e5,transparent);opacity:0.5;}
 
-        .press-meta{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+        .press-meta{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
         .press-gw{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.08em;background:rgba(30,136,229,0.12);border:1px solid rgba(30,136,229,0.25);border-radius:20px;padding:3px 12px;color:#1e88e5;}
         .press-team{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:20px;padding:3px 12px;color:#00c853;}
         .press-date{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.06em;color:#2d4a65;margin-left:auto;}
 
-        /* Media players */
-        .media-section{margin-top:12px;}
-        .media-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#4d6a85;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-        audio{width:100%;border-radius:8px;outline:none;height:40px;background:#070d14;}
-        video{width:100%;border-radius:10px;max-height:300px;background:#000;margin-top:4px;}
+        .media-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#4d6a85;margin-bottom:6px;margin-top:14px;}
 
-        /* Loading */
-        .loading{text-align:center;padding:40px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;letter-spacing:0.1em;text-transform:uppercase;}
+        /* Audio player */
+        audio{width:100%;border-radius:8px;outline:none;height:42px;display:block;}
+
+        /* Video player — KEY FIX */
+        .video-wrap{position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden;margin-top:6px;}
+        .video-wrap video{width:100%;max-height:320px;display:block;border-radius:12px;}
+        .video-err{display:none;padding:20px;text-align:center;color:#4d6a85;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.06em;}
+
         .empty{text-align:center;padding:50px 20px;color:#2d4a65;}
         .empty span{font-size:40px;display:block;margin-bottom:12px;opacity:0.4;}
         .empty p{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;letter-spacing:0.1em;text-transform:uppercase;}
+        .loading{text-align:center;padding:40px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;}
 
-        @media(max-width:480px){.press-card{padding:16px;}.press-meta{gap:6px;}}
+        .back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#4d6a85!important;}
+        .back-btn:hover{border-color:#1e88e5!important;color:#1e88e5!important;}
+
+        @media(max-width:480px){.press-card{padding:16px;}}
     </style>
 </head>
 <body>
@@ -78,7 +70,6 @@
         <p class="page-sub">Official Media Room</p>
     </div>
 
-    <!-- Password Gate -->
     <div class="gate-card" id="gateCard">
         <h3>🔒 Enter Access Code</h3>
         <input id="gatePass" type="password" placeholder="••••" maxlength="10"/>
@@ -86,9 +77,8 @@
         <p id="gateErr" style="color:#f44336;font-size:0.82rem;margin-top:10px;display:none;">❌ Wrong password</p>
     </div>
 
-    <!-- Content (hidden until password) -->
     <div id="pressContent" style="display:none;">
-        <div id="pressList"><div class="loading">Loading press conferences...</div></div>
+        <div id="pressList"><div class="loading">Loading...</div></div>
     </div>
 
     <div class="btn-row" style="margin-top:28px;">
@@ -101,21 +91,27 @@
 const PRESS_PASSWORD = "2005";
 
 function checkGate() {
-    const val = document.getElementById("gatePass").value;
-    if (val === PRESS_PASSWORD) {
+    if (document.getElementById("gatePass").value === PRESS_PASSWORD) {
         document.getElementById("gateCard").style.display = "none";
         document.getElementById("pressContent").style.display = "block";
-        loadPress();
+        waitAndLoad();
     } else {
         document.getElementById("gateErr").style.display = "block";
     }
 }
 document.getElementById("gatePass").addEventListener("keydown", e => { if (e.key === "Enter") checkGate(); });
 
+function waitAndLoad() {
+    let tries = 0;
+    const t = setInterval(() => {
+        tries++;
+        if (window.db) { clearInterval(t); loadPress(); }
+        else if (tries > 40) { clearInterval(t); document.getElementById("pressList").innerHTML = '<div class="loading">Database not ready</div>'; }
+    }, 100);
+}
+
 function loadPress() {
     const list = document.getElementById("pressList");
-    if (!window.db) { list.innerHTML = '<div class="loading">Database not ready...</div>'; setTimeout(loadPress, 800); return; }
-
     window.db.collection("pressConferences").orderBy("savedAt","desc").onSnapshot(snap => {
         if (snap.empty) {
             list.innerHTML = `<div class="empty"><span>🎙️</span><p>No press conferences yet</p></div>`;
@@ -124,18 +120,38 @@ function loadPress() {
         list.innerHTML = "";
         snap.forEach((doc, i) => {
             const d = doc.data();
-            const card = document.createElement("div");
-            card.className = "press-card";
-            card.style.animationDelay = (i * 0.08) + "s";
-
             const date = d.savedAt ? new Date(d.savedAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) : "";
 
+            const card = document.createElement("div");
+            card.className = "press-card";
+            card.style.animationDelay = (i * 0.07) + "s";
+
+            // Build media HTML
             let mediaHtml = "";
+
             if (d.audioURL) {
-                mediaHtml += `<div class="media-section"><div class="media-label">🎙️ Voice Message</div><audio controls src="${d.audioURL}"></audio></div>`;
+                mediaHtml += `
+                    <div class="media-label">🎙️ Voice Message</div>
+                    <audio controls preload="metadata" src="${d.audioURL}"></audio>
+                `;
             }
+
             if (d.videoURL) {
-                mediaHtml += `<div class="media-section" style="margin-top:12px;"><div class="media-label">🎬 Video</div><video controls src="${d.videoURL}" playsinline></video></div>`;
+                // Use direct src — Firebase Storage URLs work as direct src
+                mediaHtml += `
+                    <div class="media-label">🎬 Video</div>
+                    <div class="video-wrap">
+                        <video controls preload="metadata" playsinline
+                            src="${d.videoURL}"
+                            onerror="this.parentNode.querySelector('.video-err').style.display='block';this.style.display='none';">
+                        </video>
+                        <div class="video-err">⚠️ Video could not load. <a href="${d.videoURL}" target="_blank" style="color:#1e88e5;">Open directly ↗</a></div>
+                    </div>
+                `;
+            }
+
+            if (!d.audioURL && !d.videoURL) {
+                mediaHtml = `<div style="color:#2d4a65;font-size:0.85rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;margin-top:8px;">No media uploaded</div>`;
             }
 
             card.innerHTML = `
@@ -144,13 +160,13 @@ function loadPress() {
                     <span class="press-team">${d.team}</span>
                     <span class="press-date">${date}</span>
                 </div>
-                ${mediaHtml || '<div style="color:#2d4a65;font-size:0.85rem;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:0.06em;">No media uploaded</div>'}
+                ${mediaHtml}
             `;
             list.appendChild(card);
         });
     }, err => {
         console.error(err);
-        list.innerHTML = '<div class="loading">Error loading. Check Firestore index.</div>';
+        list.innerHTML = '<div class="loading">Error loading data.</div>';
     });
 }
 </script>
