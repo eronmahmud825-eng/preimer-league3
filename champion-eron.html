@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ERON MAHMOOD — Champion Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#04080f;
+  --gold:#ffd600;--gold2:#ffb300;--golddim:rgba(255,214,0,0.08);
+  --text:#f0f4f8;--text2:#8a9bb0;--text3:#2d4a65;
+  --border:rgba(255,214,0,0.15);--border2:rgba(255,214,0,0.08);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(255,214,0,0.1) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 10% 80%,rgba(255,179,0,0.04) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 30% at 90% 30%,rgba(255,214,0,0.03) 0%,transparent 50%);
+}
+
+.wrap{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:32px 16px 60px;}
+
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:36px;animation:fadeDown .7s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.season-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--golddim);border:1px solid var(--border);
+  border-radius:20px;padding:5px 16px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;
+  letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,214,0,0.6);
+  margin-bottom:20px;
+}
+.hero-trophy{font-size:72px;display:block;margin-bottom:12px;
+  animation:trophyFloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 30px rgba(255,214,0,0.7));}
+@keyframes trophyFloat{
+  0%,100%{transform:translateY(0) rotate(-2deg);filter:drop-shadow(0 0 20px rgba(255,214,0,0.5));}
+  50%{transform:translateY(-10px) rotate(2deg);filter:drop-shadow(0 0 50px rgba(255,214,0,1));}
+}
+.hero-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,9vw,4.5rem);
+  letter-spacing:0.08em;color:var(--gold);line-height:1;
+  text-shadow:0 0 60px rgba(255,214,0,0.5);
+}
+.hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-top:6px;}
+.hero-stars{font-size:18px;letter-spacing:6px;margin-top:10px;opacity:0.5;}
+
+/* ── CHAMPION BANNER ── */
+.champion-banner{
+  background:linear-gradient(135deg,#1a1200,#2c1e00,#1a1200);
+  border:2px solid rgba(255,214,0,0.4);border-radius:16px;
+  padding:16px 20px;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  box-shadow:0 0 40px rgba(255,214,0,0.1);
+  animation:slideUp .5s ease .1s both;
+}
+.banner-icon{font-size:28px;}
+.banner-text{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.1em;
+  color:var(--gold);text-shadow:0 0 20px rgba(255,214,0,0.5);}
+.banner-date{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(255,214,0,0.5);}
+
+/* ── BIG STATS ── */
+.big-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;animation:slideUp .5s ease .15s both;}
+.big-stat{
+  background:linear-gradient(135deg,#0d1620,#111e2e);
+  border:1px solid var(--border);border-radius:14px;
+  padding:18px 10px;text-align:center;position:relative;overflow:hidden;
+}
+.big-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.4;}
+.big-stat-val{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:0.04em;
+  color:var(--gold);line-height:1;}
+.big-stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;
+  letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-top:4px;}
+
+/* ── FULL STATS TABLE ── */
+.stats-card{
+  background:linear-gradient(135deg,#0a1420,#0d1828);
+  border:1px solid rgba(255,214,0,0.12);border-radius:16px;
+  overflow:hidden;margin-bottom:20px;
+  animation:slideUp .5s ease .2s both;
+}
+.stats-card-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;
+  font-weight:700;letter-spacing:0.16em;text-transform:uppercase;
+  color:rgba(255,214,0,0.5);padding:14px 18px 10px;
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:6px;
+}
+.stat-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;border-bottom:1px solid var(--border2);
+  transition:background .15s;
+}
+.stat-row:last-child{border-bottom:none;}
+.stat-row:hover{background:rgba(255,214,0,0.03);}
+.stat-row-label{
+  font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;
+  letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);
+  display:flex;align-items:center;gap:8px;
+}
+.stat-row-icon{font-size:14px;opacity:0.7;}
+.stat-row-val{
+  font-family:'Bebas Neue',sans-serif;font-size:1.3rem;
+  letter-spacing:0.04em;color:var(--text);
+}
+.stat-row-val.gold{color:var(--gold);}
+.stat-row-val.green{color:#00e676;}
+.stat-row-val.red{color:#ff5252;}
+.stat-row-val.blue{color:#448aff;}
+
+/* ── WIN RATE BAR ── */
+.winrate-section{
+  background:linear-gradient(135deg,#0a1420,#0d1828);
+  border:1px solid rgba(255,214,0,0.12);border-radius:16px;
+  padding:18px 18px;margin-bottom:20px;
+  animation:slideUp .5s ease .25s both;
+}
+.wr-title{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,214,0,0.5);margin-bottom:16px;
+  display:flex;align-items:center;gap:6px;}
+.wr-bars{display:flex;flex-direction:column;gap:10px;}
+.wr-row{display:flex;align-items:center;gap:10px;}
+.wr-label{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--text2);width:44px;flex-shrink:0;}
+.wr-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;}
+.wr-bar-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+.wr-bar-fill.gold{background:linear-gradient(90deg,#ffb300,#ffd600);}
+.wr-bar-fill.red{background:linear-gradient(90deg,#c62828,#ff5252);}
+.wr-bar-fill.blue{background:linear-gradient(90deg,#1565c0,#448aff);}
+.wr-pct{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;
+  letter-spacing:0.04em;color:var(--text2);width:38px;text-align:right;flex-shrink:0;}
+
+/* ── RANKING VS OTHERS ── */
+.rank-card{
+  background:linear-gradient(135deg,#0a1420,#0d1828);
+  border:1px solid rgba(255,214,0,0.12);border-radius:16px;
+  padding:18px;margin-bottom:20px;
+  animation:slideUp .5s ease .3s both;
+}
+.rank-title{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,214,0,0.5);margin-bottom:14px;
+  display:flex;align-items:center;gap:6px;}
+.rank-rows{display:flex;flex-direction:column;gap:8px;}
+.rank-row{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 14px;
+  border:1px solid transparent;
+}
+.rank-row.first{border-color:rgba(255,214,0,0.3);background:rgba(255,214,0,0.05);}
+.rank-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;
+  width:20px;flex-shrink:0;}
+.rank-num.r1{color:var(--gold);}
+.rank-num.r2{color:#c0c0c0;}
+.rank-num.r3{color:#cd7f32;}
+.rank-coach{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.05em;flex:1;}
+.rank-pts{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);}
+.rank-pts-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);}
+
+/* back btn */
+.back-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px;background:transparent;
+  border:1.5px solid rgba(255,214,0,0.2);border-radius:12px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,214,0,0.5);
+  cursor:pointer;transition:all .2s;margin-top:8px;
+}
+.back-btn:hover{border-color:rgba(255,214,0,0.5);color:var(--gold);}
+
+@media(max-width:400px){
+  .big-stats{grid-template-columns:repeat(3,1fr);}
+  .big-stat-val{font-size:1.8rem;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="season-pill">🏆 Season 1 Champion</div>
+    <span class="hero-trophy">🥇</span>
+    <div class="hero-name">ERON MAHMOOD</div>
+    <div class="hero-sub">December 2025 — League Winner</div>
+    <div class="hero-stars">★ ★ ★ ★ ★</div>
+  </div>
+
+  <div class="champion-banner">
+    <span class="banner-icon">🏆</span>
+    <div>
+      <div class="banner-text">SEASON 1 CHAMPION</div>
+      <div class="banner-date">🗓 12/2025 — Final Standing: 1st Place</div>
+    </div>
+  </div>
+
+  <!-- Big 3 stats -->
+  <div class="big-stats">
+    <div class="big-stat">
+      <div class="big-stat-val">91</div>
+      <div class="big-stat-lbl">Points</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-val">29</div>
+      <div class="big-stat-lbl">Wins</div>
+    </div>
+    <div class="big-stat">
+      <div class="big-stat-val">+78</div>
+      <div class="big-stat-lbl">Goal Diff</div>
+    </div>
+  </div>
+
+  <!-- Full stats -->
+  <div class="stats-card">
+    <div class="stats-card-title">📊 Full Season Statistics</div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">🎮</span>Games Played</div>
+      <div class="stat-row-val">38</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">✅</span>Wins</div>
+      <div class="stat-row-val green">29</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">❌</span>Losses</div>
+      <div class="stat-row-val red">6</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">🤝</span>Draws</div>
+      <div class="stat-row-val blue">4</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">⚽</span>Goals For</div>
+      <div class="stat-row-val green">230</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">🥅</span>Goals Against</div>
+      <div class="stat-row-val red">152</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">📈</span>Goal Difference</div>
+      <div class="stat-row-val gold">+78</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">⭐</span>Total Points</div>
+      <div class="stat-row-val gold">91</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">⚡</span>Goals Per Game</div>
+      <div class="stat-row-val">6.05</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label"><span class="stat-row-icon">🔥</span>Points Per Game</div>
+      <div class="stat-row-val gold">2.39</div>
+    </div>
+  </div>
+
+  <!-- Win rate bars -->
+  <div class="winrate-section">
+    <div class="wr-title">📉 Result Breakdown</div>
+    <div class="wr-bars">
+      <div class="wr-row">
+        <div class="wr-label">Win</div>
+        <div class="wr-bar-wrap"><div class="wr-bar-fill gold" style="width:76.3%"></div></div>
+        <div class="wr-pct">76.3%</div>
+      </div>
+      <div class="wr-row">
+        <div class="wr-label">Draw</div>
+        <div class="wr-bar-wrap"><div class="wr-bar-fill blue" style="width:10.5%"></div></div>
+        <div class="wr-pct">10.5%</div>
+      </div>
+      <div class="wr-row">
+        <div class="wr-label">Loss</div>
+        <div class="wr-bar-wrap"><div class="wr-bar-fill red" style="width:15.8%"></div></div>
+        <div class="wr-pct">15.8%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Standings -->
+  <div class="rank-card">
+    <div class="rank-title">🏆 Season 1 Final Standings</div>
+    <div class="rank-rows">
+      <div class="rank-row first">
+        <div class="rank-num r1">1</div>
+        <div class="rank-coach">ERON MAHMOOD 🏆</div>
+        <div><div class="rank-pts">91</div><div class="rank-pts-lbl">pts</div></div>
+      </div>
+      <div class="rank-row">
+        <div class="rank-num r2">2</div>
+        <div class="rank-coach">ARIN MAHMOOD</div>
+        <div><div class="rank-pts" style="color:#c0c0c0;">71</div><div class="rank-pts-lbl">pts</div></div>
+      </div>
+      <div class="rank-row">
+        <div class="rank-num r3">3</div>
+        <div class="rank-coach">LAWIN</div>
+        <div><div class="rank-pts" style="color:#cd7f32;">7</div><div class="rank-pts-lbl">pts</div></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="back-btn" onclick="history.back()">⬅ Back to Champions</button>
+</div>
+
+<script>
+// Animate bars on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.wr-bar-fill').forEach(el => {
+    const w = el.style.width;
+    el.style.width = '0%';
+    setTimeout(() => el.style.width = w, 300);
+  });
+});
+</script>
+</body>
+</html>
