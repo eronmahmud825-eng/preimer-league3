@@ -3,51 +3,37 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Football League</title>
+    <title>Football League — Season 4</title>
     <link rel="stylesheet" href="style.css" />
     <style>
-        body { background: #04080f; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .champion-only { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px 20px; animation: fadeIn 1s ease both; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .season-ended {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
-            color: #2d4a65; margin-bottom: 28px;
-            border: 1px solid #1e3048; border-radius: 20px; padding: 5px 18px;
+        .season-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2);
+            border-radius: 20px; padding: 5px 16px; margin-bottom: 20px;
+            font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem;
+            letter-spacing: 0.2em; text-transform: uppercase; color: #00c853;
         }
-        .champ-btn {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(1.4rem, 5vw, 2rem);
-            letter-spacing: 0.1em;
-            padding: 22px 48px;
-            background: linear-gradient(135deg, #1a1400, #2c2000);
-            border: 2px solid rgba(255, 214, 0, 0.5);
-            border-radius: 16px;
-            color: #ffd600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-shadow: 0 0 30px rgba(255, 214, 0, 0.5);
-            box-shadow: 0 0 40px rgba(255, 214, 0, 0.08), inset 0 0 40px rgba(255, 214, 0, 0.03);
-            animation: glow 3s ease-in-out infinite;
-        }
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 30px rgba(255,214,0,0.1), inset 0 0 30px rgba(255,214,0,0.03); border-color: rgba(255,214,0,0.4); }
-            50% { box-shadow: 0 0 60px rgba(255,214,0,0.25), inset 0 0 40px rgba(255,214,0,0.06); border-color: rgba(255,214,0,0.7); }
-        }
-        .champ-btn:hover { transform: scale(1.04); }
-        .trophy-big { font-size: 72px; display: block; margin-bottom: 10px; animation: trophyPulse 2.5s ease-in-out infinite; }
-        @keyframes trophyPulse { 0%,100%{filter:drop-shadow(0 0 20px rgba(255,214,0,0.4));} 50%{filter:drop-shadow(0 0 50px rgba(255,214,0,0.9));} }
-        .sub-text { font-family: 'Barlow Condensed', sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #3d5a3e; margin-top: 16px; }
+        .new-dot { width: 7px; height: 7px; border-radius: 50%; background: #00c853;
+            animation: blink 1.2s ease-in-out infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
     </style>
 </head>
 <body>
-    <div class="champion-only">
-        <span class="trophy-big">🏆</span>
-        <div class="season-ended">⚽ Season Ended — Data Saved</div>
-        <button class="champ-btn" onclick="location.href='champions.html'">
-            🏆 CHAMPIONS WON
-        </button>
-        <p class="sub-text">Hall of Champions — All Time Winners</p>
+    <div class="container" style="text-align:center;">
+        <div class="season-badge"><span class="new-dot"></span> Season 4 — Fresh Start</div>
+        <h1>⚽ Football League</h1>
+        <div class="buttons">
+            <button onclick="location.href='table.html'">🏆 Table</button>
+            <button onclick="location.href='matchweek.html'">⚽ Match Week</button>
+            <button onclick="location.href='history.html'">📜 History</button>
+            <button onclick="location.href='encounters.html'">🤝 Encounters</button>
+            <button class="warning-btn" onclick="location.href='card-warning.html'">🟡 Card Warning</button>
+            <button class="check-btn" onclick="location.href='check-games.html'">🔍 Check Games</button>
+            <button onclick="location.href='injuries.html'" style="border-color:rgba(255,111,0,0.3);">🏥 Injuries</button>
+            <button class="admin-btn" onclick="location.href='admin.html'">🔐 Admin</button>
+            <button onclick="location.href='betting.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">🎰 Betting</button>
+            <button onclick="location.href='champions.html'" style="border-color:rgba(255,214,0,0.4);color:#ffd600;">🏆 Champions</button>
+        </div>
     </div>
 </body>
 </html>
