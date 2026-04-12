@@ -1,1 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ARIN MAHMOOD — Champion Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#04080f;
+  --blue:#00b0ff;--blue2:#0091ea;--bluedim:rgba(0,176,255,0.08);
+  --gold:#ffd600;--golddim:rgba(255,214,0,0.08);
+  --green:#00e676;
+  --text:#f0f4f8;--text2:#8a9bb0;--text3:#2d4a65;
+  --border-b:rgba(0,176,255,0.15);--border2:rgba(0,176,255,0.08);
+  --border-g:rgba(255,214,0,0.15);
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,176,255,0.09) 0%,transparent 55%),
+             radial-gradient(ellipse 50% 40% at 80% 80%,rgba(255,214,0,0.04) 0%,transparent 50%);}
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:28px 16px 60px;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes trophyFloat{
+  0%,100%{transform:translateY(0) rotate(-2deg);filter:drop-shadow(0 0 20px rgba(0,176,255,0.6));}
+  50%{transform:translateY(-10px) rotate(2deg);filter:drop-shadow(0 0 50px rgba(0,176,255,1));}
+}
 
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:28px;animation:fadeDown .7s ease both;}
+.season-pill{display:inline-flex;align-items:center;gap:6px;background:var(--bluedim);
+  border:1px solid var(--border-b);border-radius:20px;padding:5px 16px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:rgba(0,176,255,0.7);margin-bottom:18px;}
+.hero-trophy{font-size:68px;display:block;margin-bottom:10px;animation:trophyFloat 3s ease-in-out infinite;}
+.hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,9vw,4.5rem);
+  letter-spacing:0.08em;color:var(--blue);line-height:1;text-shadow:0 0 60px rgba(0,176,255,0.5);}
+.hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--text3);margin-top:6px;}
+.hero-stars{font-size:18px;letter-spacing:6px;margin-top:10px;opacity:0.5;color:var(--blue);}
+
+/* ── DOUBLE CHAMP BANNER ── */
+.champ-banner{background:linear-gradient(135deg,#001220,#001e36,#001220);
+  border:2px solid rgba(0,176,255,0.35);border-radius:16px;padding:14px 20px;
+  margin-bottom:20px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 0 40px rgba(0,176,255,0.08);animation:slideUp .4s ease .1s both;}
+.banner-icon{font-size:28px;}
+.banner-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.1em;
+  color:var(--blue);text-shadow:0 0 20px rgba(0,176,255,0.5);}
+.banner-date{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(0,176,255,0.5);}
+
+/* ── SEASON TABS ── */
+.season-tabs{display:flex;gap:8px;margin-bottom:20px;animation:slideUp .4s ease .15s both;}
+.tab{flex:1;padding:12px 10px;text-align:center;border-radius:12px;cursor:pointer;
+  border:1.5px solid var(--border-b);background:transparent;transition:all .2s;
+  font-family:'Barlow Condensed',sans-serif;}
+.tab.active{background:var(--bluedim);border-color:var(--blue);}
+.tab-num{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.06em;color:var(--blue);}
+.tab-lbl{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-top:2px;}
+.tab-date{font-size:0.68rem;letter-spacing:0.06em;color:rgba(0,176,255,0.5);margin-top:2px;}
+
+/* ── SEASON PANELS ── */
+.season-panel{display:none;}
+.season-panel.active{display:block;animation:slideUp .3s ease both;}
+
+/* ── BIG 3 ── */
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.b3{background:linear-gradient(135deg,#0d1620,#111e2e);border:1px solid var(--border-b);
+  border-radius:14px;padding:16px 8px;text-align:center;position:relative;overflow:hidden;}
+.b3::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:0.4;}
+.b3-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.04em;
+  color:var(--blue);line-height:1;}
+.b3-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text3);margin-top:3px;}
+
+/* ── STATS TABLE ── */
+.stats-card{background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid rgba(0,176,255,0.12);
+  border-radius:16px;overflow:hidden;margin-bottom:16px;}
+.sc-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;color:rgba(0,176,255,0.5);
+  padding:12px 16px 10px;border-bottom:1px solid var(--border2);}
+.sr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border2);transition:background .15s;}
+.sr:last-child{border-bottom:none;}
+.sr:hover{background:rgba(0,176,255,0.03);}
+.sr-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.06em;
+  text-transform:uppercase;color:var(--text2);display:flex;align-items:center;gap:7px;}
+.sr-val{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:0.04em;color:var(--text);}
+.sr-val.blue{color:var(--blue);}
+.sr-val.green{color:var(--green);}
+.sr-val.red{color:#ff5252;}
+.sr-val.gold{color:var(--gold);}
+
+/* ── WIN RATE ── */
+.wr-card{background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid rgba(0,176,255,0.12);
+  border-radius:16px;padding:16px;margin-bottom:16px;}
+.wr-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;color:rgba(0,176,255,0.5);margin-bottom:14px;}
+.wr-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.wr-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--text2);width:42px;flex-shrink:0;}
+.wr-track{flex:1;height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;}
+.wr-fill{height:100%;border-radius:4px;transition:width 1.2s ease;}
+.wr-fill.b{background:linear-gradient(90deg,#0091ea,#00b0ff);}
+.wr-fill.r{background:linear-gradient(90deg,#c62828,#ff5252);}
+.wr-fill.gr{background:linear-gradient(90deg,#37474f,#607d8b);}
+.wr-pct{font-family:'Bebas Neue',sans-serif;font-size:0.88rem;color:var(--text2);
+  width:36px;text-align:right;flex-shrink:0;}
+
+/* ── FINAL TABLE ── */
+.ft-card{background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid rgba(0,176,255,0.12);
+  border-radius:16px;padding:16px;margin-bottom:16px;}
+.ft-title{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;color:rgba(0,176,255,0.5);margin-bottom:12px;}
+.ft-row{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;background:rgba(255,255,255,0.03);margin-bottom:7px;
+  border:1px solid transparent;}
+.ft-row.winner{border-color:rgba(0,176,255,0.3);background:rgba(0,176,255,0.05);}
+.ft-row.winner-gold{border-color:rgba(255,214,0,0.3);background:rgba(255,214,0,0.05);}
+.ft-rank{font-family:'Bebas Neue',sans-serif;font-size:1rem;width:18px;flex-shrink:0;}
+.r1{color:var(--gold);}
+.r2{color:var(--blue);}
+.r3{color:#cd7f32;}
+.ft-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:0.05em;flex:1;}
+.ft-pts{font-family:'Bebas Neue',sans-serif;font-size:1rem;}
+.ft-pts-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);}
+
+/* ── NO DATA ── */
+.no-data-box{background:rgba(255,214,0,0.04);border:1px solid rgba(255,214,0,0.15);
+  border-radius:14px;padding:28px 20px;text-align:center;margin-bottom:16px;}
+.nd-icon{font-size:42px;display:block;margin-bottom:10px;opacity:0.6;}
+.nd-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.08em;
+  color:rgba(255,214,0,0.7);margin-bottom:6px;}
+.nd-text{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.06em;
+  color:var(--text3);line-height:1.6;}
+
+/* back */
+.back-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:13px;background:transparent;border:1.5px solid rgba(0,176,255,0.2);
+  border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:rgba(0,176,255,0.5);
+  cursor:pointer;transition:all .2s;margin-top:8px;}
+.back-btn:hover{border-color:rgba(0,176,255,0.5);color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="season-pill">👑 2× Champion — Seasons 2 & 3</div>
+    <span class="hero-trophy">👑</span>
+    <div class="hero-name">ARIN MAHMOOD</div>
+    <div class="hero-sub">Most Titles — 2× League Winner</div>
+    <div class="hero-stars">★ ★ ★ ★ ★</div>
+  </div>
+
+  <div class="champ-banner">
+    <span class="banner-icon">🏆</span>
+    <div>
+      <div class="banner-title">2× CHAMPION — GREATEST OF ALL TIME</div>
+      <div class="banner-date">Season 2: 3/2026 &nbsp;|&nbsp; Season 3: 4/2025</div>
+    </div>
+  </div>
+
+  <!-- Season Tabs -->
+  <div class="season-tabs">
+    <div class="tab active" onclick="showSeason(3)">
+      <div class="tab-num">S3</div>
+      <div class="tab-lbl">Season 3</div>
+      <div class="tab-date">4/2025</div>
+    </div>
+    <div class="tab" onclick="showSeason(2)">
+      <div class="tab-num">S2</div>
+      <div class="tab-lbl">Season 2</div>
+      <div class="tab-date">3/2026</div>
+    </div>
+  </div>
+
+  <!-- ══ SEASON 3 PANEL (ARIN = GERMANY — real data) ══ -->
+  <div class="season-panel active" id="panel-3">
+
+    <div class="big3">
+      <div class="b3"><div class="b3-val">62</div><div class="b3-lbl">Points</div></div>
+      <div class="b3"><div class="b3-val">20</div><div class="b3-lbl">Wins</div></div>
+      <div class="b3"><div class="b3-val">+4</div><div class="b3-lbl">Goal Diff</div></div>
+    </div>
+
+    <div class="stats-card">
+      <div class="sc-title">📊 Season 3 — Full Stats (ARIN = GERMANY)</div>
+      <div class="sr"><div class="sr-lbl">🎮 Games Played</div><div class="sr-val">38</div></div>
+      <div class="sr"><div class="sr-lbl">✅ Wins</div><div class="sr-val green">20</div></div>
+      <div class="sr"><div class="sr-lbl">❌ Losses</div><div class="sr-val red">16</div></div>
+      <div class="sr"><div class="sr-lbl">🤝 Draws</div><div class="sr-val" style="color:#448aff;">2</div></div>
+      <div class="sr"><div class="sr-lbl">⚽ Goals For</div><div class="sr-val green">243</div></div>
+      <div class="sr"><div class="sr-lbl">🥅 Goals Against</div><div class="sr-val red">239</div></div>
+      <div class="sr"><div class="sr-lbl">📈 Goal Difference</div><div class="sr-val blue">+4</div></div>
+      <div class="sr"><div class="sr-lbl">⭐ Total Points</div><div class="sr-val blue">62</div></div>
+      <div class="sr"><div class="sr-lbl">⚡ Goals Per Game</div><div class="sr-val">6.39</div></div>
+      <div class="sr"><div class="sr-lbl">🔥 Points Per Game</div><div class="sr-val blue">1.63</div></div>
+    </div>
+
+    <div class="wr-card">
+      <div class="wr-title">📉 Result Breakdown — Season 3</div>
+      <div class="wr-row"><div class="wr-lbl">Win</div>
+        <div class="wr-track"><div class="wr-fill b" id="w3" style="width:52.6%"></div></div>
+        <div class="wr-pct">52.6%</div></div>
+      <div class="wr-row"><div class="wr-lbl">Draw</div>
+        <div class="wr-track"><div class="wr-fill gr" id="d3" style="width:5.3%"></div></div>
+        <div class="wr-pct">5.3%</div></div>
+      <div class="wr-row"><div class="wr-lbl">Loss</div>
+        <div class="wr-track"><div class="wr-fill r" id="l3" style="width:42.1%"></div></div>
+        <div class="wr-pct">42.1%</div></div>
+    </div>
+
+    <div class="ft-card">
+      <div class="ft-title">🏆 Season 3 — Final Standings</div>
+      <div class="ft-row winner">
+        <div class="ft-rank r1">1</div>
+        <div class="ft-name">GERMANY (ARIN) 🏆</div>
+        <div><div class="ft-pts" style="color:var(--blue);">62</div><div class="ft-pts-lbl">pts</div></div>
+      </div>
+      <div class="ft-row">
+        <div class="ft-rank" style="color:#c0c0c0;">2</div>
+        <div class="ft-name">FRANCE</div>
+        <div><div class="ft-pts" style="color:#c0c0c0;">59</div><div class="ft-pts-lbl">pts</div></div>
+      </div>
+      <div class="ft-row">
+        <div class="ft-rank" style="color:#cd7f32;">3</div>
+        <div class="ft-name">SPAIN</div>
+        <div><div class="ft-pts" style="color:#cd7f32;">46</div><div class="ft-pts-lbl">pts</div></div>
+      </div>
+    </div>
+
+  </div><!-- /panel-3 -->
+
+  <!-- ══ SEASON 2 PANEL (no real data) ══ -->
+  <div class="season-panel" id="panel-2">
+    <div class="no-data-box">
+      <span class="nd-icon">📁</span>
+      <div class="nd-title">ARIN MAHMOOD — SEASON 2 CHAMPION</div>
+      <div class="nd-text">
+        Season 2 data was not recorded.<br/>
+        🗓 Date: 3/2026<br/>
+        🏆 ARIN MAHMOOD won this season<br/><br/>
+        <span style="color:rgba(255,214,0,0.4);font-size:0.75rem;">No full statistics available for this season.</span>
+      </div>
+    </div>
+  </div><!-- /panel-2 -->
+
+  <button class="back-btn" onclick="history.back()">⬅ Back to Champions</button>
+</div>
+
+<script>
+function showSeason(n) {
+  document.querySelectorAll('.season-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.querySelectorAll('.tab')[n===3?0:1].classList.add('active');
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('#panel-'+n+' .wr-fill').forEach(el => {
+      const w = el.style.width; el.style.width='0%';
+      setTimeout(()=>el.style.width=w, 50);
+    });
+  }, 50);
+}
+window.addEventListener('load', () => {
+  document.querySelectorAll('#panel-3 .wr-fill').forEach(el => {
+    const w=el.style.width; el.style.width='0%';
+    setTimeout(()=>el.style.width=w, 400);
+  });
+});
+</script>
+</body>
+</html>
