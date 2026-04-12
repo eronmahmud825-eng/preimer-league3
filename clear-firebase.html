@@ -1,1 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clear All Firebase Data</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .warn-box { background:#1e0a0a;border:2px solid #f44336;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center; }
+        .warn-box h2 { color:#f44336;font-size:1.4rem;margin-bottom:8px; }
+        .warn-box p { color:#e57373;font-size:0.92rem;line-height:1.6; }
+        .status-line { padding:6px 0;font-size:0.88rem;border-bottom:1px solid #1e3048; }
+        .status-line.ok { color:#00c853; }
+        .status-line.err { color:#f44336; }
+        .status-line.info { color:#8faac8; }
+        #log { margin-top:12px;max-height:320px;overflow-y:auto; }
+        .progress-bar { height:6px;background:#1e3048;border-radius:3px;margin-top:12px;overflow:hidden; }
+        .progress-fill { height:100%;background:#00c853;border-radius:3px;transition:width 0.3s;width:0%; }
+        #clearBtn { background:#c62828 !important;color:#fff !important;font-size:1.05rem;padding:14px;width:100%;margin-top:4px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:0.06em;text-transform:uppercase; }
+        #clearBtn:hover:not(:disabled) { background:#b71c1c !important; }
+        #clearBtn:disabled { opacity:0.45;cursor:not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🗑️ Clear All Data</h1>
 
+        <div class="warn-box">
+            <h2>⚠️ DANGER ZONE</h2>
+            <p>This will permanently delete <strong>ALL</strong> data from Firebase:<br/>
+            matches · players · suspensions · injuries · cards<br/>
+            <strong>This cannot be undone!</strong></p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-container">
+                <label>Admin Password
+                    <input id="adminPass" type="password" placeholder="Enter admin password" autocomplete="off" />
+                </label>
+                <label>Type <strong style="color:#f44336;">DELETE ALL</strong> to confirm
+                    <input id="confirmText" type="text" placeholder="DELETE ALL" autocomplete="off" />
+                </label>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <button id="clearBtn" disabled>🗑️ Clear Everything</button>
+            </div>
+        </div>
+
+        <div class="card" id="logCard" style="display:none;">
+            <h3>📋 Progress</h3>
+            <div id="log"></div>
+        </div>
+
+        <div class="btn-row">
+            <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
+        </div>
+    </div>
+
+    <!-- Firebase MUST load first -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="firebase.js"></script>
+
+    <script>
+        const ADMIN_PASSWORD = "123321";
+
+        function checkReady() {
+            const pass = document.getElementById("adminPass").value;
+            const confirm = document.getElementById("confirmText").value.trim();
+            document.getElementById("clearBtn").disabled = !(pass === ADMIN_PASSWORD && confirm === "DELETE ALL");
+        }
+        document.getElementById("adminPass").addEventListener("input", checkReady);
+        document.getElementById("confirmText").addEventListener("input", checkReady);
+
+        function addLog(msg, type = "info") {
+            document.getElementById("logCard").style.display = "block";
+            const div = document.createElement("div");
+            div.className = "status-line " + type;
+            div.textContent = msg;
+            const log = document.getElementById("log");
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function setProgress(pct) {
+            document.getElementById("progressFill").style.width = pct + "%";
+        }
+
+        // Wait until db is available before allowing clear
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const check = setInterval(() => {
+                    attempts++;
+                    if (window.db) { clearInterval(check); resolve(window.db); }
+                    else if (attempts > 30) { clearInterval(check); reject(new Error("Firebase did not initialize. Check your firebase.js file.")); }
+                }, 100);
+            });
+        }
+
+        async function deleteCollection(db, colName) {
+            addLog("Deleting '" + colName + "'...", "info");
+            try {
+                const snap = await db.collection(colName).get();
+                if (snap.empty) {
+                    addLog("  → '" + colName + "' is already empty ✓", "ok");
+                    return;
+                }
+                // Delete in batches of 400
+                const docs = snap.docs;
+                let deleted = 0;
+                while (deleted < docs.length) {
+                    const batch = db.batch();
+                    const chunk = docs.slice(deleted, deleted + 400);
+                    chunk.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    deleted += chunk.length;
+                }
+                addLog("  → '" + colName + "': deleted " + docs.length + " record(s) ✓", "ok");
+            } catch (err) {
+                addLog("  → '" + colName + "' error: " + err.message, "err");
+            }
+        }
+
+        document.getElementById("clearBtn").addEventListener("click", async () => {
+            const btn = document.getElementById("clearBtn");
+            btn.disabled = true;
+            btn.textContent = "⏳ Clearing...";
+            setProgress(5);
+
+            try {
+                addLog("🔌 Connecting to Firebase...", "info");
+                const db = await getDB();
+                addLog("✅ Firebase connected", "ok");
+                setProgress(10);
+
+                const collections = [
+                    "matches",
+                    "players",
+                    "playerSuspensions",
+                    "playerInjuries",
+                    "cards",
+                    "cardWarnings"
+                ];
+
+                for (let i = 0; i < collections.length; i++) {
+                    await deleteCollection(db, collections[i]);
+                    setProgress(10 + Math.round((i + 1) / collections.length * 88));
+                }
+
+                setProgress(100);
+                addLog("", "info");
+                addLog("🎉 ALL DATA CLEARED SUCCESSFULLY!", "ok");
+                addLog("Your database is now completely empty.", "ok");
+                addLog("Go to Admin to add new players for SPAIN, GERMANY, FRANCE.", "ok");
+                btn.textContent = "✅ Done!";
+                btn.style.background = "#00c853";
+                btn.style.color = "#000";
+
+            } catch (err) {
+                addLog("❌ " + err.message, "err");
+                console.error(err);
+                btn.disabled = false;
+                btn.textContent = "🗑️ Retry";
+            }
+        });
+    </script>
+</body>
+</html>
