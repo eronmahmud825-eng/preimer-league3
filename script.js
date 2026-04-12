@@ -1,6 +1,6 @@
 // script.js - With Injury system (3 team matches, auto countdown like red card)
 const ADMIN_PASSWORD = "123321";
-const teamsList = ["SPAIN", "FRANCE", "GERMANY"];
+const teamsList = ["PARISANT GERMAN", "LIVERPOOL", "BAYER MUNICH"];
 
 function docToMatch(doc) {
     const d = doc.data();
