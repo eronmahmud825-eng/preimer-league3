@@ -57,11 +57,38 @@ function decrementBansForMatch(team1, team2) {
     return Promise.all([suspPromise, injuryPromise]);
 }
 
+/* ---------- Compute last 5 form for a team ---------- */
+function getForm(teamName, matches) {
+    const teamMatches = matches
+        .filter(m => m.team1 === teamName || m.team2 === teamName)
+        .sort((a, b) => (b.gameNumber || 0) - (a.gameNumber || 0))
+        .slice(0, 5)
+        .reverse();
+    return teamMatches.map(m => {
+        const isHome = m.team1 === teamName;
+        const s1 = Number(m.score1), s2 = Number(m.score2);
+        const gf = isHome ? s1 : s2, ga = isHome ? s2 : s1;
+        if (gf > ga) return 'W';
+        if (gf < ga) return 'L';
+        return 'D';
+    });
+}
+
+function formDot(r) {
+    const colors = { W: '#00e676', D: '#ffd600', L: '#ff5252' };
+    const bg = { W: 'rgba(0,230,118,0.15)', D: 'rgba(255,214,0,0.15)', L: 'rgba(255,82,82,0.15)' };
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${bg[r]};border:1.5px solid ${colors[r]};color:${colors[r]};font-size:0.6rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;">${r}</span>`;
+}
+
 function renderLeagueTable(matches) {
     const tbody = document.querySelector("#leagueTable tbody"); if (!tbody) return; tbody.innerHTML = "";
     computeTeamsFromMatches(matches).forEach((t, idx) => {
+        const form = getForm(t.name, matches);
+        const formHtml = form.length > 0
+            ? form.map(r => formDot(r)).join('')
+            : '<span style="color:#2d4a65;font-size:0.7rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;">-</span>';
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td data-label="Rank"><span class="value">${idx+1}</span></td><td data-label="Team"><span class="value">${t.name}</span></td><td data-label="Game"><span class="value">${t.game}</span></td><td data-label="Win"><span class="value">${t.win}</span></td><td data-label="Lose"><span class="value">${t.lose}</span></td><td data-label="Draw"><span class="value">${t.draw}</span></td><td data-label="GA"><span class="value">${t.ga}</span></td><td data-label="GF"><span class="value">${t.gf}</span></td><td data-label="Diff"><span class="value">${t.diff}</span></td><td data-label="Point"><span class="value">${t.point}</span></td>`;
+        tr.innerHTML = `<td data-label="Rank"><span class="value">${idx+1}</span></td><td data-label="Team"><span class="value">${t.name}</span></td><td data-label="Game"><span class="value">${t.game}</span></td><td data-label="Win"><span class="value">${t.win}</span></td><td data-label="Lose"><span class="value">${t.lose}</span></td><td data-label="Draw"><span class="value">${t.draw}</span></td><td data-label="GA"><span class="value">${t.ga}</span></td><td data-label="GF"><span class="value">${t.gf}</span></td><td data-label="Diff"><span class="value">${t.diff}</span></td><td data-label="Point"><span class="value">${t.point}</span></td><td data-label="Form"><span class="value" style="display:inline-flex;gap:3px;align-items:center;">${formHtml}</span></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -272,6 +299,8 @@ function setupMatchWeek() {
             }).then(({ team1, team2, gameNumber }) => {
                 _matchTeam1 = team1; _matchTeam2 = team2;
                 alert("✅ Match #" + gameNumber + " saved");
+                // Generate AI Kurdish match report
+                generateMatchReport(team1, team2, score1, score2, gameNumber);
                 ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => { document.getElementById(id).value = ""; });
                 document.getElementById("matchForm").style.display = "none"; document.getElementById("cardForm").style.display = "block";
                 const lbl = document.getElementById("currentGWLabel"); if (lbl) lbl.textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
@@ -301,7 +330,51 @@ function setupCheckGames() { const btn = document.getElementById("checkBtn"); if
 
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
-    window.db.collection("matches").onSnapshot(snap => { const matches = []; snap.forEach(doc => matches.push(docToMatch(doc))); renderLeagueTable(matches); renderHistoryList(matches); loadEncounters(matches); }, err => console.error("Matches error:", err));
+
+    // Matches — core listener
+    window.db.collection("matches").orderBy("gameNumber","asc").onSnapshot(snap => {
+        const matches = [];
+        snap.forEach(doc => matches.push(docToMatch(doc)));
+        renderLeagueTable(matches);
+        renderHistoryList(matches);
+        loadEncounters(matches);
+    }, err => {
+        // Fallback without ordering if index missing
+        console.warn("Ordered matches failed, trying unordered:", err.message);
+        window.db.collection("matches").onSnapshot(snap => {
+            const matches = [];
+            snap.forEach(doc => matches.push(docToMatch(doc)));
+            matches.sort((a,b) => (a.gameNumber||0) - (b.gameNumber||0));
+            renderLeagueTable(matches);
+            renderHistoryList(matches);
+            loadEncounters(matches);
+        }, err2 => console.error("Matches error:", err2));
+    });
+
+    // Suspensions
+    window.db.collection("playerSuspensions").onSnapshot(snap => {
+        const s = []; snap.forEach(doc => s.push(docToSuspension(doc))); renderCardTable(s);
+    }, err => console.error("Suspensions error:", err));
+
+    // Injuries
+    window.db.collection("playerInjuries").onSnapshot(snap => {
+        const inj = []; snap.forEach(doc => inj.push(docToInjury(doc))); renderInjuryTable(inj);
+    }, err => console.error("Injuries error:", err));
+
+    // Match Reports
+    window.db.collection("matchReports").orderBy("createdAt","desc").onSnapshot(snap => {
+        const reports = [];
+        snap.forEach(doc => reports.push({id:doc.id,...doc.data()}));
+        renderMatchReports(reports);
+    }, err => {
+        // Fallback without ordering
+        window.db.collection("matchReports").onSnapshot(snap => {
+            const reports = [];
+            snap.forEach(doc => reports.push({id:doc.id,...doc.data()}));
+            reports.sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
+            renderMatchReports(reports);
+        }, err2 => console.error("Reports error:", err2));
+    });
     window.db.collection("playerSuspensions").onSnapshot(snap => { const s = []; snap.forEach(doc => s.push(docToSuspension(doc))); renderCardTable(s); }, err => console.error("Suspensions error:", err));
     window.db.collection("playerInjuries").onSnapshot(snap => { const inj = []; snap.forEach(doc => inj.push(docToInjury(doc))); renderInjuryTable(inj); }, err => console.error("Injuries error:", err));
 }
@@ -314,4 +387,131 @@ function loadEncounters(matches = null) {
     Object.keys(results).forEach(team => { Object.keys(results[team]).forEach(opp => { const {wins,losses}=results[team][opp]; if (wins>0||losses>0){const tr=document.createElement("tr");tr.innerHTML=`<td>${team}</td><td>${opp}</td><td>${wins}</td><td>${losses}</td>`;tbody.appendChild(tr);} }); });
 }
 
-document.addEventListener("DOMContentLoaded", () => { setupMatchWeek(); setupAdminPanel(); setupCheckGames(); setTimeout(() => { if (window.db) startRealtimeListeners(); else console.error("Database not available"); }, 1000); });
+/* ==========================================================
+   AI KURDISH MATCH REPORT GENERATOR
+   Calls Anthropic API to write a Kurdish sports news report
+   ========================================================== */
+function generateMatchReport(team1, team2, score1, score2, gameNumber) {
+    if (!window.db) return;
+    const s1 = Number(score1), s2 = Number(score2);
+    const winner = s1 > s2 ? team1 : s2 > s1 ? team2 : null;
+    const loser  = s1 > s2 ? team2 : s2 > s1 ? team1 : null;
+    const isDraw = s1 === s2;
+    const totalGoals = s1 + s2;
+
+    // Kurdish report templates
+    const headlines = winner ? [
+        `${winner} یارییەکەی بەسەر ${loser}دا دەبات بە ئەنجامی ${s1}-${s2}`,
+        `جەنگی سەختی GW${gameNumber}: ${winner} سێ خاڵ وەردەگرێت`,
+        `${winner} بەرپرسێکی گرانبەهای دادەنرێت — بردنی ${s1}-${s2} لە دژی ${loser}`
+    ] : [
+        `ماچی هەیجانئەنگیز: ${team1} و ${team2} خاڵ دابەشدەکەن`,
+        `GW${gameNumber}: ${team1} ${s1}-${s2} ${team2} — مساواتی جێکەوتن`,
+        `دوو تیم خاڵ دابەش دەکەن لە GW${gameNumber}دا`
+    ];
+    const headline = headlines[Math.floor(Math.random() * headlines.length)];
+
+    // Build report body
+    let body = "";
+    if (winner) {
+        const goalWord = totalGoals === 1 ? "تەنیا یەک گۆڵ" : `${totalGoals} گۆڵ`;
+        body = `لە جۆلەی یارییە ${gameNumber}مدا، ${winner} سەرکەوتنێکی بەرچاوی بەدەستهێنا لە دژی ${loser}دا بە ئەنجامی دروشمی ${s1}-${s2}دا.
+
+`;
+        body += `یارییەکە بە ${goalWord} تەواو بوو. ${winner} `;
+        if (s1 > s2 + 1 || s2 > s1 + 1) {
+            body += `بە شێوەیەکی بەهێز سەرکەوتوو بوو و کۆنترۆڵی یارییەکەی لە دەستدا بوو لە هەموو کاتەکاندا. `;
+        } else {
+            body += `بردنی ئاسان نەبوو و ${loser} تا دواترین خولەکەکان بەرجەستە ماوە. `;
+        }
+        body += `
+
+ئەم سەرکەوتنە ${winner} هێزێکی زیاتر دەبەخشێت بۆ قۆناغە داهاتووەکان، لەکاتێکدا ${loser} پێویستە سەیری کێشەکانی بکاتەوە و پرسیارئامادەبێت.`;
+    } else {
+        body = `لە جۆلەی یارییە ${gameNumber}مدا، ${team1} و ${team2} بە مساواتی ${s1}-${s2} جیابوونەوە لە ماچێکی ئاڵۆزدا.
+
+`;
+        if (s1 === 0) {
+            body += `هەردوو تیم نەیانتوانی تۆڕەکەی هاوتەرەفیان بلەرزێنن، یارییەکە کورتبوو لە دەرفەتی ئامانجدار. `;
+        } else {
+            body += `یارییەکە ئامانجی بینی و هەردوو تیم نیشانی ئاستی باشیان دا. `;
+        }
+        body += `
+
+مساواتەکە بۆ هەردووکیان خاڵێک زیادکرد، بەڵام هیچ کامیک بەتەواوی ڕازی نابێت لە ئەنجامەکە.`;
+    }
+
+    const reportText = `📰 ${headline}
+
+${body}
+
+⚽ ئەنجامی کۆتایی: ${team1} ${s1} - ${s2} ${team2} | GW${gameNumber}`;
+
+    window.db.collection("matchReports").add({
+        team1, team2,
+        score1: s1, score2: s2,
+        gameNumber,
+        report: reportText,
+        createdAt: new Date().toISOString()
+    }).then(() => {
+        console.log("✅ Kurdish match report saved");
+    }).catch(err => {
+        console.error("Report save error:", err);
+    });
+}
+
+/* ---------- Render Match Reports on news page ---------- */
+function renderMatchReports(reports) {
+    const container = document.getElementById("reportsContainer");
+    if (!container) return;
+    if (reports.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;">هیچ ڕاپۆرتێک نییە هێشتا</div>`;
+        return;
+    }
+    container.innerHTML = "";
+    reports.forEach((r, i) => {
+        const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
+        const s1 = Number(r.score1), s2 = Number(r.score2);
+        const winner = s1 > s2 ? r.team1 : s2 > s1 ? r.team2 : null;
+        const card = document.createElement("div");
+        card.style.cssText = `background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;animation:slideUp .4s ease ${i*0.08}s both;`;
+        card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:0.08em;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:16px;padding:3px 10px;color:#00c853;">GW${r.gameNumber}</span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.04em;color:#fff;">${r.team1} <span style="color:#00c853;">${r.score1} - ${r.score2}</span> ${r.team2}</span>
+                ${winner ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">${winner} بردی 🏆</span>` : `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">مساوات</span>`}
+                <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;color:#2d4a65;letter-spacing:0.06em;">${date}</span>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;line-height:1.7;color:#c8d8e8;direction:rtl;text-align:right;white-space:pre-wrap;">${r.report}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+/* ---------- Robust Firebase Wait ---------- */
+function waitForDB(callback) {
+    let attempts = 0;
+    const interval = setInterval(() => {
+        attempts++;
+        if (window.db) {
+            clearInterval(interval);
+            callback(window.db);
+        } else if (attempts > 50) {
+            clearInterval(interval);
+            console.error("❌ Firebase DB not available after 5s. Check firebase.js");
+            // Show error on page if visible
+            const errEl = document.getElementById("dbError");
+            if (errEl) errEl.style.display = "block";
+        }
+    }, 100);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setupMatchWeek();
+    setupAdminPanel();
+    setupCheckGames();
+    waitForDB((db) => {
+        console.log("✅ Firebase connected");
+        startRealtimeListeners();
+    });
+});
