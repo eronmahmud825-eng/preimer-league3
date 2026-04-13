@@ -57,11 +57,38 @@ function decrementBansForMatch(team1, team2) {
     return Promise.all([suspPromise, injuryPromise]);
 }
 
+/* ---------- Compute last 5 form for a team ---------- */
+function getForm(teamName, matches) {
+    const teamMatches = matches
+        .filter(m => m.team1 === teamName || m.team2 === teamName)
+        .sort((a, b) => (b.gameNumber || 0) - (a.gameNumber || 0))
+        .slice(0, 5)
+        .reverse();
+    return teamMatches.map(m => {
+        const isHome = m.team1 === teamName;
+        const s1 = Number(m.score1), s2 = Number(m.score2);
+        const gf = isHome ? s1 : s2, ga = isHome ? s2 : s1;
+        if (gf > ga) return 'W';
+        if (gf < ga) return 'L';
+        return 'D';
+    });
+}
+
+function formDot(r) {
+    const colors = { W: '#00e676', D: '#ffd600', L: '#ff5252' };
+    const bg = { W: 'rgba(0,230,118,0.15)', D: 'rgba(255,214,0,0.15)', L: 'rgba(255,82,82,0.15)' };
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${bg[r]};border:1.5px solid ${colors[r]};color:${colors[r]};font-size:0.6rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;">${r}</span>`;
+}
+
 function renderLeagueTable(matches) {
     const tbody = document.querySelector("#leagueTable tbody"); if (!tbody) return; tbody.innerHTML = "";
     computeTeamsFromMatches(matches).forEach((t, idx) => {
+        const form = getForm(t.name, matches);
+        const formHtml = form.length > 0
+            ? form.map(r => formDot(r)).join('')
+            : '<span style="color:#2d4a65;font-size:0.7rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;">-</span>';
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td data-label="Rank"><span class="value">${idx+1}</span></td><td data-label="Team"><span class="value">${t.name}</span></td><td data-label="Game"><span class="value">${t.game}</span></td><td data-label="Win"><span class="value">${t.win}</span></td><td data-label="Lose"><span class="value">${t.lose}</span></td><td data-label="Draw"><span class="value">${t.draw}</span></td><td data-label="GA"><span class="value">${t.ga}</span></td><td data-label="GF"><span class="value">${t.gf}</span></td><td data-label="Diff"><span class="value">${t.diff}</span></td><td data-label="Point"><span class="value">${t.point}</span></td>`;
+        tr.innerHTML = `<td data-label="Rank"><span class="value">${idx+1}</span></td><td data-label="Team"><span class="value">${t.name}</span></td><td data-label="Game"><span class="value">${t.game}</span></td><td data-label="Win"><span class="value">${t.win}</span></td><td data-label="Lose"><span class="value">${t.lose}</span></td><td data-label="Draw"><span class="value">${t.draw}</span></td><td data-label="GA"><span class="value">${t.ga}</span></td><td data-label="GF"><span class="value">${t.gf}</span></td><td data-label="Diff"><span class="value">${t.diff}</span></td><td data-label="Point"><span class="value">${t.point}</span></td><td data-label="Form"><span class="value" style="display:inline-flex;gap:3px;align-items:center;">${formHtml}</span></td>`;
         tbody.appendChild(tr);
     });
 }
@@ -272,6 +299,8 @@ function setupMatchWeek() {
             }).then(({ team1, team2, gameNumber }) => {
                 _matchTeam1 = team1; _matchTeam2 = team2;
                 alert("✅ Match #" + gameNumber + " saved");
+                // Generate AI Kurdish match report
+                generateMatchReport(team1, team2, score1, score2, gameNumber);
                 ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => { document.getElementById(id).value = ""; });
                 document.getElementById("matchForm").style.display = "none"; document.getElementById("cardForm").style.display = "block";
                 const lbl = document.getElementById("currentGWLabel"); if (lbl) lbl.textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
@@ -302,6 +331,8 @@ function setupCheckGames() { const btn = document.getElementById("checkBtn"); if
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
     window.db.collection("matches").onSnapshot(snap => { const matches = []; snap.forEach(doc => matches.push(docToMatch(doc))); renderLeagueTable(matches); renderHistoryList(matches); loadEncounters(matches); }, err => console.error("Matches error:", err));
+    // Load match reports
+    window.db.collection("matchReports").orderBy("createdAt","desc").onSnapshot(snap => { const reports = []; snap.forEach(doc => reports.push({id:doc.id,...doc.data()})); renderMatchReports(reports); }, err => console.error("Reports error:", err));
     window.db.collection("playerSuspensions").onSnapshot(snap => { const s = []; snap.forEach(doc => s.push(docToSuspension(doc))); renderCardTable(s); }, err => console.error("Suspensions error:", err));
     window.db.collection("playerInjuries").onSnapshot(snap => { const inj = []; snap.forEach(doc => inj.push(docToInjury(doc))); renderInjuryTable(inj); }, err => console.error("Injuries error:", err));
 }
@@ -312,6 +343,85 @@ function loadEncounters(matches = null) {
     matches.forEach(m => { const t1=m.team1,t2=m.team2; if (!results[t1]) results[t1]={}; if (!results[t2]) results[t2]={}; if (!results[t1][t2]) results[t1][t2]={wins:0,losses:0}; if (!results[t2][t1]) results[t2][t1]={wins:0,losses:0}; if (m.score1>m.score2){results[t1][t2].wins++;results[t2][t1].losses++;}else if(m.score2>m.score1){results[t2][t1].wins++;results[t1][t2].losses++;} });
     tbody.innerHTML = "";
     Object.keys(results).forEach(team => { Object.keys(results[team]).forEach(opp => { const {wins,losses}=results[team][opp]; if (wins>0||losses>0){const tr=document.createElement("tr");tr.innerHTML=`<td>${team}</td><td>${opp}</td><td>${wins}</td><td>${losses}</td>`;tbody.appendChild(tr);} }); });
+}
+
+/* ==========================================================
+   AI KURDISH MATCH REPORT GENERATOR
+   Calls Anthropic API to write a Kurdish sports news report
+   ========================================================== */
+async function generateMatchReport(team1, team2, score1, score2, gameNumber) {
+    if (!window.db) return;
+    const s1 = Number(score1), s2 = Number(score2);
+    let result, winner, loser;
+    if (s1 > s2) { result = "برد"; winner = team1; loser = team2; }
+    else if (s2 > s1) { result = "برد"; winner = team2; loser = team1; }
+    else { result = "مساوات"; winner = null; loser = null; }
+
+    const prompt = `تۆ ڕۆژنامەنووسێکی وەرزشیی کوردی. بە کوردی سۆرانی ڕاپۆرتێکی ماچی فوتبۆل بنووسە.
+
+ماچ: ${team1} ${s1} - ${s2} ${team2}
+جۆلەی یاری: GW${gameNumber}
+ئەنجامی یاری: ${winner ? winner + " بردی" : "مساوات"}
+
+پێویستە ڕاپۆرتەکە:
+- سەرتاڤی گوێراکی هەبێت (headline)
+- ١ پەراگراف دەربارەی چۆنییەتی یاریەکە
+- ئاماژە بە گۆڵەکان و ئەنجامەکە
+- ئاراستەی دواتر بۆ ئەو تیمانە
+- کورت و بەهێز بێت (١٥٠-٢٠٠ پەیڤ)
+- تەنیا کوردی بنووسە`;
+
+    try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1000,
+                messages: [{ role: "user", content: prompt }]
+            })
+        });
+        const data = await response.json();
+        const reportText = data.content && data.content[0] ? data.content[0].text : null;
+        if (reportText) {
+            await window.db.collection("matchReports").add({
+                team1, team2, score1: s1, score2: s2, gameNumber,
+                report: reportText,
+                createdAt: new Date().toISOString()
+            });
+            console.log("✅ Kurdish match report saved");
+        }
+    } catch (err) {
+        console.error("Report generation error:", err);
+    }
+}
+
+/* ---------- Render Match Reports on news page ---------- */
+function renderMatchReports(reports) {
+    const container = document.getElementById("reportsContainer");
+    if (!container) return;
+    if (reports.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;">هیچ ڕاپۆرتێک نییە هێشتا</div>`;
+        return;
+    }
+    container.innerHTML = "";
+    reports.forEach((r, i) => {
+        const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
+        const s1 = Number(r.score1), s2 = Number(r.score2);
+        const winner = s1 > s2 ? r.team1 : s2 > s1 ? r.team2 : null;
+        const card = document.createElement("div");
+        card.style.cssText = `background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;animation:slideUp .4s ease ${i*0.08}s both;`;
+        card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:0.08em;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:16px;padding:3px 10px;color:#00c853;">GW${r.gameNumber}</span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.04em;color:#fff;">${r.team1} <span style="color:#00c853;">${r.score1} - ${r.score2}</span> ${r.team2}</span>
+                ${winner ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">${winner} بردی 🏆</span>` : `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">مساوات</span>`}
+                <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;color:#2d4a65;letter-spacing:0.06em;">${date}</span>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;line-height:1.7;color:#c8d8e8;direction:rtl;text-align:right;white-space:pre-wrap;">${r.report}</div>
+        `;
+        container.appendChild(card);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => { setupMatchWeek(); setupAdminPanel(); setupCheckGames(); setTimeout(() => { if (window.db) startRealtimeListeners(); else console.error("Database not available"); }, 1000); });
