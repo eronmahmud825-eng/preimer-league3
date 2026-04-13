@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ئەخبارەکان — Match Reports</title>
+    <link rel="stylesheet" href="style.css"/>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
+        body { background: #04080f; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+
+        .news-header { text-align:center; margin-bottom:32px; animation: fadeDown .6s ease both; }
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-14px);} to{opacity:1;transform:translateY(0);} }
+
+        .news-icon { font-size:52px; display:block; margin-bottom:10px;
+            filter: drop-shadow(0 0 20px rgba(0,200,83,0.5));
+            animation: iconPulse 2.5s ease-in-out infinite; }
+        @keyframes iconPulse {
+            0%,100%{ filter:drop-shadow(0 0 12px rgba(0,200,83,0.4)); }
+            50%{ filter:drop-shadow(0 0 30px rgba(0,200,83,0.9)); }
+        }
+        .news-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,7vw,3.5rem);
+            letter-spacing:0.1em; color:#fff; margin:0;
+            text-shadow: 0 0 40px rgba(0,200,83,0.3); }
+        .news-sub { font-family:'Barlow Condensed',sans-serif; font-size:0.78rem;
+            letter-spacing:0.22em; text-transform:uppercase; color:#2d4a65; margin-top:6px; }
+
+        .live-badge { display:inline-flex; align-items:center; gap:5px;
+            background:rgba(0,200,83,0.08); border:1px solid rgba(0,200,83,0.2);
+            border-radius:20px; padding:4px 14px; margin-bottom:22px;
+            font-family:'Barlow Condensed',sans-serif; font-size:0.7rem;
+            letter-spacing:0.12em; text-transform:uppercase; color:#00c853; }
+        .live-dot { width:6px; height:6px; border-radius:50%; background:#00c853;
+            animation:blink 1.2s ease-in-out infinite; }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+
+        .report-card {
+            background:linear-gradient(135deg,#0a1420,#0d1828);
+            border:1px solid #1e3048; border-radius:16px;
+            padding:20px; margin-bottom:16px;
+            animation: slideUp .4s ease both;
+            transition: border-color .2s, box-shadow .2s;
+            position:relative; overflow:hidden;
+        }
+        .report-card::before { content:''; position:absolute; top:0; left:0; right:0;
+            height:2px; background:linear-gradient(90deg,transparent,#00c853,transparent);
+            opacity:0.4; }
+        .report-card:hover { border-color:rgba(0,200,83,0.3);
+            box-shadow:0 4px 24px rgba(0,200,83,0.07); }
+
+        .rc-top { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+        .rc-gw { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; letter-spacing:0.08em;
+            background:rgba(0,200,83,0.1); border:1px solid rgba(0,200,83,0.2);
+            border-radius:16px; padding:3px 10px; color:#00c853; }
+        .rc-score { font-family:'Barlow Condensed',sans-serif; font-size:0.95rem;
+            font-weight:700; letter-spacing:0.04em; color:#fff; }
+        .rc-score b { color:#00c853; }
+        .rc-winner { font-family:'Barlow Condensed',sans-serif; font-size:0.7rem;
+            letter-spacing:0.08em; text-transform:uppercase; padding:2px 9px;
+            border-radius:10px; background:rgba(255,214,0,0.1);
+            border:1px solid rgba(255,214,0,0.2); color:#ffd600; }
+        .rc-date { margin-left:auto; font-family:'Barlow Condensed',sans-serif;
+            font-size:0.7rem; color:#2d4a65; letter-spacing:0.06em; }
+
+        .rc-report { font-family:'Barlow Condensed',sans-serif; font-size:0.95rem;
+            line-height:1.8; color:#c8d8e8; direction:rtl; text-align:right;
+            white-space:pre-wrap; border-top:1px solid #1e3048; padding-top:12px; }
+
+        .back-btn { background:transparent!important; border:1.5px solid #1e3048!important;
+            color:#2d4a65!important; }
+        .back-btn:hover { border-color:rgba(0,200,83,0.4)!important; color:#00c853!important; }
+
+        .empty-state { text-align:center; padding:50px 20px; color:#2d4a65; }
+        .empty-state span { font-size:40px; display:block; margin-bottom:12px; opacity:0.3; }
+        .empty-state p { font-family:'Barlow Condensed',sans-serif; font-size:0.85rem;
+            letter-spacing:0.1em; text-transform:uppercase; direction:rtl; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="news-header">
+        <span class="news-icon">📰</span>
+        <h1 class="news-title">ئەخبارەکان</h1>
+        <p class="news-sub">AI Kurdish Match Reports — بە کوردی</p>
+    </div>
+
+    <div style="text-align:center;">
+        <div class="live-badge"><span class="live-dot"></span> دروستکراوی AI — بەخۆماتیک</div>
+    </div>
+
+    <div id="reportsContainer">
+        <div class="empty-state">
+            <span>📰</span>
+            <p>چاوەڕێ بکە...</p>
+        </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+        <button class="back-btn" onclick="location.href='index.html'">⬅ گەڕانەوە</button>
+    </div>
+</div>
+
+<script src="firebase.js"></script>
+<script src="script.js"></script>
+<script>
+// Override renderMatchReports for this page with better styling
+function renderMatchReports(reports) {
+    const container = document.getElementById("reportsContainer");
+    if (!container) return;
+
+    if (reports.length === 0) {
+        container.innerHTML = `<div class="empty-state"><span>📰</span><p>هیچ ڕاپۆرتێک نییە هێشتا — ماچێک سەمبیت بکە بۆ دروستبوونی ڕاپۆرت</p></div>`;
+        return;
+    }
+
+    container.innerHTML = "";
+    reports.forEach((r, i) => {
+        const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", {day:"2-digit",month:"short",year:"numeric"}) : "";
+        const s1 = Number(r.score1), s2 = Number(r.score2);
+        const winner = s1 > s2 ? r.team1 : s2 > s1 ? r.team2 : null;
+
+        const card = document.createElement("div");
+        card.className = "report-card";
+        card.style.animationDelay = (i * 0.07) + "s";
+        card.innerHTML = `
+            <div class="rc-top">
+                <span class="rc-gw">GW${r.gameNumber}</span>
+                <span class="rc-score">${r.team1} <b>${r.score1} - ${r.score2}</b> ${r.team2}</span>
+                <span class="rc-winner">${winner ? winner + " بردی 🏆" : "مساوات ⚖️"}</span>
+                <span class="rc-date">${date}</span>
+            </div>
+            <div class="rc-report">${r.report}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+</script>
+</body>
+</html>
