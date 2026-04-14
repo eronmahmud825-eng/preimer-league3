@@ -1,6 +1,7 @@
 // script.js - With Injury system (3 team matches, auto countdown like red card)
 const ADMIN_PASSWORD = "123321";
-const teamsList = ["PARISANT GERMAN", "LIVERPOOL", "BAYER MUNICH"];
+const SUPER_ADMIN_PASSWORD = "9999";
+const teamsList = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
 
 function docToMatch(doc) {
     const d = doc.data();
@@ -80,9 +81,6 @@ function formDot(r) {
     return '<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:' + bg[r] + ';border:1.5px solid ' + colors[r] + ';color:' + colors[r] + ';font-size:0.6rem;font-weight:700;">' + r + '</span>';
 }
 
-// =============================================
-// FIX: renderLeagueTable — broken quote removed
-// =============================================
 function renderLeagueTable(matches) {
     const tbody = document.querySelector("#leagueTable tbody");
     if (!tbody) return;
@@ -225,7 +223,7 @@ function openEditInjuryModal(id, player, gamesLeft) {
 
 function deleteInjury(id, player) {
     const pass = prompt("Admin password to delete injury for " + player + ":");
-    if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
     window.db.collection("playerInjuries").doc(id).delete()
         .then(() => alert("✅ Injury deleted for " + player))
@@ -260,7 +258,7 @@ function openEditSuspensionModal(susp) {
 
 function deleteSuspension(id, player) {
     const pass = prompt("Admin password to delete warnings for " + player + ":");
-    if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
     window.db.collection("playerSuspensions").doc(id).delete()
         .then(() => alert("✅ Deleted for " + player))
@@ -418,7 +416,7 @@ function setupMatchWeek() {
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
             const pass = document.getElementById("adminPass").value || "";
-            if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+            if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
             const team1 = document.getElementById("team1").value;
             const team2 = document.getElementById("team2").value;
             const score1 = Number(document.getElementById("score1").value);
@@ -443,7 +441,6 @@ function setupMatchWeek() {
                     const el = document.getElementById(id);
                     if (el) el.value = "";
                 });
-                // SAFE display toggle
                 const matchForm = document.getElementById("matchForm");
                 const cardForm = document.getElementById("cardForm");
                 if (matchForm) matchForm.style.display = "none";
@@ -464,17 +461,217 @@ function setupMatchWeek() {
     if (okBtn) okBtn.addEventListener("click", () => { alert("✅ All data saved!"); window.location.href = "index.html"; });
 }
 
+/* =============================================
+   SUPER ADMIN PANEL (password: 9999)
+   Edit Matches, Points, Players, Suspensions, Injuries
+   ============================================= */
+function loadSuperAdminPanel() {
+    if (!window.db) { setTimeout(loadSuperAdminPanel, 300); return; }
+
+    // --- Matches editor ---
+    const matchesTbody = document.querySelector("#saMatchesTable tbody");
+    if (matchesTbody) {
+        window.db.collection("matches").orderBy("gameNumber","asc").get().then(snap => {
+            matchesTbody.innerHTML = "";
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    '<td>GW' + (d.gameNumber||'-') + '</td>' +
+                    '<td>' + d.team1 + ' vs ' + d.team2 + '</td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<input type="number" min="0" id="s1_' + doc.id + '" value="' + (d.score1||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
+                        ' - ' +
+                        '<input type="number" min="0" id="s2_' + doc.id + '" value="' + (d.score2||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
+                    '</td>' +
+                    '<td><input type="date" id="dt_' + doc.id + '" value="' + (d.date||'') + '" style="padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<button onclick="saUpdateMatch(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾 Save</button>' +
+                        '<button onclick="saDeleteMatch(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
+                    '</td>';
+                matchesTbody.appendChild(tr);
+            });
+        }).catch(err => {
+            // fallback without orderBy
+            window.db.collection("matches").get().then(snap => {
+                matchesTbody.innerHTML = "";
+                const docs = [];
+                snap.forEach(doc => docs.push(doc));
+                docs.sort((a,b) => (a.data().gameNumber||0)-(b.data().gameNumber||0));
+                docs.forEach(doc => {
+                    const d = doc.data();
+                    const tr = document.createElement("tr");
+                    tr.innerHTML =
+                        '<td>GW' + (d.gameNumber||'-') + '</td>' +
+                        '<td>' + d.team1 + ' vs ' + d.team2 + '</td>' +
+                        '<td style="white-space:nowrap;">' +
+                            '<input type="number" min="0" id="s1_' + doc.id + '" value="' + (d.score1||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
+                            ' - ' +
+                            '<input type="number" min="0" id="s2_' + doc.id + '" value="' + (d.score2||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
+                        '</td>' +
+                        '<td><input type="date" id="dt_' + doc.id + '" value="' + (d.date||'') + '" style="padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
+                        '<td style="white-space:nowrap;">' +
+                            '<button onclick="saUpdateMatch(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾 Save</button>' +
+                            '<button onclick="saDeleteMatch(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
+                        '</td>';
+                    matchesTbody.appendChild(tr);
+                });
+            });
+        });
+    }
+
+    // --- Suspensions editor ---
+    const suspTbody = document.querySelector("#saSuspTable tbody");
+    if (suspTbody) {
+        window.db.collection("playerSuspensions").get().then(snap => {
+            suspTbody.innerHTML = "";
+            if (snap.empty) { suspTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4d6a85;padding:16px;">No suspensions</td></tr>'; return; }
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    '<td>' + (d.team||'') + '</td>' +
+                    '<td>' + (d.player||'') + '</td>' +
+                    '<td><input type="number" min="0" max="3" id="ay_' + doc.id + '" value="' + (d.activeYellows||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
+                    '<td><input type="number" min="0" max="1" id="ybl_' + doc.id + '" value="' + (d.yellowBanLeft||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
+                    '<td><input type="number" min="0" max="3" id="rbl_' + doc.id + '" value="' + (d.redBanLeft||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<button onclick="saUpdateSusp(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
+                        '<button onclick="saDeleteSusp(\'' + doc.id + '\',\'' + (d.player||'').replace(/'/g,"") + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
+                    '</td>';
+                suspTbody.appendChild(tr);
+            });
+        });
+    }
+
+    // --- Injuries editor ---
+    const injTbody = document.querySelector("#saInjTable tbody");
+    if (injTbody) {
+        window.db.collection("playerInjuries").get().then(snap => {
+            injTbody.innerHTML = "";
+            if (snap.empty) { injTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#4d6a85;padding:16px;">No injuries</td></tr>'; return; }
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    '<td>' + (d.team||'') + '</td>' +
+                    '<td>' + (d.player||'') + '</td>' +
+                    '<td><input type="number" min="0" max="20" id="inj_' + doc.id + '" value="' + (d.injuryGamesLeft||0) + '" style="width:60px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<button onclick="saUpdateInj(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
+                        '<button onclick="saDeleteInj(\'' + doc.id + '\',\'' + (d.player||'').replace(/'/g,"") + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
+                    '</td>';
+                injTbody.appendChild(tr);
+            });
+        });
+    }
+
+    // --- Players editor ---
+    const plTbody = document.querySelector("#saPlayersTable tbody");
+    if (plTbody) {
+        window.db.collection("players").get().then(snap => {
+            plTbody.innerHTML = "";
+            if (snap.empty) { plTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#4d6a85;padding:16px;">No players</td></tr>'; return; }
+            snap.forEach(doc => {
+                const d = doc.data();
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    '<td>' + (d.team||'') + '</td>' +
+                    '<td><input type="text" id="pname_' + doc.id + '" value="' + (d.player||'').replace(/"/g,'&quot;') + '" style="width:160px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
+                    '<td style="white-space:nowrap;">' +
+                        '<button onclick="saUpdatePlayer(\'' + doc.id + '\',\'' + (d.team||'').replace(/'/g,"") + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
+                        '<button onclick="saDeletePlayer(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
+                    '</td>';
+                plTbody.appendChild(tr);
+            });
+        });
+    }
+}
+
+/* Super admin action helpers */
+window.saUpdateMatch = function(id) {
+    if (!window.db) return;
+    const s1 = Number(document.getElementById("s1_"+id).value)||0;
+    const s2 = Number(document.getElementById("s2_"+id).value)||0;
+    const dt = document.getElementById("dt_"+id).value||"";
+    window.db.collection("matches").doc(id).update({ score1: s1, score2: s2, date: dt })
+        .then(() => alert("✅ Match updated!"))
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saDeleteMatch = function(id) {
+    if (!confirm("Delete this match? This cannot be undone.")) return;
+    if (!window.db) return;
+    window.db.collection("matches").doc(id).delete()
+        .then(() => { alert("✅ Match deleted"); loadSuperAdminPanel(); })
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saUpdateSusp = function(id) {
+    if (!window.db) return;
+    const ay  = Number(document.getElementById("ay_"+id).value)||0;
+    const ybl = Number(document.getElementById("ybl_"+id).value)||0;
+    const rbl = Number(document.getElementById("rbl_"+id).value)||0;
+    window.db.collection("playerSuspensions").doc(id).update({ activeYellows: ay, yellowBanLeft: ybl, redBanLeft: rbl })
+        .then(() => alert("✅ Suspension updated!"))
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saDeleteSusp = function(id, player) {
+    if (!confirm("Delete suspension for " + player + "?")) return;
+    if (!window.db) return;
+    window.db.collection("playerSuspensions").doc(id).delete()
+        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saUpdateInj = function(id) {
+    if (!window.db) return;
+    const g = Number(document.getElementById("inj_"+id).value)||0;
+    window.db.collection("playerInjuries").doc(id).update({ injuryGamesLeft: g })
+        .then(() => alert("✅ Injury updated!"))
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saDeleteInj = function(id, player) {
+    if (!confirm("Delete injury for " + player + "?")) return;
+    if (!window.db) return;
+    window.db.collection("playerInjuries").doc(id).delete()
+        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saUpdatePlayer = function(id, team) {
+    if (!window.db) return;
+    const name = document.getElementById("pname_"+id).value.trim();
+    if (!name) { alert("❌ Player name cannot be empty"); return; }
+    window.db.collection("players").doc(id).update({ player: name, team: team })
+        .then(() => alert("✅ Player updated!"))
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+window.saDeletePlayer = function(id) {
+    if (!confirm("Delete this player?")) return;
+    if (!window.db) return;
+    window.db.collection("players").doc(id).delete()
+        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
+        .catch(err => { console.error(err); alert("❌ Error"); });
+};
+
 function setupAdminPanel() {
     const loginBtn = document.getElementById("loginBtn");
     const addPlayerBtn = document.getElementById("addPlayerBtn");
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
             const pw = document.getElementById("adminPassword").value;
-            if (pw === ADMIN_PASSWORD) {
+            if (pw === SUPER_ADMIN_PASSWORD) {
+                document.getElementById("passwordForm").style.display = "none";
+                const normalAdmin = document.getElementById("adminContent");
+                const superAdmin  = document.getElementById("superAdminContent");
+                if (normalAdmin) normalAdmin.style.display = "block";
+                if (superAdmin)  superAdmin.style.display  = "block";
+                loadPlayersTable();
+                loadSuperAdminPanel();
+            } else if (pw === ADMIN_PASSWORD) {
                 document.getElementById("passwordForm").style.display = "none";
                 document.getElementById("adminContent").style.display = "block";
                 loadPlayersTable();
-            } else alert("❌ Wrong password");
+            } else {
+                alert("❌ Wrong password");
+            }
         });
     }
     if (addPlayerBtn) {
@@ -506,7 +703,7 @@ function loadPlayersTable() {
 
 window.deletePlayer = function(id) {
     const pass = prompt("Admin password to delete:");
-    if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
     window.db.collection("players").doc(id).delete()
         .then(() => { alert("✅ Deleted"); loadPlayersTable(); })
@@ -515,7 +712,7 @@ window.deletePlayer = function(id) {
 
 function onDeleteMatchClick(docId) {
     const pass = prompt("Admin password to delete:");
-    if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
     window.db.collection("matches").doc(docId).delete()
         .then(() => alert("✅ Match deleted"))
