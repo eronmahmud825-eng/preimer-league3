@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Edit Table</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+body{background:#04080f;}
+.container{max-width:700px;padding:24px 14px 60px;}
+
+/* Gate */
+.gate{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:340px;margin:60px auto;text-align:center;}
+.gate h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.1em;color:#fff;margin-bottom:6px;}
+.gate p{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:#2d4a65;margin-bottom:20px;}
+.gate input{width:100%;padding:12px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1.2rem;font-family:inherit;text-align:center;letter-spacing:0.3em;outline:none;transition:border-color .2s;}
+.gate input:focus{border-color:#ffd600;}
+.gate-btn{margin-top:12px;width:100%;padding:12px;background:#ffd600;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.gate-btn:hover{background:#ffb300;}
+.gate-err{color:#ff5252;font-size:0.82rem;margin-top:10px;display:none;font-family:'Barlow Condensed',sans-serif;}
+
+/* Page header */
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,3rem);letter-spacing:0.1em;color:#ffd600;text-align:center;margin-bottom:6px;text-shadow:0 0 30px rgba(255,214,0,0.3);}
+.page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;color:#2d4a65;text-align:center;margin-bottom:24px;}
+
+/* Warning box */
+.warn-box{background:rgba(255,214,0,0.05);border:1px solid rgba(255,214,0,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.06em;color:rgba(255,214,0,0.6);line-height:1.5;}
+
+/* Team edit cards */
+.team-card{background:linear-gradient(135deg,#0d1620,#111e2e);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;transition:border-color .2s;}
+.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ffd600,transparent);opacity:0.3;}
+.team-card:hover{border-color:rgba(255,214,0,0.25);}
+.team-name-label{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.08em;color:#ffd600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.team-rank{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:rgba(255,214,0,0.6);}
+
+.fields-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:500px){.fields-grid{grid-template-columns:repeat(2,1fr);}}
+
+.field-wrap{}
+.field-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#2d4a65;margin-bottom:5px;display:block;}
+.field-input{width:100%;padding:9px 10px;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;outline:none;transition:border-color .2s;text-align:center;}
+.field-input:focus{border-color:#ffd600;}
+.field-input.pts{border-color:rgba(255,214,0,0.3);color:#ffd600;}
+.field-input.pts:focus{border-color:#ffd600;}
+
+/* Actions */
+.save-team-btn{width:100%;margin-top:12px;padding:10px;background:rgba(255,214,0,0.1);border:1.5px solid rgba(255,214,0,0.3);border-radius:10px;color:#ffd600;font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.save-team-btn:hover{background:rgba(255,214,0,0.15);border-color:#ffd600;}
+.save-team-btn.saved{background:rgba(0,200,83,0.1);border-color:rgba(0,200,83,0.4);color:#00c853;}
+
+.save-all-btn{width:100%;padding:14px;background:#ffd600;color:#000;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.1em;cursor:pointer;margin-top:8px;transition:all .2s;}
+.save-all-btn:hover{background:#ffb300;transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,214,0,0.3);}
+
+.back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#2d4a65!important;}
+.back-btn:hover{border-color:rgba(255,214,0,0.3)!important;color:rgba(255,214,0,0.6)!important;}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:999;background:#ffd600;color:#000;padding:10px 24px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;letter-spacing:0.06em;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.note{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.06em;color:#2d4a65;margin-top:6px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="gateWrap">
+  <div class="gate">
+    <h2>🔐 Secret Panel</h2>
+    <p>Enter admin code to edit table</p>
+    <input id="gateInput" type="password" placeholder="••••" maxlength="10" autocomplete="off"/>
+    <button class="gate-btn" onclick="checkGate()">Enter</button>
+    <div id="gateErr" class="gate-err">❌ Wrong password</div>
+  </div>
+</div>
+
+<!-- Edit Panel -->
+<div id="editPanel" style="display:none;">
+  <div class="container">
+    <div class="page-title">⚙️ Edit Table</div>
+    <div class="page-sub">Secret Admin — Direct Firebase Edit</div>
+
+    <div class="warn-box">
+      ⚠️ ئەم پەیجە ڕاستەوخۆ داتای Firebase دەگۆڕێت. تەنها ژمارەکان بگۆڕە — ناوی تیمەکان ناگۆڕدرێت.
+    </div>
+
+    <div id="teamCards">
+      <div style="text-align:center;padding:30px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;">Loading data...</div>
+    </div>
+
+    <button class="save-all-btn" onclick="saveAll()">💾 Save All Changes</button>
+
+    <div class="note" style="text-align:center;margin-top:10px;">
+      گۆڕانکاریەکان ڕاستەوخۆ لە Firestore تۆمار دەبن — پەیجی تەختەکە نوێبکەرەوە بۆ دیتنی گۆڕانکارییەکان
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+      <button class="back-btn" onclick="location.href='index.html'">⬅ گەڕانەوە</button>
+      <button class="back-btn" onclick="location.href='table.html'" style="margin-left:8px;border-color:rgba(0,200,83,0.3)!important;color:#00c853!important;">🏆 View Table</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+const SECRET_PASS = "9999";
+const TEAMS = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
+
+// Each team's editable fields
+const FIELDS = [
+    { key:"game",  label:"Games",  cls:"" },
+    { key:"win",   label:"Win",    cls:"" },
+    { key:"lose",  label:"Lose",   cls:"" },
+    { key:"draw",  label:"Draw",   cls:"" },
+    { key:"gf",    label:"GF",     cls:"" },
+    { key:"ga",    label:"GA",     cls:"" },
+    { key:"diff",  label:"Diff",   cls:"" },
+    { key:"point", label:"Points", cls:"pts" },
+];
+
+// In-memory state: { teamName: { game, win, lose, draw, gf, ga, diff, point, _docId } }
+let tableState = {};
+
+function checkGate() {
+    const val = document.getElementById("gateInput").value;
+    if (val === SECRET_PASS) {
+        document.getElementById("gateWrap").style.display = "none";
+        document.getElementById("editPanel").style.display = "block";
+        waitForDB(() => loadTableData());
+    } else {
+        document.getElementById("gateErr").style.display = "block";
+        document.getElementById("gateInput").value = "";
+    }
+}
+document.getElementById("gateInput").addEventListener("keydown", e => { if(e.key==="Enter") checkGate(); });
+
+function waitForDB(cb) {
+    let t = 0;
+    const iv = setInterval(() => {
+        t++;
+        if (window.db) { clearInterval(iv); cb(); }
+        else if (t > 60) { clearInterval(iv); showToast("❌ Firebase not ready"); }
+    }, 100);
+}
+
+// ── Load current table data from matches (compute live) + any manual overrides ──
+function loadTableData() {
+    if (!window.db) return;
+
+    // Load matches and compute real stats
+    window.db.collection("matches").get().then(snap => {
+        const matches = [];
+        snap.forEach(doc => matches.push(doc.data()));
+
+        // Compute from matches
+        const computed = {};
+        TEAMS.forEach(t => computed[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
+        matches.forEach(m => {
+            const h = computed[m.team1], a = computed[m.team2];
+            if (!h || !a) return;
+            const s1=Number(m.score1), s2=Number(m.score2);
+            h.game++; a.game++;
+            h.gf+=s1; h.ga+=s2; a.gf+=s2; a.ga+=s1;
+            if(s1>s2){h.win++;h.point+=3;a.lose++;}
+            else if(s2>s1){a.win++;a.point+=3;h.lose++;}
+            else{h.draw++;a.draw++;h.point++;a.point++;}
+        });
+        TEAMS.forEach(t => { if(computed[t]) computed[t].diff = computed[t].gf - computed[t].ga; });
+
+        // Check for manual overrides in tableOverrides collection
+        window.db.collection("tableOverrides").get().then(oSnap => {
+            const overrides = {};
+            oSnap.forEach(doc => { overrides[doc.data().team] = { ...doc.data(), _docId: doc.id }; });
+
+            // Merge: override takes priority if it exists
+            TEAMS.forEach(t => {
+                tableState[t] = { ...(computed[t] || {}), ...(overrides[t] || {}), _docId: overrides[t]?._docId || null };
+            });
+
+            renderCards();
+        }).catch(() => {
+            // No overrides yet — just use computed
+            TEAMS.forEach(t => { tableState[t] = { ...(computed[t]||{}), _docId: null }; });
+            renderCards();
+        });
+    }).catch(err => {
+        showToast("❌ Error loading: " + err.message);
+    });
+}
+
+function renderCards() {
+    const container = document.getElementById("teamCards");
+    container.innerHTML = "";
+
+    // Sort by points desc
+    const sorted = [...TEAMS].sort((a,b) => (tableState[b]?.point||0) - (tableState[a]?.point||0));
+
+    sorted.forEach((team, idx) => {
+        const d = tableState[team] || {};
+        const rankEmoji = ["🥇","🥈","🥉"][idx] || (idx+1);
+
+        const card = document.createElement("div");
+        card.className = "team-card";
+        card.id = "card-" + team.replace(/ /g,"_");
+
+        let fieldsHtml = FIELDS.map(f => `
+            <div class="field-wrap">
+                <label class="field-lbl">${f.label}</label>
+                <input class="field-input ${f.cls}" 
+                    type="number" 
+                    id="f_${team.replace(/ /g,'_')}_${f.key}" 
+                    value="${d[f.key] !== undefined ? d[f.key] : 0}"
+                    oninput="onFieldChange('${team}','${f.key}',this.value)"/>
+            </div>
+        `).join("");
+
+        card.innerHTML = `
+            <div class="team-name-label">
+                <span>${rankEmoji}</span>
+                <span>${team}</span>
+                <span class="team-rank">${d.point || 0} pts</span>
+            </div>
+            <div class="fields-grid">${fieldsHtml}</div>
+            <button class="save-team-btn" id="btn-${team.replace(/ /g,'_')}" onclick="saveTeam('${team}')">
+                💾 Save ${team}
+            </button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function onFieldChange(team, key, val) {
+    if (!tableState[team]) tableState[team] = {};
+    tableState[team][key] = Number(val) || 0;
+    // Auto-calc diff when gf/ga change
+    if (key === "gf" || key === "ga") {
+        const gf = tableState[team].gf || 0;
+        const ga = tableState[team].ga || 0;
+        tableState[team].diff = gf - ga;
+        const diffEl = document.getElementById(`f_${team.replace(/ /g,'_')}_diff`);
+        if (diffEl) diffEl.value = gf - ga;
+    }
+}
+
+function saveTeam(team) {
+    if (!window.db) { showToast("❌ DB not ready"); return; }
+    const data = tableState[team] || {};
+    const payload = {
+        team,
+        game:  Number(data.game)  || 0,
+        win:   Number(data.win)   || 0,
+        lose:  Number(data.lose)  || 0,
+        draw:  Number(data.draw)  || 0,
+        gf:    Number(data.gf)    || 0,
+        ga:    Number(data.ga)    || 0,
+        diff:  Number(data.diff)  || 0,
+        point: Number(data.point) || 0,
+        updatedAt: new Date().toISOString()
+    };
+
+    const btnId = "btn-" + team.replace(/ /g,"_");
+    const btn = document.getElementById(btnId);
+    if (btn) { btn.textContent = "⏳ Saving..."; btn.disabled = true; }
+
+    let promise;
+    if (data._docId) {
+        promise = window.db.collection("tableOverrides").doc(data._docId).set(payload);
+    } else {
+        promise = window.db.collection("tableOverrides").add(payload).then(ref => {
+            tableState[team]._docId = ref.id;
+        });
+    }
+
+    promise.then(() => {
+        showToast("✅ " + team + " saved!");
+        if (btn) { btn.className = "save-team-btn saved"; btn.textContent = "✅ Saved"; btn.disabled = false; }
+        // Update rank pill
+        const rankPill = document.querySelector("#card-" + team.replace(/ /g,"_") + " .team-rank");
+        if (rankPill) rankPill.textContent = payload.point + " pts";
+    }).catch(err => {
+        showToast("❌ Error: " + err.message);
+        if (btn) { btn.textContent = "💾 Save " + team; btn.disabled = false; }
+    });
+}
+
+function saveAll() {
+    TEAMS.forEach(t => saveTeam(t));
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast show";
+    setTimeout(() => t.className = "toast", 2800);
+}
+</script>
+</body>
+</html>
