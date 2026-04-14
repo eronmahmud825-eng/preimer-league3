@@ -1,41 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History Game</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>History</title>
+    <link rel="stylesheet" href="style.css"/>
 </head>
-
 <body>
     <div class="container">
-        <h1 class="title">History Game</h1>
-        <div class="card table-card">
+        <h1 class="title">📜 Match History</h1>
+        <div class="table-card">
             <div class="table-container">
-                <table id="historyTable" aria-label="Match history">
+                <table id="historyTable">
                     <thead>
                         <tr>
+                            <th>GW</th>
                             <th>Date</th>
                             <th>Match</th>
                             <th>Score</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody><tr><td colspan="5" style="text-align:center;color:#4d6a85;padding:20px;">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
         <div class="btn-row">
             <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
         </div>
-        <p class="muted">Admin can delete matches (password required).</p>
     </div>
-
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
     <script src="script.js"></script>
 </body>
-
 </html>
