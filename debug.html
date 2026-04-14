@@ -1,1 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Debug — Firebase Check</title>
+    <style>
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family: monospace; background:#04080f; color:#e0f0ff; padding:20px; }
+        h1 { color:#00c853; font-size:1.4rem; margin-bottom:20px; }
+        .item { padding:10px 14px; border-radius:8px; margin-bottom:8px; font-size:0.85rem; }
+        .ok  { background:rgba(0,200,83,0.1); border:1px solid rgba(0,200,83,0.3); color:#00c853; }
+        .err { background:rgba(255,68,68,0.1); border:1px solid rgba(255,68,68,0.3); color:#ff5252; }
+        .info{ background:rgba(30,136,229,0.1); border:1px solid rgba(30,136,229,0.3); color:#64b5f6; }
+        .warn{ background:rgba(255,193,7,0.1); border:1px solid rgba(255,193,7,0.3); color:#ffd600; }
+        #log { margin-top:10px; }
+        .data-section { margin-top:20px; }
+        .data-section h3 { color:#ffd600; font-size:0.9rem; margin-bottom:8px; }
+        .data-row { padding:6px 10px; border-bottom:1px solid #1e3048; font-size:0.78rem; color:#8ab4cc; }
+        pre { background:#0a1520; border:1px solid #1e3048; border-radius:8px; padding:14px; font-size:0.75rem; color:#8ab4cc; overflow-x:auto; margin-top:8px; white-space:pre-wrap; word-break:break-all; }
+        .btn { display:inline-block; padding:8px 18px; background:#00c853; color:#000; border:none; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:700; margin:4px; font-family:monospace; }
+        .btn:hover { background:#00a844; }
+        .btn.red { background:#c62828; color:#fff; }
+    </style>
+</head>
+<body>
+<h1>🔍 Firebase Debug Page</h1>
+<div id="log"></div>
 
+<div style="margin-top:16px;">
+    <button class="btn" onclick="testRead()">📖 Test Read Matches</button>
+    <button class="btn" onclick="testWrite()">✍️ Test Write</button>
+    <button class="btn" onclick="showConfig()">⚙️ Show Config</button>
+    <button class="btn red" onclick="location.href='index.html'">⬅ Back</button>
+</div>
+
+<div class="data-section" id="dataSection"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+function log(msg, type="info") {
+    const d = document.createElement("div");
+    d.className = "item " + type;
+    d.textContent = new Date().toLocaleTimeString() + " — " + msg;
+    document.getElementById("log").appendChild(d);
+}
+
+function showConfig() {
+    try {
+        const app = firebase.app();
+        const config = app.options;
+        const section = document.getElementById("dataSection");
+        section.innerHTML = `<h3>⚙️ Firebase Config</h3><pre>${JSON.stringify({
+            projectId: config.projectId,
+            authDomain: config.authDomain,
+            apiKey: config.apiKey ? config.apiKey.substring(0,8)+"..." : "MISSING",
+            appId: config.appId ? "✅ set" : "MISSING"
+        }, null, 2)}</pre>`;
+        if (!config.projectId || config.projectId === "YOUR_PROJECT_ID") {
+            log("❌ firebase.js has placeholder values! Replace with your real config.", "err");
+        } else {
+            log("✅ Config looks real: " + config.projectId, "ok");
+        }
+    } catch(e) {
+        log("❌ Cannot read config: " + e.message, "err");
+    }
+}
+
+function testRead() {
+    if (!window.db) { log("❌ window.db is undefined! firebase.js not loaded correctly.", "err"); return; }
+    log("Reading matches collection...", "info");
+    window.db.collection("matches").get()
+        .then(snap => {
+            if (snap.empty) {
+                log("⚠️ matches collection is EMPTY — no data saved yet", "warn");
+            } else {
+                log("✅ Found " + snap.size + " matches in Firebase!", "ok");
+                const section = document.getElementById("dataSection");
+                let html = "<h3>📋 Matches in Firebase (" + snap.size + " total)</h3>";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    html += `<div class="data-row">GW${d.gameNumber} | ${d.team1} ${d.score1}-${d.score2} ${d.team2} | ${d.date}</div>`;
+                });
+                section.innerHTML = html;
+            }
+        })
+        .catch(err => {
+            log("❌ Read failed: " + err.code + " — " + err.message, "err");
+            if (err.code === "permission-denied") {
+                log("🔐 Firestore rules blocking read. Go to Firebase Console → Firestore → Rules", "err");
+            }
+            if (err.code === "unavailable") {
+                log("🌐 Network error — check internet connection", "err");
+            }
+        });
+
+    // Also check other collections
+    ["players","playerSuspensions","playerInjuries","bets"].forEach(col => {
+        window.db.collection(col).get()
+            .then(snap => log("✅ " + col + ": " + snap.size + " docs", snap.size > 0 ? "ok" : "warn"))
+            .catch(err => log("❌ " + col + ": " + err.message, "err"));
+    });
+}
+
+function testWrite() {
+    if (!window.db) { log("❌ window.db undefined", "err"); return; }
+    window.db.collection("_test").add({ test: true, ts: new Date().toISOString() })
+        .then(ref => {
+            log("✅ Write successful! Doc ID: " + ref.id, "ok");
+            return window.db.collection("_test").doc(ref.id).delete();
+        })
+        .then(() => log("✅ Delete successful — Firestore read/write working!", "ok"))
+        .catch(err => {
+            log("❌ Write failed: " + err.code + " — " + err.message, "err");
+            if (err.code === "permission-denied") {
+                log("🔐 Fix Firestore Rules: Firebase Console → Firestore → Rules → allow read, write: if true;", "err");
+            }
+        });
+}
+
+// Auto run on load
+window.addEventListener("load", () => {
+    log("Page loaded", "info");
+    if (typeof firebase === "undefined") {
+        log("❌ Firebase SDK not loaded!", "err");
+    } else {
+        log("✅ Firebase SDK loaded", "ok");
+    }
+    if (!window.db) {
+        log("❌ window.db is undefined — firebase.js problem!", "err");
+        log("Check: does firebase.js have window.db = firebase.firestore() ?", "warn");
+    } else {
+        log("✅ window.db is ready", "ok");
+        showConfig();
+        testRead();
+    }
+});
+</script>
+</body>
+</html>
