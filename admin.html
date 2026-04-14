@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+        #superAdminContent { display: none; }
+        .sa-section {
+            background: linear-gradient(135deg,#0a1420,#0d1828);
+            border: 1px solid #1e3048;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .sa-section h3 {
+            margin-top: 0;
+            color: #ffd600;
+            font-size: 1rem;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid #1e3048;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        .sa-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            color: #c8d8e8;
+        }
+        .sa-table th {
+            background: #0d1e30;
+            color: #4d9fdb;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 0.78rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+        .sa-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #0d1e30;
+            vertical-align: middle;
+        }
+        .sa-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .super-badge {
+            display: inline-block;
+            background: linear-gradient(90deg,#ffd600,#ff6f00);
+            color: #000;
+            font-weight: 800;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -24,9 +76,8 @@
             </div>
         </div>
 
-        <!-- Admin Content -->
+        <!-- Normal Admin Content -->
         <div id="adminContent" style="display:none;">
-
             <!-- Add Player -->
             <div class="form-card">
                 <h3>➕ Add Player</h3>
@@ -36,7 +87,7 @@
                             <option value="">Select Team</option>
                             <option value="PARISANT GERMAN">PARISANT GERMAN</option>
                             <option value="LIVERPOOL">LIVERPOOL</option>
-                            <option value="BAYER MUNICH">BAYER MUNICH</option>
+                            <option value="BARCELONA">BARCELONA</option>
                         </select>
                     </label>
                     <label>Player Name
@@ -47,7 +98,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Players Table -->
             <div class="table-card">
                 <div class="table-container">
@@ -65,11 +115,109 @@
                     </table>
                 </div>
             </div>
+            <div class="btn-row">
+                <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
+            </div>
+        </div>
+
+        <!-- ======= SUPER ADMIN CONTENT (password: 9999) ======= -->
+        <div id="superAdminContent">
+            <div style="background:linear-gradient(90deg,rgba(255,214,0,0.1),rgba(255,111,0,0.08));border:1px solid rgba(255,214,0,0.25);border-radius:12px;padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+                <span style="font-size:1.3rem;">👑</span>
+                <div>
+                    <div style="color:#ffd600;font-weight:700;font-size:0.95rem;letter-spacing:0.04em;">Super Admin Mode <span class="super-badge">9999</span></div>
+                    <div style="color:#7a9ab8;font-size:0.78rem;margin-top:2px;">Full access — edit and delete any record in the database</div>
+                </div>
+            </div>
+
+            <!-- ── Edit Matches ── -->
+            <div class="sa-section">
+                <h3>⚽ Edit Matches</h3>
+                <div style="overflow-x:auto;">
+                    <table class="sa-table" id="saMatchesTable">
+                        <thead>
+                            <tr>
+                                <th>GW</th>
+                                <th>Match</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" style="text-align:center;color:#4d6a85;padding:16px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Edit Suspensions ── -->
+            <div class="sa-section">
+                <h3>🟡 Edit Suspensions / Cards</h3>
+                <div style="overflow-x:auto;">
+                    <table class="sa-table" id="saSuspTable">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Player</th>
+                                <th>🟡 Yellows</th>
+                                <th>Yellow Ban Left</th>
+                                <th>Red Ban Left</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="6" style="text-align:center;color:#4d6a85;padding:16px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Edit Injuries ── -->
+            <div class="sa-section">
+                <h3>🏥 Edit Injuries</h3>
+                <div style="overflow-x:auto;">
+                    <table class="sa-table" id="saInjTable">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Player</th>
+                                <th>Games Left</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="4" style="text-align:center;color:#4d6a85;padding:16px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Edit Players ── -->
+            <div class="sa-section">
+                <h3>👤 Edit Players</h3>
+                <div style="overflow-x:auto;">
+                    <table class="sa-table" id="saPlayersTable">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Player Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="3" style="text-align:center;color:#4d6a85;padding:16px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             <div class="btn-row">
                 <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
             </div>
         </div>
+        <!-- ======= END SUPER ADMIN ======= -->
+
     </div>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
