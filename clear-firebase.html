@@ -28,7 +28,7 @@
         <div class="warn-box">
             <h2>⚠️ DANGER ZONE</h2>
             <p>This will permanently delete <strong>ALL</strong> data from Firebase:<br/>
-            matches · players · suspensions · injuries · cards<br/>
+            matches · players · suspensions · injuries · reports<br/>
             <strong>This cannot be undone!</strong></p>
         </div>
 
@@ -55,23 +55,28 @@
         </div>
     </div>
 
-    <!-- Firebase MUST load first -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
 
     <script>
+        // MUST match the password in script.js
         const ADMIN_PASSWORD = "123321";
+        const SUPER_ADMIN_PASSWORD = "9999";
 
         function checkReady() {
             const pass = document.getElementById("adminPass").value;
             const confirm = document.getElementById("confirmText").value.trim();
-            document.getElementById("clearBtn").disabled = !(pass === ADMIN_PASSWORD && confirm === "DELETE ALL");
+            // Allow both admin and super admin passwords
+            const validPass = (pass === ADMIN_PASSWORD || pass === SUPER_ADMIN_PASSWORD);
+            document.getElementById("clearBtn").disabled = !(validPass && confirm === "DELETE ALL");
         }
+        
         document.getElementById("adminPass").addEventListener("input", checkReady);
         document.getElementById("confirmText").addEventListener("input", checkReady);
 
-        function addLog(msg, type = "info") {
+        function addLog(msg, type) {
+            type = type || "info";
             document.getElementById("logCard").style.display = "block";
             const div = document.createElement("div");
             div.className = "status-line " + type;
@@ -85,83 +90,113 @@
             document.getElementById("progressFill").style.width = pct + "%";
         }
 
-        // Wait until db is available before allowing clear
         function getDB() {
-            return new Promise((resolve, reject) => {
+            return new Promise(function(resolve, reject) {
                 let attempts = 0;
-                const check = setInterval(() => {
+                const check = setInterval(function() {
                     attempts++;
-                    if (window.db) { clearInterval(check); resolve(window.db); }
-                    else if (attempts > 30) { clearInterval(check); reject(new Error("Firebase did not initialize. Check your firebase.js file.")); }
+                    if (window.db) { 
+                        clearInterval(check); 
+                        resolve(window.db); 
+                    }
+                    else if (attempts > 50) { 
+                        clearInterval(check); 
+                        reject(new Error("Firebase did not initialize. Check your firebase.js file.")); 
+                    }
                 }, 100);
             });
         }
 
-        async function deleteCollection(db, colName) {
-            addLog("Deleting '" + colName + "'...", "info");
-            try {
-                const snap = await db.collection(colName).get();
+        function deleteCollection(db, colName) {
+            return db.collection(colName).get().then(function(snap) {
                 if (snap.empty) {
                     addLog("  → '" + colName + "' is already empty ✓", "ok");
-                    return;
+                    return 0;
                 }
-                // Delete in batches of 400
+                
                 const docs = snap.docs;
                 let deleted = 0;
-                while (deleted < docs.length) {
+                
+                // Delete in batches of 400
+                function deleteBatch() {
+                    if (deleted >= docs.length) {
+                        addLog("  → '" + colName + "': deleted " + docs.length + " record(s) ✓", "ok");
+                        return Promise.resolve(docs.length);
+                    }
+                    
                     const batch = db.batch();
                     const chunk = docs.slice(deleted, deleted + 400);
-                    chunk.forEach(doc => batch.delete(doc.ref));
-                    await batch.commit();
-                    deleted += chunk.length;
+                    chunk.forEach(function(doc) {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    return batch.commit().then(function() {
+                        deleted += chunk.length;
+                        return deleteBatch();
+                    });
                 }
-                addLog("  → '" + colName + "': deleted " + docs.length + " record(s) ✓", "ok");
-            } catch (err) {
+                
+                return deleteBatch();
+            }).catch(function(err) {
                 addLog("  → '" + colName + "' error: " + err.message, "err");
-            }
+                return 0;
+            });
         }
 
-        document.getElementById("clearBtn").addEventListener("click", async () => {
+        document.getElementById("clearBtn").addEventListener("click", function() {
             const btn = document.getElementById("clearBtn");
             btn.disabled = true;
             btn.textContent = "⏳ Clearing...";
             setProgress(5);
 
-            try {
-                addLog("🔌 Connecting to Firebase...", "info");
-                const db = await getDB();
-                addLog("✅ Firebase connected", "ok");
+            getDB().then(function(db) {
+                addLog("🔌 Firebase connected", "ok");
                 setProgress(10);
 
-                const collections = [
+                var collections = [
                     "matches",
                     "players",
                     "playerSuspensions",
                     "playerInjuries",
+                    "matchReports",
+                    "tableOverrides",
                     "cards",
                     "cardWarnings"
                 ];
 
-                for (let i = 0; i < collections.length; i++) {
-                    await deleteCollection(db, collections[i]);
-                    setProgress(10 + Math.round((i + 1) / collections.length * 88));
+                var index = 0;
+                
+                function processNext() {
+                    if (index >= collections.length) {
+                        setProgress(100);
+                        addLog("", "info");
+                        addLog("🎉 ALL DATA CLEARED SUCCESSFULLY!", "ok");
+                        addLog("Your database is now completely empty.", "ok");
+                        addLog("Go to Admin to add new players.", "ok");
+                        btn.textContent = "✅ Done!";
+                        btn.style.background = "#00c853";
+                        btn.style.color = "#000";
+                        return;
+                    }
+                    
+                    var colName = collections[index];
+                    addLog("Deleting '" + colName + "'...", "info");
+                    
+                    return deleteCollection(db, colName).then(function() {
+                        setProgress(10 + Math.round((index + 1) / collections.length * 88));
+                        index++;
+                        return processNext();
+                    });
                 }
-
-                setProgress(100);
-                addLog("", "info");
-                addLog("🎉 ALL DATA CLEARED SUCCESSFULLY!", "ok");
-                addLog("Your database is now completely empty.", "ok");
-                addLog("Go to Admin to add new players for SPAIN, GERMANY, FRANCE.", "ok");
-                btn.textContent = "✅ Done!";
-                btn.style.background = "#00c853";
-                btn.style.color = "#000";
-
-            } catch (err) {
+                
+                return processNext();
+                
+            }).catch(function(err) {
                 addLog("❌ " + err.message, "err");
                 console.error(err);
                 btn.disabled = false;
                 btn.textContent = "🗑️ Retry";
-            }
+            });
         });
     </script>
 </body>
