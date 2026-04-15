@@ -1,43 +1,89 @@
-// script.js - With Injury system (3 team matches, auto countdown like red card)
+// script.js - Fixed version with proper gameNumber and clean listeners
 const ADMIN_PASSWORD = "123321";
 const SUPER_ADMIN_PASSWORD = "9999";
 const teamsList = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
 
 function docToMatch(doc) {
     const d = doc.data();
-    return { id: doc.id, team1: d.team1, team2: d.team2, score1: Number(d.score1), score2: Number(d.score2), date: d.date || "", gameNumber: Number(d.gameNumber) || 0, savedAt: d.savedAt || "" };
+    return { 
+        id: doc.id, 
+        team1: d.team1, 
+        team2: d.team2, 
+        score1: Number(d.score1), 
+        score2: Number(d.score2), 
+        date: d.date || "", 
+        gameNumber: Number(d.gameNumber) || 0, 
+        savedAt: d.savedAt || "" 
+    };
 }
+
 function docToSuspension(doc) {
     const d = doc.data();
-    return { id: doc.id, team: d.team, player: d.player, activeYellows: Number(d.activeYellows)||0, yellowBanLeft: Number(d.yellowBanLeft)||0, redBanLeft: Number(d.redBanLeft)||0 };
+    return { 
+        id: doc.id, 
+        team: d.team, 
+        player: d.player, 
+        activeYellows: Number(d.activeYellows)||0, 
+        yellowBanLeft: Number(d.yellowBanLeft)||0, 
+        redBanLeft: Number(d.redBanLeft)||0 
+    };
 }
+
 function docToInjury(doc) {
     const d = doc.data();
-    return { id: doc.id, team: d.team, player: d.player, injuryGamesLeft: Number(d.injuryGamesLeft)||0 };
+    return { 
+        id: doc.id, 
+        team: d.team, 
+        player: d.player, 
+        injuryGamesLeft: Number(d.injuryGamesLeft)||0 
+    };
 }
 
 function applyMatchToTeams(match, teams) {
-    const a = teams.find(t => t.name === match.team1), b = teams.find(t => t.name === match.team2);
+    const a = teams.find(t => t.name === match.team1);
+    const b = teams.find(t => t.name === match.team2);
     if (!a || !b) return;
-    a.game++; b.game++; a.gf += match.score1; a.ga += match.score2; b.gf += match.score2; b.ga += match.score1;
-    if (match.score1 > match.score2) { a.win++; b.lose++; } else if (match.score1 < match.score2) { b.win++; a.lose++; } else { a.draw++; b.draw++; }
+    
+    // Only apply if this is a valid match with a game number
+    if (!match.gameNumber || match.gameNumber <= 0) return;
+    
+    a.game++; 
+    b.game++; 
+    a.gf += match.score1; 
+    a.ga += match.score2; 
+    b.gf += match.score2; 
+    b.ga += match.score1;
+    
+    if (match.score1 > match.score2) { 
+        a.win++; 
+        b.lose++; 
+    } else if (match.score1 < match.score2) { 
+        b.win++; 
+        a.lose++; 
+    } else { 
+        a.draw++; 
+        b.draw++; 
+    }
 }
 
-// ─── Global state ─────────────────────────────────────────────
+// Global state
 window._tableOverrides = {};
-window._lastMatches    = [];
-window._matchesReady   = false; // NEW: flag so override listener knows if matches loaded
+window._lastMatches = [];
+window._matchesReady = false;
 
-// ─── Compute teams, then apply any manual overrides ───────────
 function computeTeamsFromMatches(matches) {
-    const teams = teamsList.map(name => ({ name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0 }));
-    matches.forEach(m => applyMatchToTeams(m, teams));
+    const teams = teamsList.map(name => ({ 
+        name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0 
+    }));
+    
+    // Only process matches with valid game numbers
+    const validMatches = matches.filter(m => m.gameNumber > 0);
+    validMatches.forEach(m => applyMatchToTeams(m, teams));
+    
     teams.forEach(t => {
-        t.diff  = t.gf - t.ga;
+        t.diff = t.gf - t.ga;
         t.point = t.win * 3 + t.draw;
 
-        // ── OVERRIDE: if a saved override exists for this team, replace ALL stats ──
-        // Try both key formats: with spaces and with underscores
         const ov = window._tableOverrides[t.name] || window._tableOverrides[t.name.replace(/ /g, "_")];
         if (ov) {
             if (ov.game  !== undefined) t.game  = Number(ov.game);
@@ -50,6 +96,7 @@ function computeTeamsFromMatches(matches) {
             if (ov.point !== undefined) t.point = Number(ov.point);
         }
     });
+    
     teams.sort((x, y) =>
         y.point !== x.point ? y.point - x.point :
         y.diff  !== x.diff  ? y.diff  - x.diff  :
@@ -58,76 +105,110 @@ function computeTeamsFromMatches(matches) {
     return teams;
 }
 
-function getTotalMatchCount(matches) {
+function getNextGameNumber(matches) {
     const nums = matches.map(m => m.gameNumber).filter(n => n > 0);
-    return nums.length > 0 ? Math.max(...nums) : matches.length;
+    return nums.length > 0 ? Math.max(...nums) + 1 : 1;
 }
 
 function decrementBansForMatch(team1, team2) {
     if (!window.db) return Promise.resolve();
-    const suspPromise = window.db.collection("playerSuspensions").where("team","in",[team1,team2]).get().then(snap => {
-        const batch = window.db.batch(); let changed = false;
-        snap.forEach(doc => {
-            const d = doc.data();
-            let yellowBanLeft = Number(d.yellowBanLeft)||0, redBanLeft = Number(d.redBanLeft)||0, activeYellows = Number(d.activeYellows)||0, updated = false;
-            if (redBanLeft > 0) { redBanLeft--; updated = true; if (redBanLeft === 0) activeYellows = 0; }
-            else if (yellowBanLeft > 0) { yellowBanLeft--; updated = true; if (yellowBanLeft === 0) activeYellows = 0; }
-            if (updated) { batch.update(doc.ref, { yellowBanLeft, redBanLeft, activeYellows }); changed = true; }
+    
+    const suspPromise = window.db.collection("playerSuspensions")
+        .where("team", "in", [team1, team2]).get()
+        .then(snap => {
+            if (snap.empty) return Promise.resolve();
+            const batch = window.db.batch();
+            snap.forEach(doc => {
+                const d = doc.data();
+                let yellowBanLeft = Number(d.yellowBanLeft)||0;
+                let redBanLeft = Number(d.redBanLeft)||0;
+                let activeYellows = Number(d.activeYellows)||0;
+                let updated = false;
+                
+                if (redBanLeft > 0) {
+                    redBanLeft--;
+                    updated = true;
+                    if (redBanLeft === 0) activeYellows = 0;
+                } else if (yellowBanLeft > 0) {
+                    yellowBanLeft--;
+                    updated = true;
+                    if (yellowBanLeft === 0) activeYellows = 0;
+                }
+                
+                if (updated) {
+                    batch.update(doc.ref, { yellowBanLeft, redBanLeft, activeYellows });
+                }
+            });
+            return batch.commit();
         });
-        return changed ? batch.commit() : Promise.resolve();
-    });
-    const injuryPromise = window.db.collection("playerInjuries").where("team","in",[team1,team2]).get().then(snap => {
-        const batch = window.db.batch(); let changed = false;
-        snap.forEach(doc => {
-            let injuryGamesLeft = Number(doc.data().injuryGamesLeft)||0;
-            if (injuryGamesLeft > 0) { injuryGamesLeft--; batch.update(doc.ref, { injuryGamesLeft }); changed = true; }
+
+    const injuryPromise = window.db.collection("playerInjuries")
+        .where("team", "in", [team1, team2]).get()
+        .then(snap => {
+            if (snap.empty) return Promise.resolve();
+            const batch = window.db.batch();
+            snap.forEach(doc => {
+                let injuryGamesLeft = Number(doc.data().injuryGamesLeft)||0;
+                if (injuryGamesLeft > 0) {
+                    injuryGamesLeft--;
+                    batch.update(doc.ref, { injuryGamesLeft });
+                }
+            });
+            return batch.commit();
         });
-        return changed ? batch.commit() : Promise.resolve();
-    });
+
     return Promise.all([suspPromise, injuryPromise]);
 }
 
-/* ---------- Form dots ---------- */
 function getForm(teamName, matches) {
     const teamMatches = matches
         .filter(m => m.team1 === teamName || m.team2 === teamName)
+        .filter(m => m.gameNumber > 0)
         .sort((a, b) => (b.gameNumber || 0) - (a.gameNumber || 0))
-        .slice(0, 5).reverse();
+        .slice(0, 5)
+        .reverse();
+    
     return teamMatches.map(m => {
         const isHome = m.team1 === teamName;
         const s1 = Number(m.score1), s2 = Number(m.score2);
         const gf = isHome ? s1 : s2, ga = isHome ? s2 : s1;
-        if (gf > ga) return 'W'; if (gf < ga) return 'L'; return 'D';
+        if (gf > ga) return 'W';
+        if (gf < ga) return 'L';
+        return 'D';
     });
 }
+
 function formDot(r) {
     const colors = { W: '#00e676', D: '#ffd600', L: '#ff5252' };
-    const bg     = { W: 'rgba(0,230,118,0.15)', D: 'rgba(255,214,0,0.15)', L: 'rgba(255,82,82,0.15)' };
+    const bg = { W: 'rgba(0,230,118,0.15)', D: 'rgba(255,214,0,0.15)', L: 'rgba(255,82,82,0.15)' };
     return '<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:' + bg[r] + ';border:1.5px solid ' + colors[r] + ';color:' + colors[r] + ';font-size:0.6rem;font-weight:700;">' + r + '</span>';
 }
 
-/* ---------- Render league table ---------- */
 function renderLeagueTable(matches) {
     const tbody = document.querySelector("#leagueTable tbody");
     if (!tbody) return;
+    
     tbody.innerHTML = "";
-    computeTeamsFromMatches(matches).forEach((t, idx) => {
+    const teams = computeTeamsFromMatches(matches);
+    
+    teams.forEach((t, idx) => {
         const form = getForm(t.name, matches);
         const formHtml = form.length > 0
             ? form.map(r => formDot(r)).join('')
             : '<span style="color:#2d4a65;font-size:0.7rem;">-</span>';
+        
         const tr = document.createElement("tr");
         tr.innerHTML =
-            '<td data-label="Rank"><span class="value">'  + (idx+1)  + '</span></td>' +
-            '<td data-label="Team"><span class="value">'  + t.name   + '</span></td>' +
-            '<td data-label="Game"><span class="value">'  + t.game   + '</span></td>' +
-            '<td data-label="Win"><span class="value">'   + t.win    + '</span></td>' +
-            '<td data-label="Lose"><span class="value">'  + t.lose   + '</span></td>' +
-            '<td data-label="Draw"><span class="value">'  + t.draw   + '</span></td>' +
-            '<td data-label="GA"><span class="value">'    + t.ga     + '</span></td>' +
-            '<td data-label="GF"><span class="value">'    + t.gf     + '</span></td>' +
-            '<td data-label="Diff"><span class="value">'  + t.diff   + '</span></td>' +
-            '<td data-label="Point"><span class="value">' + t.point  + '</span></td>' +
+            '<td data-label="Rank"><span class="value">' + (idx+1) + '</span></td>' +
+            '<td data-label="Team"><span class="value">' + t.name + '</span></td>' +
+            '<td data-label="Game"><span class="value">' + t.game + '</span></td>' +
+            '<td data-label="Win"><span class="value">' + t.win + '</span></td>' +
+            '<td data-label="Lose"><span class="value">' + t.lose + '</span></td>' +
+            '<td data-label="Draw"><span class="value">' + t.draw + '</span></td>' +
+            '<td data-label="GA"><span class="value">' + t.ga + '</span></td>' +
+            '<td data-label="GF"><span class="value">' + t.gf + '</span></td>' +
+            '<td data-label="Diff"><span class="value">' + t.diff + '</span></td>' +
+            '<td data-label="Point"><span class="value">' + t.point + '</span></td>' +
             '<td data-label="Form"><span class="value" style="display:inline-flex;gap:3px;align-items:center;">' + formHtml + '</span></td>';
         tbody.appendChild(tr);
     });
@@ -136,17 +217,21 @@ function renderLeagueTable(matches) {
 function renderHistoryList(matches) {
     const tbody = document.querySelector("#historyTable tbody");
     if (!tbody) return;
+    
     tbody.innerHTML = "";
-    matches.slice().reverse().forEach(m => {
+    const validMatches = matches.filter(m => m.gameNumber > 0).slice().reverse();
+    
+    validMatches.forEach(m => {
         const tr = document.createElement("tr");
         tr.innerHTML =
-            '<td data-label="GW"><span class="value">GW' + (m.gameNumber||'-') + '</span></td>' +
-            '<td data-label="Date"><span class="value">'  + m.date + '</span></td>' +
+            '<td data-label="GW"><span class="value">GW' + m.gameNumber + '</span></td>' +
+            '<td data-label="Date"><span class="value">' + m.date + '</span></td>' +
             '<td data-label="Match"><span class="value">' + m.team1 + ' vs ' + m.team2 + '</span></td>' +
             '<td data-label="Score"><span class="value">' + m.score1 + '-' + m.score2 + '</span></td>' +
             '<td data-label="Action"><span class="value"><button class="delete-btn" data-id="' + m.id + '">Delete</button></span></td>';
         tbody.appendChild(tr);
     });
+    
     tbody.querySelectorAll(".delete-btn").forEach(btn =>
         btn.addEventListener("click", () => onDeleteMatchClick(btn.getAttribute("data-id")))
     );
@@ -155,35 +240,42 @@ function renderHistoryList(matches) {
 function renderCardTable(suspensions) {
     const tbody = document.querySelector("#cardTable tbody");
     if (!tbody) return;
+    
     tbody.innerHTML = "";
     if (suspensions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No card warnings yet</td></tr>';
         return;
     }
+    
     suspensions.forEach(susp => {
-        const isBannedRed    = susp.redBanLeft > 0;
+        const isBannedRed = susp.redBanLeft > 0;
         const isBannedYellow = susp.yellowBanLeft > 0;
         let badge = "";
-        if (isBannedRed)         badge = '<span style="background:#c0392b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">BANNED ' + susp.redBanLeft    + ' left</span>';
+        
+        if (isBannedRed) badge = '<span style="background:#c0392b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">BANNED ' + susp.redBanLeft + ' left</span>';
         else if (isBannedYellow) badge = '<span style="background:#b8860b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">BANNED ' + susp.yellowBanLeft + ' left</span>';
         else if (susp.activeYellows === 2) badge = '<span style="background:#5a4200;color:#ffe;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">1 more = ban</span>';
-        const banLeft     = isBannedRed ? susp.redBanLeft + ' match(es)' : isBannedYellow ? susp.yellowBanLeft + ' match' : 'Eligible';
+        
+        const banLeft = isBannedRed ? susp.redBanLeft + ' match(es)' : isBannedYellow ? susp.yellowBanLeft + ' match' : 'Eligible';
         const yellowStyle = susp.activeYellows >= 3 ? 'color:#f1c40f;font-weight:bold;' : '';
+        
         const tr = document.createElement("tr");
         tr.innerHTML =
-            '<td data-label="Team"><span class="value">'    + susp.team   + '</span></td>' +
-            '<td data-label="Player"><span class="value">'  + susp.player + badge + '</span></td>' +
+            '<td data-label="Team"><span class="value">' + susp.team + '</span></td>' +
+            '<td data-label="Player"><span class="value">' + susp.player + badge + '</span></td>' +
             '<td data-label="Yellows"><span class="value" style="' + yellowStyle + '">' + susp.activeYellows + '</span></td>' +
             '<td data-label="Ban Left"><span class="value">' + banLeft + '</span></td>' +
             '<td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="' + susp.id + '">Edit</button> <button class="delete-btn" data-id="' + susp.id + '" data-player="' + susp.player + '">Delete</button></td>';
         tbody.appendChild(tr);
     });
+    
     tbody.querySelectorAll(".edit-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             const susp = suspensions.find(s => s.id === btn.getAttribute("data-id"));
             if (susp) openEditSuspensionModal(susp);
         });
     });
+    
     tbody.querySelectorAll(".delete-btn").forEach(btn =>
         btn.addEventListener("click", () => deleteSuspension(btn.getAttribute("data-id"), btn.getAttribute("data-player")))
     );
@@ -192,39 +284,45 @@ function renderCardTable(suspensions) {
 function renderInjuryTable(injuries) {
     const tbody = document.querySelector("#injuryTable tbody");
     if (!tbody) return;
+    
     tbody.innerHTML = "";
     if (injuries.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No injuries recorded</td></tr>';
         return;
     }
+    
     injuries.filter(i => i.injuryGamesLeft > 0).forEach(inj => {
-        const isHard    = inj.injuryGamesLeft > 1;
+        const isHard = inj.injuryGamesLeft > 1;
         const typeBadge = isHard
             ? '<span style="background:#c0392b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">HARD</span>'
             : '<span style="background:#b8860b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">EASY</span>';
+        
         const tr = document.createElement("tr");
         tr.innerHTML =
-            '<td data-label="Team"><span class="value">'    + inj.team   + '</span></td>' +
-            '<td data-label="Player"><span class="value">'  + inj.player + ' <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">INJURED</span>' + typeBadge + '</span></td>' +
+            '<td data-label="Team"><span class="value">' + inj.team + '</span></td>' +
+            '<td data-label="Player"><span class="value">' + inj.player + ' <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">INJURED</span>' + typeBadge + '</span></td>' +
             '<td data-label="Games Left"><span class="value" style="color:#e67e22;font-weight:bold;">' + inj.injuryGamesLeft + '</span></td>' +
             '<td data-label="Status"><span class="value" style="color:#e74c3c;">Not Available</span></td>' +
             '<td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="' + inj.id + '" data-player="' + inj.player + '" data-games="' + inj.injuryGamesLeft + '">Edit</button> <button class="delete-btn" data-id="' + inj.id + '" data-player="' + inj.player + '">Delete</button></td>';
         tbody.appendChild(tr);
     });
+    
     injuries.filter(i => i.injuryGamesLeft === 0).forEach(inj => {
         const tr = document.createElement("tr");
         tr.style.opacity = "0.5";
         tr.innerHTML =
-            '<td data-label="Team"><span class="value">'   + inj.team   + '</span></td>' +
+            '<td data-label="Team"><span class="value">' + inj.team + '</span></td>' +
             '<td data-label="Player"><span class="value">' + inj.player + '</span></td>' +
             '<td data-label="Games Left"><span class="value">0</span></td>' +
             '<td data-label="Status"><span class="value" style="color:#2ecc71;">Recovered</span></td>' +
             '<td data-label="Actions"><button class="delete-btn" data-id="' + inj.id + '" data-player="' + inj.player + '">Delete</button></td>';
         tbody.appendChild(tr);
     });
+    
     tbody.querySelectorAll(".edit-btn[data-games]").forEach(btn =>
         btn.addEventListener("click", () => openEditInjuryModal(btn.getAttribute("data-id"), btn.getAttribute("data-player"), btn.getAttribute("data-games")))
     );
+    
     tbody.querySelectorAll(".delete-btn").forEach(btn =>
         btn.addEventListener("click", () => deleteInjury(btn.getAttribute("data-id"), btn.getAttribute("data-player")))
     );
@@ -243,6 +341,7 @@ function openEditInjuryModal(id, player, gamesLeft) {
     document.getElementById("editInjuryGames").value = gamesLeft;
     modal.style.display = "flex";
     modal._editId = id;
+    
     document.getElementById("cancelEditInjuryBtn").onclick = () => { modal.style.display = "none"; };
     document.getElementById("saveEditInjuryBtn").onclick = () => {
         const games = Number(document.getElementById("editInjuryGames").value)||0;
@@ -276,13 +375,14 @@ function openEditSuspensionModal(susp) {
     document.getElementById("editYellowBanLeft").value = susp.yellowBanLeft;
     document.getElementById("editRedBanLeft").value = susp.redBanLeft;
     modal.style.display = "flex";
+    
     document.getElementById("cancelEditSuspBtn").onclick = () => { modal.style.display = "none"; };
     document.getElementById("saveEditSuspBtn").onclick = () => {
         if (!window.db) return;
         window.db.collection("playerSuspensions").doc(susp.id).update({
-            activeYellows:  Number(document.getElementById("editActiveYellow").value)||0,
-            yellowBanLeft:  Number(document.getElementById("editYellowBanLeft").value)||0,
-            redBanLeft:     Number(document.getElementById("editRedBanLeft").value)||0
+            activeYellows: Number(document.getElementById("editActiveYellow").value)||0,
+            yellowBanLeft: Number(document.getElementById("editYellowBanLeft").value)||0,
+            redBanLeft: Number(document.getElementById("editRedBanLeft").value)||0
         }).then(() => { modal.style.display = "none"; alert("Updated!"); })
           .catch(err => { console.error(err); alert("Error"); });
     };
@@ -298,39 +398,57 @@ function deleteSuspension(id, player) {
 }
 
 function getOrCreatePlayerSusp(team, player) {
-    return window.db.collection("playerSuspensions").where("team","==",team).where("player","==",player).get().then(snap => {
-        if (!snap.empty) {
-            const doc = snap.docs[0], d = doc.data();
-            return { id: doc.id, team, player, activeYellows: Number(d.activeYellows)||0, yellowBanLeft: Number(d.yellowBanLeft)||0, redBanLeft: Number(d.redBanLeft)||0 };
-        }
-        return window.db.collection("playerSuspensions").add({ team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 })
-            .then(ref => ({ id: ref.id, team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 }));
-    });
+    return window.db.collection("playerSuspensions")
+        .where("team", "==", team)
+        .where("player", "==", player)
+        .get()
+        .then(snap => {
+            if (!snap.empty) {
+                const doc = snap.docs[0], d = doc.data();
+                return { id: doc.id, team, player, activeYellows: Number(d.activeYellows)||0, yellowBanLeft: Number(d.yellowBanLeft)||0, redBanLeft: Number(d.redBanLeft)||0 };
+            }
+            return window.db.collection("playerSuspensions").add({ team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 })
+                .then(ref => ({ id: ref.id, team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 }));
+        });
 }
+
 function getOrCreatePlayerInjury(team, player) {
-    return window.db.collection("playerInjuries").where("team","==",team).where("player","==",player).get().then(snap => {
-        if (!snap.empty) {
-            const doc = snap.docs[0], d = doc.data();
-            return { id: doc.id, team, player, injuryGamesLeft: Number(d.injuryGamesLeft)||0 };
-        }
-        return window.db.collection("playerInjuries").add({ team, player, injuryGamesLeft:0 })
-            .then(ref => ({ id: ref.id, team, player, injuryGamesLeft:0 }));
-    });
+    return window.db.collection("playerInjuries")
+        .where("team", "==", team)
+        .where("player", "==", player)
+        .get()
+        .then(snap => {
+            if (!snap.empty) {
+                const doc = snap.docs[0], d = doc.data();
+                return { id: doc.id, team, player, injuryGamesLeft: Number(d.injuryGamesLeft)||0 };
+            }
+            return window.db.collection("playerInjuries").add({ team, player, injuryGamesLeft:0 })
+                .then(ref => ({ id: ref.id, team, player, injuryGamesLeft:0 }));
+        });
 }
 
 function saveCardWarning(matchTeam1, matchTeam2) {
-    const team          = document.getElementById("cardTeam").value;
-    const player        = document.getElementById("playerSelect").value;
+    const team = document.getElementById("cardTeam").value;
+    const player = document.getElementById("playerSelect").value;
     const cardTypeRadio = document.querySelector('input[name="cardType"]:checked');
-    if (!team || !player)       { alert("Please select team and player"); return; }
-    if (!cardTypeRadio)          { alert("Please select Yellow or Red card"); return; }
+    
+    if (!team || !player) { alert("Please select team and player"); return; }
+    if (!cardTypeRadio) { alert("Please select Yellow or Red card"); return; }
     if (team !== matchTeam1 && team !== matchTeam2) { alert("Only " + matchTeam1 + " or " + matchTeam2 + " players"); return; }
-    if (!window.db)              { alert("Database not initialized"); return; }
+    if (!window.db) { alert("Database not initialized"); return; }
+    
     const cardType = cardTypeRadio.value;
+    
     getOrCreatePlayerSusp(team, player).then(susp => {
         let { activeYellows, yellowBanLeft, redBanLeft } = susp;
-        if (cardType === "yellow") { activeYellows++; if (activeYellows >= 3) yellowBanLeft = 1; }
-        else { redBanLeft = 3; activeYellows = 0; yellowBanLeft = 0; }
+        if (cardType === "yellow") { 
+            activeYellows++; 
+            if (activeYellows >= 3) yellowBanLeft = 1; 
+        } else { 
+            redBanLeft = 3; 
+            activeYellows = 0; 
+            yellowBanLeft = 0; 
+        }
         return window.db.collection("playerSuspensions").doc(susp.id).update({ activeYellows, yellowBanLeft, redBanLeft });
     }).then(() => {
         alert(cardType === "red" ? player + " banned for 3 " + team + " matches" : "Yellow card added for " + player);
@@ -341,15 +459,18 @@ function saveCardWarning(matchTeam1, matchTeam2) {
 }
 
 function saveInjury(matchTeam1, matchTeam2) {
-    const team            = document.getElementById("injuryTeam").value;
-    const player          = document.getElementById("injuryPlayerSelect").value;
+    const team = document.getElementById("injuryTeam").value;
+    const player = document.getElementById("injuryPlayerSelect").value;
     const injuryTypeRadio = document.querySelector('input[name="injuryType"]:checked');
-    if (!team || !player)  { alert("Please select team and player"); return; }
-    if (!injuryTypeRadio)   { alert("Please select Easy or Hard injury"); return; }
+    
+    if (!team || !player) { alert("Please select team and player"); return; }
+    if (!injuryTypeRadio) { alert("Please select Easy or Hard injury"); return; }
     if (team !== matchTeam1 && team !== matchTeam2) { alert("Only " + matchTeam1 + " or " + matchTeam2 + " players"); return; }
-    if (!window.db)         { alert("Database not initialized"); return; }
+    if (!window.db) { alert("Database not initialized"); return; }
+    
     const injuryType = injuryTypeRadio.value;
-    const gamesLeft  = injuryType === "easy" ? 1 : 5;
+    const gamesLeft = injuryType === "easy" ? 1 : 5;
+    
     getOrCreatePlayerInjury(team, player).then(inj => {
         return window.db.collection("playerInjuries").doc(inj.id).update({ injuryGamesLeft: gamesLeft });
     }).then(() => {
@@ -364,43 +485,54 @@ function loadPlayersForTeam(selectedTeam, selectId) {
     selectId = selectId || "playerSelect";
     const playerSelect = document.getElementById(selectId);
     if (!playerSelect || !window.db) return;
+    
     playerSelect.innerHTML = '<option value="">Select Player</option>';
     if (!selectedTeam) return;
-    window.db.collection("players").where("team","==",selectedTeam).get()
+    
+    window.db.collection("players").where("team", "==", selectedTeam).get()
         .then(snap => snap.forEach(doc => {
             const opt = document.createElement("option");
-            opt.value = doc.data().player; opt.textContent = doc.data().player;
+            opt.value = doc.data().player;
+            opt.textContent = doc.data().player;
             playerSelect.appendChild(opt);
-        })).catch(err => console.error(err));
+        }))
+        .catch(err => console.error(err));
 }
 
 function checkGameEligibility() {
     const team1 = document.getElementById("checkTeam1").value;
     const team2 = document.getElementById("checkTeam2").value;
+    
     if (!team1 || !team2 || team1 === team2) { alert("Please select two different teams"); return; }
     if (!window.db) { alert("Database not initialized"); return; }
+    
     Promise.all([
         window.db.collection("playerSuspensions").get(),
         window.db.collection("playerInjuries").get()
     ]).then(([suspSnap, injSnap]) => {
         const suspended = [], warnings = [], injured = [];
+        
         suspSnap.forEach(doc => {
             const s = docToSuspension(doc);
             if (s.team !== team1 && s.team !== team2) return;
-            if (s.redBanLeft > 0)           suspended.push({s, type:"red"});
-            else if (s.yellowBanLeft > 0)    suspended.push({s, type:"yellow"});
-            else if (s.activeYellows === 2)  warnings.push(s);
+            if (s.redBanLeft > 0) suspended.push({s, type:"red"});
+            else if (s.yellowBanLeft > 0) suspended.push({s, type:"yellow"});
+            else if (s.activeYellows === 2) warnings.push(s);
         });
+        
         injSnap.forEach(doc => {
             const inj = docToInjury(doc);
             if (inj.team !== team1 && inj.team !== team2) return;
             if (inj.injuryGamesLeft > 0) injured.push(inj);
         });
-        const resultDiv  = document.getElementById("checkResult");
+        
         const bannedList = document.getElementById("bannedList");
+        const resultDiv = document.getElementById("checkResult");
         let html = "";
+        
         if (suspended.length === 0 && warnings.length === 0 && injured.length === 0)
             html += '<div style="background:#0a1f10;border-left:4px solid #2ecc71;padding:14px;border-radius:8px;"><span style="color:#2ecc71;font-size:1.05em;font-weight:bold;">All players eligible for this match!</span></div>';
+        
         if (suspended.length > 0) {
             html += '<h4 style="color:#e74c3c;margin:0 0 8px;">Suspended:</h4>';
             suspended.forEach(function(item) {
@@ -409,22 +541,25 @@ function checkGameEligibility() {
                 else html += '<div style="background:#1a1400;border-left:4px solid #f1c40f;padding:12px;margin:6px 0;border-radius:8px;"><strong>' + s.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + s.team + ')</span><br/><span style="font-size:0.92em;">Yellow ban — <strong>' + s.yellowBanLeft + ' match left</strong></span></div>';
             });
         }
+        
         if (injured.length > 0) {
             html += '<h4 style="color:#e67e22;margin:14px 0 8px;">Injured:</h4>';
             injured.forEach(function(inj) {
-                const isHard      = inj.injuryGamesLeft > 1;
-                const typeLabel   = isHard ? 'Hard Injury' : 'Easy Injury';
+                const isHard = inj.injuryGamesLeft > 1;
+                const typeLabel = isHard ? 'Hard Injury' : 'Easy Injury';
                 const borderColor = isHard ? '#e74c3c' : '#f39c12';
-                const bgColor     = isHard ? '#1e0a0a' : '#1e1200';
+                const bgColor = isHard ? '#1e0a0a' : '#1e1200';
                 html += '<div style="background:' + bgColor + ';border-left:4px solid ' + borderColor + ';padding:12px;margin:6px 0;border-radius:8px;"><strong>' + inj.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + inj.team + ')</span><br/><span style="font-size:0.92em;">' + typeLabel + ' — <strong>' + inj.injuryGamesLeft + ' match(es) left</strong></span></div>';
             });
         }
+        
         if (warnings.length > 0) {
             html += '<h4 style="color:#f39c12;margin:14px 0 8px;">Yellow Warning:</h4>';
             warnings.forEach(function(s) {
                 html += '<div style="background:#191100;border-left:4px solid #f39c12;padding:10px;margin:6px 0;border-radius:8px;"><strong>' + s.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + s.team + ')</span><br/><span style="font-size:0.92em;">' + s.activeYellows + '/3 yellows — <strong>1 more = ban!</strong></span></div>';
             });
         }
+        
         bannedList.innerHTML = html;
         resultDiv.style.display = "block";
     }).catch(err => { console.error(err); alert("Error"); });
@@ -433,76 +568,101 @@ function checkGameEligibility() {
 let _matchTeam1 = "", _matchTeam2 = "";
 
 function setupMatchWeek() {
-    const saveBtn       = document.getElementById("saveMatchBtn");
-    const addCardBtn    = document.getElementById("addCardBtn");
-    const addInjuryBtn  = document.getElementById("addInjuryBtn");
-    const okBtn         = document.getElementById("okBtn");
-    const cardTeamSel   = document.getElementById("cardTeam");
+    const saveBtn = document.getElementById("saveMatchBtn");
+    const addCardBtn = document.getElementById("addCardBtn");
+    const addInjuryBtn = document.getElementById("addInjuryBtn");
+    const okBtn = document.getElementById("okBtn");
+    const cardTeamSel = document.getElementById("cardTeam");
     const injuryTeamSel = document.getElementById("injuryTeam");
 
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
             const pass = document.getElementById("adminPass").value || "";
-            if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("Wrong password"); return; }
-            const team1  = document.getElementById("team1").value;
-            const team2  = document.getElementById("team2").value;
+            if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { 
+                alert("Wrong password"); 
+                return; 
+            }
+            
+            const team1 = document.getElementById("team1").value;
+            const team2 = document.getElementById("team2").value;
             const score1 = Number(document.getElementById("score1").value);
             const score2 = Number(document.getElementById("score2").value);
-            const date   = document.getElementById("matchDate").value;
+            const date = document.getElementById("matchDate").value;
+            
             if (!team1 || !team2 || team1 === team2) { alert("Choose two different teams"); return; }
-            if (!date)   { alert("Choose a date"); return; }
+            if (!date) { alert("Choose a date"); return; }
             if (!Number.isFinite(score1) || !Number.isFinite(score2)) { alert("Enter valid scores"); return; }
             if (!window.db) { alert("Database not initialized"); return; }
+            
+            // First get all existing matches to calculate next game number
             window.db.collection("matches").get().then(snap => {
-                const gameNumber = snap.size + 1;
+                const existingMatches = [];
+                snap.forEach(doc => existingMatches.push(docToMatch(doc)));
+                
+                const gameNumber = getNextGameNumber(existingMatches);
+                
+                console.log("Saving match with gameNumber:", gameNumber);
+                
                 return window.db.collection("matches").add({
-                    team1, team2, score1, score2, date, gameNumber,
+                    team1, 
+                    team2, 
+                    score1, 
+                    score2, 
+                    date, 
+                    gameNumber: gameNumber,
                     savedAt: new Date().toLocaleString()
-                }).then(() => decrementBansForMatch(team1, team2).then(() => ({ team1, team2, gameNumber, score1, score2 })));
+                }).then(() => decrementBansForMatch(team1, team2).then(() => ({ 
+                    team1, team2, gameNumber, score1, score2 
+                })));
             }).then(({ team1, team2, gameNumber, score1, score2 }) => {
-                _matchTeam1 = team1; _matchTeam2 = team2;
-                alert("Match #" + gameNumber + " saved");
+                _matchTeam1 = team1;
+                _matchTeam2 = team2;
+                
+                alert("Match #" + gameNumber + " saved successfully!");
+                
                 generateMatchReport(team1, team2, score1, score2, gameNumber);
-                ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => {
-                    const el = document.getElementById(id); if (el) el.value = "";
+                
+                // Clear form
+                ["team1", "team2", "score1", "score2", "matchDate", "adminPass"].forEach(id => {
+                    const el = document.getElementById(id); 
+                    if (el) el.value = "";
                 });
+                
+                // Show card form
                 const matchForm = document.getElementById("matchForm");
-                const cardForm  = document.getElementById("cardForm");
+                const cardForm = document.getElementById("cardForm");
                 if (matchForm) matchForm.style.display = "none";
-                if (cardForm)  cardForm.style.display  = "block";
+                if (cardForm) cardForm.style.display = "block";
+                
                 const lbl = document.getElementById("currentGWLabel");
                 if (lbl) lbl.textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
-                ["cardTeam","injuryTeam"].forEach(id => {
+                
+                ["cardTeam", "injuryTeam"].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerHTML = '<option value="">Select Team</option><option value="' + team1 + '">' + team1 + '</option><option value="' + team2 + '">' + team2 + '</option>';
                 });
-            }).catch(err => { console.error(err); alert("Error saving match: " + err.message); });
+            }).catch(err => { 
+                console.error(err); 
+                alert("Error saving match: " + err.message); 
+            });
         });
     }
-    if (cardTeamSel)   cardTeamSel.addEventListener("change",   e => loadPlayersForTeam(e.target.value, "playerSelect"));
+    
+    if (cardTeamSel) cardTeamSel.addEventListener("change", e => loadPlayersForTeam(e.target.value, "playerSelect"));
     if (injuryTeamSel) injuryTeamSel.addEventListener("change", e => loadPlayersForTeam(e.target.value, "injuryPlayerSelect"));
-    if (addCardBtn)    addCardBtn.addEventListener("click",   () => saveCardWarning(_matchTeam1, _matchTeam2));
-    if (addInjuryBtn)  addInjuryBtn.addEventListener("click", () => saveInjury(_matchTeam1, _matchTeam2));
-    if (okBtn)         okBtn.addEventListener("click", () => { alert("All data saved!"); window.location.href = "index.html"; });
+    if (addCardBtn) addCardBtn.addEventListener("click", () => saveCardWarning(_matchTeam1, _matchTeam2));
+    if (addInjuryBtn) addInjuryBtn.addEventListener("click", () => saveInjury(_matchTeam1, _matchTeam2));
+    if (okBtn) okBtn.addEventListener("click", () => { alert("All data saved!"); window.location.href = "index.html"; });
 }
 
-/* =============================================================
-   REALTIME LISTENERS
-   FIX: tableOverrides onSnapshot now only re-renders when
-   _matchesReady is true, preventing blank table on first load.
-   Also stores overrides under BOTH the raw team name AND the
-   underscore version so computeTeamsFromMatches always finds them.
-   =============================================================*/
 function _storeOverrides(snap) {
     window._tableOverrides = {};
     snap.forEach(doc => {
         const d = doc.data();
         if (d.team) {
-            // Store under both formats so lookup always works
             window._tableOverrides[d.team] = d;
             window._tableOverrides[d.team.replace(/ /g, "_")] = d;
         }
-        // Also store using the doc ID as key (edit-table uses team_name as doc ID)
         const docId = doc.id;
         window._tableOverrides[docId] = window._tableOverrides[docId] || d;
     });
@@ -511,7 +671,7 @@ function _storeOverrides(snap) {
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
 
-    // ── Step 1: pre-load overrides, THEN start match listener ──
+    // Load overrides first
     window.db.collection("tableOverrides").get()
         .then(snap => {
             _storeOverrides(snap);
@@ -519,35 +679,41 @@ function startRealtimeListeners() {
         })
         .catch(() => { window._tableOverrides = {}; })
         .finally(() => {
-            // Start match listener only AFTER overrides are in memory
             _attachMatchListener();
         });
 
-    // ── Step 2: live override listener ──
+    // Live override listener
     window.db.collection("tableOverrides").onSnapshot(snap => {
         _storeOverrides(snap);
-        // Only re-render if matches have already been loaded once
         if (window._matchesReady) {
             renderLeagueTable(window._lastMatches);
         }
     }, err => console.warn("tableOverrides listener:", err.message));
 
-    // ── Suspensions ──
+    // Suspensions
     window.db.collection("playerSuspensions").onSnapshot(snap => {
-        const s = []; snap.forEach(doc => s.push(docToSuspension(doc))); renderCardTable(s);
+        const s = []; 
+        snap.forEach(doc => s.push(docToSuspension(doc))); 
+        renderCardTable(s);
     }, err => console.error("Suspensions:", err));
 
-    // ── Injuries ──
+    // Injuries
     window.db.collection("playerInjuries").onSnapshot(snap => {
-        const inj = []; snap.forEach(doc => inj.push(docToInjury(doc))); renderInjuryTable(inj);
+        const inj = []; 
+        snap.forEach(doc => inj.push(docToInjury(doc))); 
+        renderInjuryTable(inj);
     }, err => console.error("Injuries:", err));
 
-    // ── Match reports ──
-    window.db.collection("matchReports").orderBy("createdAt","desc").onSnapshot(snap => {
-        const r = []; snap.forEach(doc => r.push(Object.assign({id:doc.id}, doc.data()))); renderMatchReports(r);
+    // Match reports
+    window.db.collection("matchReports").orderBy("createdAt", "desc").onSnapshot(snap => {
+        const r = []; 
+        snap.forEach(doc => r.push(Object.assign({id:doc.id}, doc.data()))); 
+        renderMatchReports(r);
     }, err => {
+        // Fallback without ordering
         window.db.collection("matchReports").onSnapshot(snap => {
-            const r = []; snap.forEach(doc => r.push(Object.assign({id:doc.id}, doc.data())));
+            const r = []; 
+            snap.forEach(doc => r.push(Object.assign({id:doc.id}, doc.data())));
             r.sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
             renderMatchReports(r);
         }, err2 => console.error("Reports:", err2));
@@ -556,20 +722,27 @@ function startRealtimeListeners() {
 
 function _attachMatchListener() {
     if (!window.db) return;
+    
     const render = (matches) => {
-        window._lastMatches  = matches;
-        window._matchesReady = true; // Mark matches as loaded
+        window._lastMatches = matches;
+        window._matchesReady = true;
+        console.log("Matches loaded:", matches.length, "valid:", matches.filter(m => m.gameNumber > 0).length);
         renderLeagueTable(matches);
         renderHistoryList(matches);
         loadEncounters(matches);
     };
-    window.db.collection("matches").orderBy("gameNumber","asc").onSnapshot(snap => {
-        const m = []; snap.forEach(doc => m.push(docToMatch(doc))); render(m);
+    
+    window.db.collection("matches").orderBy("gameNumber", "asc").onSnapshot(snap => {
+        const m = []; 
+        snap.forEach(doc => m.push(docToMatch(doc))); 
+        render(m);
     }, err => {
         console.warn("Ordered matches failed, trying unordered:", err.message);
         window.db.collection("matches").onSnapshot(snap => {
-            const m = []; snap.forEach(doc => m.push(docToMatch(doc)));
-            m.sort((a,b) => (a.gameNumber||0) - (b.gameNumber||0)); render(m);
+            const m = []; 
+            snap.forEach(doc => m.push(docToMatch(doc)));
+            m.sort((a,b) => (a.gameNumber||0) - (b.gameNumber||0)); 
+            render(m);
         }, err2 => console.error("Matches:", err2));
     });
 }
@@ -577,15 +750,19 @@ function _attachMatchListener() {
 function loadEncounters(matches) {
     const tbody = document.querySelector("#encountersTable tbody");
     if (!tbody || !matches) return;
+    
     const results = {};
     matches.forEach(m => {
         const t1 = m.team1, t2 = m.team2;
-        if (!results[t1]) results[t1] = {}; if (!results[t2]) results[t2] = {};
-        if (!results[t1][t2]) results[t1][t2] = {wins:0,losses:0};
-        if (!results[t2][t1]) results[t2][t1] = {wins:0,losses:0};
-        if (m.score1 > m.score2)      { results[t1][t2].wins++;   results[t2][t1].losses++; }
-        else if (m.score2 > m.score1) { results[t2][t1].wins++;   results[t1][t2].losses++; }
+        if (!results[t1]) results[t1] = {}; 
+        if (!results[t2]) results[t2] = {};
+        if (!results[t1][t2]) results[t1][t2] = {wins:0, losses:0};
+        if (!results[t2][t1]) results[t2][t1] = {wins:0, losses:0};
+        
+        if (m.score1 > m.score2) { results[t1][t2].wins++; results[t2][t1].losses++; }
+        else if (m.score2 > m.score1) { results[t2][t1].wins++; results[t1][t2].losses++; }
     });
+    
     tbody.innerHTML = "";
     Object.keys(results).forEach(team => {
         Object.keys(results[team]).forEach(opp => {
@@ -599,14 +776,15 @@ function loadEncounters(matches) {
     });
 }
 
-/* ─── Kurdish match report generator ─── */
 function generateMatchReport(team1, team2, score1, score2, gameNumber) {
     if (!window.db) return;
+    
     const s1 = Number(score1), s2 = Number(score2);
-    const winner     = s1 > s2 ? team1 : s2 > s1 ? team2 : null;
-    const loser      = s1 > s2 ? team2 : s2 > s1 ? team1 : null;
+    const winner = s1 > s2 ? team1 : s2 > s1 ? team2 : null;
+    const loser = s1 > s2 ? team2 : s2 > s1 ? team1 : null;
     const totalGoals = s1 + s2;
-    const headlines  = winner ? [
+    
+    const headlines = winner ? [
         winner + " یارییەکەی بەسەر " + loser + "دا دەبات بە ئەنجامی " + s1 + "-" + s2,
         "جەنگی سەختی GW" + gameNumber + ": " + winner + " سێ خاڵ وەردەگرێت",
         winner + " بردنی " + s1 + "-" + s2 + " لە دژی " + loser
@@ -615,8 +793,10 @@ function generateMatchReport(team1, team2, score1, score2, gameNumber) {
         "GW" + gameNumber + ": " + team1 + " " + s1 + "-" + s2 + " " + team2 + " — مساوات",
         "دوو تیم خاڵ دابەش دەکەن لە GW" + gameNumber + "دا"
     ];
+    
     const headline = headlines[Math.floor(Math.random() * headlines.length)];
     let body = "";
+    
     if (winner) {
         const goalWord = totalGoals === 1 ? "تەنیا یەک گۆڵ" : (totalGoals + " گۆڵ");
         body = "لە جۆلەی یارییە " + gameNumber + "مدا، " + winner + " سەرکەوتنێکی بەرچاوی بەدەستهێنا لە دژی " + loser + "دا بە ئەنجامی " + s1 + "-" + s2 + "دا.\n\n";
@@ -629,7 +809,9 @@ function generateMatchReport(team1, team2, score1, score2, gameNumber) {
         body += s1 === 0 ? "هەردوو تیم نەیانتوانی تۆڕ بلەرزێنن. " : "یارییەکە ئامانجی بینی. ";
         body += "\n\nمساواتەکە بۆ هەردووکیان خاڵێک زیادکرد.";
     }
+    
     const reportText = "📰 " + headline + "\n\n" + body + "\n\n⚽ " + team1 + " " + s1 + " - " + s2 + " " + team2 + " | GW" + gameNumber;
+    
     window.db.collection("matchReports").add({
         team1, team2, score1: s1, score2: s2, gameNumber,
         report: reportText, createdAt: new Date().toISOString()
@@ -640,18 +822,21 @@ function generateMatchReport(team1, team2, score1, score2, gameNumber) {
 function renderMatchReports(reports) {
     const container = document.getElementById("reportsContainer");
     if (!container) return;
+    
     if (reports.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#2d4a65;font-size:0.85rem;">No reports yet</div>';
         return;
     }
+    
     container.innerHTML = "";
     reports.forEach((r) => {
-        const date   = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
-        const s1     = Number(r.score1), s2 = Number(r.score2);
+        const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
+        const s1 = Number(r.score1), s2 = Number(r.score2);
         const winner = s1 > s2 ? r.team1 : s2 > s1 ? r.team2 : null;
         const winBadge = winner
             ? '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">' + winner + ' won</span>'
             : '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">Draw</span>';
+        
         const card = document.createElement("div");
         card.style.cssText = "background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;";
         card.innerHTML =
@@ -666,19 +851,19 @@ function renderMatchReports(reports) {
     });
 }
 
-/* ─── Admin panel ─── */
 function setupAdminPanel() {
-    const loginBtn     = document.getElementById("loginBtn");
+    const loginBtn = document.getElementById("loginBtn");
     const addPlayerBtn = document.getElementById("addPlayerBtn");
+    
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
             const pw = document.getElementById("adminPassword").value;
             if (pw === SUPER_ADMIN_PASSWORD) {
                 document.getElementById("passwordForm").style.display = "none";
                 const normalAdmin = document.getElementById("adminContent");
-                const superAdmin  = document.getElementById("superAdminContent");
+                const superAdmin = document.getElementById("superAdminContent");
                 if (normalAdmin) normalAdmin.style.display = "block";
-                if (superAdmin)  superAdmin.style.display  = "block";
+                if (superAdmin) superAdmin.style.display = "block";
                 loadPlayersTable();
                 loadSuperAdminPanel();
             } else if (pw === ADMIN_PASSWORD) {
@@ -690,14 +875,21 @@ function setupAdminPanel() {
             }
         });
     }
+    
     if (addPlayerBtn) {
         addPlayerBtn.addEventListener("click", () => {
-            const team   = document.getElementById("adminTeam").value;
+            const team = document.getElementById("adminTeam").value;
             const player = document.getElementById("adminPlayer").value;
             if (!team || !player) { alert("Please select team and enter player name"); return; }
             if (!window.db) return;
+            
             window.db.collection("players").add({ team, player, addedAt: new Date().toLocaleString() })
-                .then(() => { alert("Player added"); document.getElementById("adminTeam").value=""; document.getElementById("adminPlayer").value=""; loadPlayersTable(); })
+                .then(() => { 
+                    alert("Player added"); 
+                    document.getElementById("adminTeam").value = "";
+                    document.getElementById("adminPlayer").value = "";
+                    loadPlayersTable(); 
+                })
                 .catch(err => { console.error(err); alert("Error"); });
         });
     }
@@ -706,10 +898,11 @@ function setupAdminPanel() {
 function loadPlayersTable() {
     const tbody = document.querySelector("#playersTable tbody");
     if (!tbody || !window.db) return;
+    
     window.db.collection("players").get().then(snap => {
         tbody.innerHTML = "";
         snap.forEach(doc => {
-            const d  = doc.data();
+            const d = doc.data();
             const tr = document.createElement("tr");
             tr.innerHTML = '<td>' + d.team + '</td><td>' + d.player + '</td><td><button class="delete-btn" onclick="deletePlayer(\'' + doc.id + '\')">Delete</button></td>';
             tbody.appendChild(tr);
@@ -740,18 +933,19 @@ function setupCheckGames() {
     if (btn) btn.addEventListener("click", checkGameEligibility);
 }
 
-/* ─── Super admin panel ─── */
 function loadSuperAdminPanel() {
     if (!window.db) { setTimeout(loadSuperAdminPanel, 300); return; }
+    
     const matchesTbody = document.querySelector("#saMatchesTable tbody");
     if (matchesTbody) {
         window.db.collection("matches").get().then(snap => {
             const docs = [];
             snap.forEach(doc => docs.push(doc));
             docs.sort((a,b) => (a.data().gameNumber||0)-(b.data().gameNumber||0));
+            
             matchesTbody.innerHTML = "";
             docs.forEach(doc => {
-                const d  = doc.data();
+                const d = doc.data();
                 const tr = document.createElement("tr");
                 tr.innerHTML =
                     '<td>GW' + (d.gameNumber||'-') + '</td>' +
@@ -763,13 +957,14 @@ function loadSuperAdminPanel() {
             });
         });
     }
+    
     const suspTbody = document.querySelector("#saSuspTable tbody");
     if (suspTbody) {
         window.db.collection("playerSuspensions").get().then(snap => {
             suspTbody.innerHTML = "";
             if (snap.empty) { suspTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4d6a85;padding:16px;">No suspensions</td></tr>'; return; }
             snap.forEach(doc => {
-                const d  = doc.data();
+                const d = doc.data();
                 const tr = document.createElement("tr");
                 tr.innerHTML =
                     '<td>' + (d.team||'') + '</td><td>' + (d.player||'') + '</td>' +
@@ -781,13 +976,14 @@ function loadSuperAdminPanel() {
             });
         });
     }
+    
     const injTbody = document.querySelector("#saInjTable tbody");
     if (injTbody) {
         window.db.collection("playerInjuries").get().then(snap => {
             injTbody.innerHTML = "";
             if (snap.empty) { injTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#4d6a85;padding:16px;">No injuries</td></tr>'; return; }
             snap.forEach(doc => {
-                const d  = doc.data();
+                const d = doc.data();
                 const tr = document.createElement("tr");
                 tr.innerHTML =
                     '<td>' + (d.team||'') + '</td><td>' + (d.player||'') + '</td>' +
@@ -797,13 +993,14 @@ function loadSuperAdminPanel() {
             });
         });
     }
+    
     const plTbody = document.querySelector("#saPlayersTable tbody");
     if (plTbody) {
         window.db.collection("players").get().then(snap => {
             plTbody.innerHTML = "";
             if (snap.empty) { plTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#4d6a85;padding:16px;">No players</td></tr>'; return; }
             snap.forEach(doc => {
-                const d  = doc.data();
+                const d = doc.data();
                 const tr = document.createElement("tr");
                 tr.innerHTML =
                     '<td>' + (d.team||'') + '</td>' +
@@ -823,6 +1020,7 @@ window.saUpdateMatch = function(id) {
     window.db.collection("matches").doc(id).update({ score1: s1, score2: s2, date: dt })
         .then(() => alert("Match updated!")).catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saDeleteMatch = function(id) {
     if (!confirm("Delete this match? Cannot be undone.")) return;
     if (!window.db) return;
@@ -830,14 +1028,16 @@ window.saDeleteMatch = function(id) {
         .then(() => { alert("Match deleted"); loadSuperAdminPanel(); })
         .catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saUpdateSusp = function(id) {
     if (!window.db) return;
     window.db.collection("playerSuspensions").doc(id).update({
         activeYellows: Number(document.getElementById("ay_"+id).value)||0,
         yellowBanLeft: Number(document.getElementById("ybl_"+id).value)||0,
-        redBanLeft:    Number(document.getElementById("rbl_"+id).value)||0
+        redBanLeft: Number(document.getElementById("rbl_"+id).value)||0
     }).then(() => alert("Suspension updated!")).catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saDeleteSusp = function(id, player) {
     if (!confirm("Delete suspension for " + player + "?")) return;
     if (!window.db) return;
@@ -845,11 +1045,13 @@ window.saDeleteSusp = function(id, player) {
         .then(() => { alert("Deleted"); loadSuperAdminPanel(); })
         .catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saUpdateInj = function(id) {
     if (!window.db) return;
     window.db.collection("playerInjuries").doc(id).update({ injuryGamesLeft: Number(document.getElementById("inj_"+id).value)||0 })
         .then(() => alert("Injury updated!")).catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saDeleteInj = function(id, player) {
     if (!confirm("Delete injury for " + player + "?")) return;
     if (!window.db) return;
@@ -857,6 +1059,7 @@ window.saDeleteInj = function(id, player) {
         .then(() => { alert("Deleted"); loadSuperAdminPanel(); })
         .catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saUpdatePlayer = function(id, team) {
     if (!window.db) return;
     const name = document.getElementById("pname_"+id).value.trim();
@@ -864,6 +1067,7 @@ window.saUpdatePlayer = function(id, team) {
     window.db.collection("players").doc(id).update({ player: name, team: team })
         .then(() => alert("Player updated!")).catch(err => { console.error(err); alert("Error"); });
 };
+
 window.saDeletePlayer = function(id) {
     if (!confirm("Delete this player?")) return;
     if (!window.db) return;
@@ -872,7 +1076,6 @@ window.saDeletePlayer = function(id) {
         .catch(err => { console.error(err); alert("Error"); });
 };
 
-/* ─── Firebase wait + boot ─── */
 function waitForDB(callback) {
     let attempts = 0;
     const interval = setInterval(() => {
