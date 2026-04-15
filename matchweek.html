@@ -5,10 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Match Week</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+        .success-box {
+            background: linear-gradient(135deg, #0a2e1a, #0d3520);
+            border: 2px solid #00c853;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        .success-box h3 {
+            color: #00c853;
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+        .success-box .match-result {
+            background: #0a1420;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #1e3048;
+        }
+        .success-box .teams {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .success-box .score {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00c853;
+        }
+        .success-box .details {
+            color: #8faac8;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .recent-matches {
+            margin-top: 20px;
+        }
+        .recent-matches h4 {
+            color: #8faac8;
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+        }
+        .recent-match-item {
+            background: #0a1420;
+            border: 1px solid #1e3048;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .recent-match-item .gw-badge {
+            background: rgba(0,200,83,0.1);
+            border: 1px solid rgba(0,200,83,0.2);
+            border-radius: 12px;
+            padding: 2px 10px;
+            color: #00c853;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .recent-match-item .match-info {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .recent-match-item .match-score {
+            color: #00c853;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .recent-match-item .match-date {
+            color: #4d6a85;
+            font-size: 0.75rem;
+        }
+        #successContainer {
+            display: none;
+        }
+        #recentMatchesContainer {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1 class="title">⚽ Match Week</h1>
+
+        <!-- Success Message (Hidden by default) -->
+        <div id="successContainer">
+            <div class="success-box">
+                <h3>✅ Match Saved Successfully!</h3>
+                <div class="match-result">
+                    <div class="teams" id="successTeams"></div>
+                    <div class="score" id="successScore"></div>
+                    <div class="details" id="successDetails"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Matches in This Session -->
+        <div id="recentMatchesContainer" class="recent-matches">
+            <h4>📝 Matches Saved This Session</h4>
+            <div id="recentMatchesList"></div>
+        </div>
 
         <!-- Match Form -->
         <div class="form-card" id="matchForm">
@@ -44,6 +154,7 @@
                 </label>
                 <div class="form-actions">
                     <button id="saveMatchBtn">💾 Save Match</button>
+                    <button class="back-btn" onclick="location.href='table.html'">📊 View Table</button>
                     <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
                 </div>
             </div>
@@ -51,7 +162,7 @@
 
         <!-- Cards + Injuries Form -->
         <div class="form-card" id="cardForm" style="display:none;">
-            <span id="currentGWLabel"></span>
+            <span id="currentGWLabel" style="display:block;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:12px;padding:10px 15px;color:#00c853;font-weight:700;margin-bottom:20px;text-align:center;"></span>
 
             <!-- Card Warning -->
             <h3 style="color:#fdd835;">🟡🔴 Card Warning</h3>
@@ -107,7 +218,8 @@
 
             <hr class="section-divider" />
 
-            <div class="form-actions">
+            <div class="form-actions" style="flex-direction:column;gap:10px;">
+                <button id="addAnotherMatchBtn" class="ok-btn" style="background:#1565c0 !important;">➕ Add Another Match</button>
                 <button id="okBtn" class="ok-btn">✅ Done — Go Home</button>
             </div>
         </div>
@@ -116,5 +228,204 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
     <script src="script.js"></script>
+    <script>
+        // Store matches saved in this session for display
+        window._sessionMatches = [];
+        
+        // Show success message after match is saved
+        function showSuccessMessage(team1, team2, score1, score2, gameNumber, date) {
+            var successContainer = document.getElementById("successContainer");
+            var recentContainer = document.getElementById("recentMatchesContainer");
+            
+            // Update success box
+            document.getElementById("successTeams").textContent = team1 + " vs " + team2;
+            document.getElementById("successScore").textContent = score1 + " - " + score2;
+            document.getElementById("successDetails").textContent = "Game Week " + gameNumber + " • " + date;
+            
+            // Show success
+            successContainer.style.display = "block";
+            recentContainer.style.display = "block";
+            
+            // Add to session matches
+            window._sessionMatches.unshift({
+                team1: team1,
+                team2: team2,
+                score1: score1,
+                score2: score2,
+                gameNumber: gameNumber,
+                date: date
+            });
+            
+            // Update recent matches list
+            updateRecentMatchesList();
+        }
+        
+        function updateRecentMatchesList() {
+            var list = document.getElementById("recentMatchesList");
+            list.innerHTML = "";
+            
+            window._sessionMatches.forEach(function(m) {
+                var item = document.createElement("div");
+                item.className = "recent-match-item";
+                item.innerHTML = 
+                    '<span class="gw-badge">GW' + m.gameNumber + '</span>' +
+                    '<span class="match-info">' + m.team1 + ' vs ' + m.team2 + '</span>' +
+                    '<span class="match-score">' + m.score1 + ' - ' + m.score2 + '</span>' +
+                    '<span class="match-date">' + m.date + '</span>';
+                list.appendChild(item);
+            });
+        }
+        
+        // Override the save button click to show success
+        document.addEventListener("DOMContentLoaded", function() {
+            var saveBtn = document.getElementById("saveMatchBtn");
+            if (saveBtn) {
+                // Remove existing listeners by cloning
+                var newSaveBtn = saveBtn.cloneNode(true);
+                saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                
+                newSaveBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var pass = document.getElementById("adminPass").value || "";
+                    if (pass !== "123321" && pass !== "9999") { 
+                        alert("Wrong password"); 
+                        return; 
+                    }
+                    
+                    var team1 = document.getElementById("team1").value;
+                    var team2 = document.getElementById("team2").value;
+                    var score1 = Number(document.getElementById("score1").value);
+                    var score2 = Number(document.getElementById("score2").value);
+                    var date = document.getElementById("matchDate").value;
+                    
+                    if (!team1 || !team2 || team1 === team2) { alert("Choose two different teams"); return; }
+                    if (!date) { alert("Choose a date"); return; }
+                    if (!Number.isFinite(score1) || !Number.isFinite(score2)) { alert("Enter valid scores"); return; }
+                    if (!window.db) { alert("Database not initialized"); return; }
+                    
+                    // Disable button
+                    newSaveBtn.disabled = true;
+                    newSaveBtn.textContent = "⏳ Saving...";
+                    
+                    // Get next game number
+                    window.db.collection("matches").get().then(function(snap) {
+                        var existingMatches = [];
+                        snap.forEach(function(doc) { existingMatches.push(docToMatch(doc)); });
+                        
+                        var maxGameNum = 0;
+                        existingMatches.forEach(function(m) {
+                            if (m.gameNumber > maxGameNum) maxGameNum = m.gameNumber;
+                        });
+                        var gameNumber = maxGameNum + 1;
+                        
+                        console.log("Saving match with gameNumber:", gameNumber);
+                        
+                        return window.db.collection("matches").add({
+                            team1: team1, 
+                            team2: team2, 
+                            score1: score1, 
+                            score2: score2, 
+                            date: date, 
+                            gameNumber: gameNumber,
+                            savedAt: new Date().toLocaleString()
+                        });
+                    }).then(function(docRef) {
+                        if (!docRef) return;
+                        
+                        console.log("Match saved with ID:", docRef.id);
+                        
+                        // Get the game number we just saved
+                        return docRef.get().then(function(doc) {
+                            var data = doc.data();
+                            var gameNumber = data.gameNumber;
+                            
+                            // Decrement bans
+                            return decrementBansForMatch(team1, team2).then(function() {
+                                return gameNumber;
+                            });
+                        });
+                    }).then(function(gameNumber) {
+                        if (!gameNumber) return;
+                        
+                        // Show success message ON THE PAGE
+                        showSuccessMessage(team1, team2, score1, score2, gameNumber, date);
+                        
+                        // Generate report
+                        generateMatchReport(team1, team2, score1, score2, gameNumber);
+                        
+                        // Clear form
+                        document.getElementById("team1").value = "";
+                        document.getElementById("team2").value = "";
+                        document.getElementById("score1").value = "";
+                        document.getElementById("score2").value = "";
+                        document.getElementById("matchDate").value = "";
+                        document.getElementById("adminPass").value = "";
+                        
+                        // Show card form
+                        document.getElementById("matchForm").style.display = "none";
+                        document.getElementById("cardForm").style.display = "block";
+                        
+                        // Update label
+                        document.getElementById("currentGWLabel").textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
+                        
+                        // Update team selects for cards/injuries
+                        ["cardTeam", "injuryTeam"].forEach(function(id) {
+                            var el = document.getElementById(id);
+                            if (el) el.innerHTML = '<option value="">Select Team</option><option value="' + team1 + '">' + team1 + '</option><option value="' + team2 + '">' + team2 + '</option>';
+                        });
+                        
+                        // Re-enable button for next time
+                        newSaveBtn.disabled = false;
+                        newSaveBtn.textContent = "💾 Save Match";
+                        
+                    }).catch(function(err) { 
+                        console.error(err); 
+                        alert("Error saving match: " + err.message);
+                        newSaveBtn.disabled = false;
+                        newSaveBtn.textContent = "💾 Save Match";
+                    });
+                });
+            }
+            
+            // Add "Add Another Match" button functionality
+            var addAnotherBtn = document.getElementById("addAnotherMatchBtn");
+            if (addAnotherBtn) {
+                addAnotherBtn.addEventListener("click", function() {
+                    document.getElementById("cardForm").style.display = "none";
+                    document.getElementById("matchForm").style.display = "block";
+                    
+                    // Keep success message visible
+                });
+            }
+            
+            // Load existing matches from Firebase on page load to show in recent list
+            if (window.db) {
+                window.db.collection("matches").orderBy("gameNumber", "desc").limit(5).get().then(function(snap) {
+                    if (snap.empty) return;
+                    
+                    snap.forEach(function(doc) {
+                        var d = doc.data();
+                        window._sessionMatches.push({
+                            team1: d.team1,
+                            team2: d.team2,
+                            score1: d.score1,
+                            score2: d.score2,
+                            gameNumber: d.gameNumber,
+                            date: d.date
+                        });
+                    });
+                    
+                    if (window._sessionMatches.length > 0) {
+                        document.getElementById("recentMatchesContainer").style.display = "block";
+                        updateRecentMatchesList();
+                    }
+                }).catch(function(err) {
+                    console.log("Could not load recent matches:", err);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
