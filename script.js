@@ -24,11 +24,9 @@ function applyMatchToTeams(match, teams) {
 }
 
 // ─── Global state ─────────────────────────────────────────────
-// _tableOverrides: { "TEAM NAME": { game, win, lose, draw, gf, ga, diff, point } }
-// Saved by edit-table.html into Firestore "tableOverrides" collection.
-// When an override exists for a team, ALL of its stats are replaced.
 window._tableOverrides = {};
 window._lastMatches    = [];
+window._matchesReady   = false; // NEW: flag so override listener knows if matches loaded
 
 // ─── Compute teams, then apply any manual overrides ───────────
 function computeTeamsFromMatches(matches) {
@@ -39,7 +37,8 @@ function computeTeamsFromMatches(matches) {
         t.point = t.win * 3 + t.draw;
 
         // ── OVERRIDE: if a saved override exists for this team, replace ALL stats ──
-        const ov = window._tableOverrides[t.name];
+        // Try both key formats: with spaces and with underscores
+        const ov = window._tableOverrides[t.name] || window._tableOverrides[t.name.replace(/ /g, "_")];
         if (ov) {
             if (ov.game  !== undefined) t.game  = Number(ov.game);
             if (ov.win   !== undefined) t.win   = Number(ov.win);
@@ -488,41 +487,49 @@ function setupMatchWeek() {
 }
 
 /* =============================================================
-   REALTIME LISTENERS  — correct ordering so overrides always win
-   =============================================================
-   Step 1: fetch tableOverrides ONCE (get) to populate the cache
-   Step 2: start onSnapshot for tableOverrides → update cache + re-render
-   Step 3: start onSnapshot for matches         → render uses current cache
-   This ensures the match listener never overwrites saved overrides.
-*/
+   REALTIME LISTENERS
+   FIX: tableOverrides onSnapshot now only re-renders when
+   _matchesReady is true, preventing blank table on first load.
+   Also stores overrides under BOTH the raw team name AND the
+   underscore version so computeTeamsFromMatches always finds them.
+   =============================================================*/
+function _storeOverrides(snap) {
+    window._tableOverrides = {};
+    snap.forEach(doc => {
+        const d = doc.data();
+        if (d.team) {
+            // Store under both formats so lookup always works
+            window._tableOverrides[d.team] = d;
+            window._tableOverrides[d.team.replace(/ /g, "_")] = d;
+        }
+        // Also store using the doc ID as key (edit-table uses team_name as doc ID)
+        const docId = doc.id;
+        window._tableOverrides[docId] = window._tableOverrides[docId] || d;
+    });
+}
+
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
 
-    // ── Step 1: pre-load overrides ──────────────────────────────
+    // ── Step 1: pre-load overrides, THEN start match listener ──
     window.db.collection("tableOverrides").get()
         .then(snap => {
-            window._tableOverrides = {};
-            snap.forEach(doc => {
-                const d = doc.data();
-                if (d.team) window._tableOverrides[d.team] = d;
-            });
+            _storeOverrides(snap);
             console.log("Overrides loaded:", Object.keys(window._tableOverrides));
         })
         .catch(() => { window._tableOverrides = {}; })
         .finally(() => {
-            // ── Step 3: start match listener only AFTER overrides are ready ──
+            // Start match listener only AFTER overrides are in memory
             _attachMatchListener();
         });
 
-    // ── Step 2: live override listener (fires on every edit-table.html save) ──
+    // ── Step 2: live override listener ──
     window.db.collection("tableOverrides").onSnapshot(snap => {
-        window._tableOverrides = {};
-        snap.forEach(doc => {
-            const d = doc.data();
-            if (d.team) window._tableOverrides[d.team] = d;
-        });
-        // Re-render the league table immediately using cached matches
-        renderLeagueTable(window._lastMatches || []);
+        _storeOverrides(snap);
+        // Only re-render if matches have already been loaded once
+        if (window._matchesReady) {
+            renderLeagueTable(window._lastMatches);
+        }
     }, err => console.warn("tableOverrides listener:", err.message));
 
     // ── Suspensions ──
@@ -550,8 +557,9 @@ function startRealtimeListeners() {
 function _attachMatchListener() {
     if (!window.db) return;
     const render = (matches) => {
-        window._lastMatches = matches;
-        renderLeagueTable(matches);   // overrides already in window._tableOverrides
+        window._lastMatches  = matches;
+        window._matchesReady = true; // Mark matches as loaded
+        renderLeagueTable(matches);
         renderHistoryList(matches);
         loadEncounters(matches);
     };
