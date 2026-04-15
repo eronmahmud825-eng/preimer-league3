@@ -1,6 +1,5 @@
 // script.js - With Injury system (3 team matches, auto countdown like red card)
 const ADMIN_PASSWORD = "123321";
-const SUPER_ADMIN_PASSWORD = "9999";
 const teamsList = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
 
 function docToMatch(doc) {
@@ -22,10 +21,29 @@ function applyMatchToTeams(match, teams) {
     a.game++; b.game++; a.gf += match.score1; a.ga += match.score2; b.gf += match.score2; b.ga += match.score1;
     if (match.score1 > match.score2) { a.win++; b.lose++; } else if (match.score1 < match.score2) { b.win++; a.lose++; } else { a.draw++; b.draw++; }
 }
+// Global store for manual table overrides
+window._tableOverrides = {};
+window._lastMatches = [];
+
 function computeTeamsFromMatches(matches) {
     const teams = teamsList.map(name => ({ name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0 }));
     matches.forEach(m => applyMatchToTeams(m, teams));
-    teams.forEach(t => { t.diff = t.gf - t.ga; t.point = t.win * 3 + t.draw; });
+    teams.forEach(t => {
+        t.diff = t.gf - t.ga;
+        t.point = t.win * 3 + t.draw;
+        // Apply manual overrides if they exist
+        const ov = window._tableOverrides[t.name];
+        if (ov) {
+            if (ov.game  !== undefined) t.game  = ov.game;
+            if (ov.win   !== undefined) t.win   = ov.win;
+            if (ov.lose  !== undefined) t.lose  = ov.lose;
+            if (ov.draw  !== undefined) t.draw  = ov.draw;
+            if (ov.gf    !== undefined) t.gf    = ov.gf;
+            if (ov.ga    !== undefined) t.ga    = ov.ga;
+            if (ov.diff  !== undefined) t.diff  = ov.diff;
+            if (ov.point !== undefined) t.point = ov.point;
+        }
+    });
     teams.sort((x, y) => y.point !== x.point ? y.point - x.point : y.diff !== x.diff ? y.diff - x.diff : (y.gf||0) - (x.gf||0));
     return teams;
 }
@@ -78,120 +96,64 @@ function getForm(teamName, matches) {
 function formDot(r) {
     const colors = { W: '#00e676', D: '#ffd600', L: '#ff5252' };
     const bg = { W: 'rgba(0,230,118,0.15)', D: 'rgba(255,214,0,0.15)', L: 'rgba(255,82,82,0.15)' };
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:' + bg[r] + ';border:1.5px solid ' + colors[r] + ';color:' + colors[r] + ';font-size:0.6rem;font-weight:700;">' + r + '</span>';
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${bg[r]};border:1.5px solid ${colors[r]};color:${colors[r]};font-size:0.6rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;">${r}</span>`;
 }
 
 function renderLeagueTable(matches) {
-    const tbody = document.querySelector("#leagueTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
+    const tbody = document.querySelector("#leagueTable tbody"); if (!tbody) return; tbody.innerHTML = "";
     computeTeamsFromMatches(matches).forEach((t, idx) => {
         const form = getForm(t.name, matches);
-        let formHtml = '';
-        if (form.length > 0) {
-            formHtml = form.map(r => formDot(r)).join('');
-        } else {
-            formHtml = '<span style="color:#2d4a65;font-size:0.7rem;letter-spacing:0.06em;">-</span>';
-        }
+        const formHtml = form.length > 0
+            ? form.map(r => formDot(r)).join('')
+            : '<span style="color:#2d4a65;font-size:0.7rem;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;">-</span>';
         const tr = document.createElement("tr");
-        tr.innerHTML =
-            '<td data-label="Rank"><span class="value">' + (idx+1) + '</span></td>' +
-            '<td data-label="Team"><span class="value">' + t.name + '</span></td>' +
-            '<td data-label="Game"><span class="value">' + t.game + '</span></td>' +
-            '<td data-label="Win"><span class="value">' + t.win + '</span></td>' +
-            '<td data-label="Lose"><span class="value">' + t.lose + '</span></td>' +
-            '<td data-label="Draw"><span class="value">' + t.draw + '</span></td>' +
-            '<td data-label="GA"><span class="value">' + t.ga + '</span></td>' +
-            '<td data-label="GF"><span class="value">' + t.gf + '</span></td>' +
-            '<td data-label="Diff"><span class="value">' + t.diff + '</span></td>' +
-            '<td data-label="Point"><span class="value">' + t.point + '</span></td>' +
-            '<td data-label="Form"><span class="value" style="display:inline-flex;gap:3px;align-items:center;">' + formHtml + '</span></td>';
+        tr.innerHTML = `<td data-label="Rank"><span class="value">${idx+1}</span></td><td data-label="Team"><span class="value">${t.name}</span></td><td data-label="Game"><span class="value">${t.game}</span></td><td data-label="Win"><span class="value">${t.win}</span></td><td data-label="Lose"><span class="value">${t.lose}</span></td><td data-label="Draw"><span class="value">${t.draw}</span></td><td data-label="GA"><span class="value">${t.ga}</span></td><td data-label="GF"><span class="value">${t.gf}</span></td><td data-label="Diff"><span class="value">${t.diff}</span></td><td data-label="Point"><span class="value">${t.point}</span></td><td data-label="Form"><span class="value" style="display:inline-flex;gap:3px;align-items:center;">${formHtml}</span></td>`;
         tbody.appendChild(tr);
     });
 }
 
 function renderHistoryList(matches) {
-    const tbody = document.querySelector("#historyTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
+    const tbody = document.querySelector("#historyTable tbody"); if (!tbody) return; tbody.innerHTML = "";
     matches.slice().reverse().forEach(m => {
         const tr = document.createElement("tr");
-        tr.innerHTML =
-            '<td data-label="GW"><span class="value">GW' + (m.gameNumber||'-') + '</span></td>' +
-            '<td data-label="Date"><span class="value">' + m.date + '</span></td>' +
-            '<td data-label="Match"><span class="value">' + m.team1 + ' vs ' + m.team2 + '</span></td>' +
-            '<td data-label="Score"><span class="value">' + m.score1 + '-' + m.score2 + '</span></td>' +
-            '<td data-label="Action"><span class="value"><button class="delete-btn" data-id="' + m.id + '">🗑 Delete</button></span></td>';
+        tr.innerHTML = `<td data-label="GW"><span class="value">GW${m.gameNumber||'-'}</span></td><td data-label="Date"><span class="value">${m.date}</span></td><td data-label="Match"><span class="value">${m.team1} vs ${m.team2}</span></td><td data-label="Score"><span class="value">${m.score1}-${m.score2}</span></td><td data-label="Action"><span class="value"><button class="delete-btn" data-id="${m.id}">🗑 Delete</button></span></td>`;
         tbody.appendChild(tr);
     });
     tbody.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", () => onDeleteMatchClick(btn.getAttribute("data-id"))));
 }
 
 function renderCardTable(suspensions) {
-    const tbody = document.querySelector("#cardTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    if (suspensions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No card warnings yet</td></tr>';
-        return;
-    }
+    const tbody = document.querySelector("#cardTable tbody"); if (!tbody) return; tbody.innerHTML = "";
+    if (suspensions.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No card warnings yet</td></tr>`; return; }
     suspensions.forEach(susp => {
         const isBannedRed = susp.redBanLeft > 0, isBannedYellow = susp.yellowBanLeft > 0;
         let badge = "";
-        if (isBannedRed) badge = '<span style="background:#c0392b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">🔴 BANNED — ' + susp.redBanLeft + ' left</span>';
-        else if (isBannedYellow) badge = '<span style="background:#b8860b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">🟡 BANNED — ' + susp.yellowBanLeft + ' left</span>';
-        else if (susp.activeYellows === 2) badge = '<span style="background:#5a4200;color:#ffe;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">⚠️ 1 more = ban</span>';
-        const banLeft = isBannedRed ? '🔴 ' + susp.redBanLeft + ' match(es)' : isBannedYellow ? '🟡 ' + susp.yellowBanLeft + ' match' : '✅ Eligible';
-        const yellowStyle = susp.activeYellows >= 3 ? 'color:#f1c40f;font-weight:bold;' : '';
+        if (isBannedRed) badge = `<span style="background:#c0392b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">🔴 BANNED — ${susp.redBanLeft} left</span>`;
+        else if (isBannedYellow) badge = `<span style="background:#b8860b;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">🟡 BANNED — ${susp.yellowBanLeft} left</span>`;
+        else if (susp.activeYellows === 2) badge = `<span style="background:#5a4200;color:#ffe;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:6px;">⚠️ 1 more = ban</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML =
-            '<td data-label="Team"><span class="value">' + susp.team + '</span></td>' +
-            '<td data-label="Player"><span class="value">' + susp.player + badge + '</span></td>' +
-            '<td data-label="🟡 Yellows"><span class="value" style="' + yellowStyle + '">' + susp.activeYellows + '</span></td>' +
-            '<td data-label="Ban Left"><span class="value">' + banLeft + '</span></td>' +
-            '<td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="' + susp.id + '">✏️ Edit</button><button class="delete-btn" data-id="' + susp.id + '" data-player="' + susp.player + '">🗑 Delete</button></td>';
+        tr.innerHTML = `<td data-label="Team"><span class="value">${susp.team}</span></td><td data-label="Player"><span class="value">${susp.player}${badge}</span></td><td data-label="🟡 Yellows"><span class="value" style="${susp.activeYellows>=3?'color:#f1c40f;font-weight:bold;':''}">${susp.activeYellows}</span></td><td data-label="Ban Left"><span class="value">${isBannedRed?`🔴 ${susp.redBanLeft} match(es)`:isBannedYellow?`🟡 ${susp.yellowBanLeft} match`:'✅ Eligible'}</span></td><td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="${susp.id}">✏️ Edit</button><button class="delete-btn" data-id="${susp.id}" data-player="${susp.player}">🗑 Delete</button></td>`;
         tbody.appendChild(tr);
     });
-    tbody.querySelectorAll(".edit-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const susp = suspensions.find(s => s.id === btn.getAttribute("data-id"));
-            if (susp) openEditSuspensionModal(susp);
-        });
-    });
+    tbody.querySelectorAll(".edit-btn").forEach(btn => { btn.addEventListener("click", () => { const susp = suspensions.find(s => s.id === btn.getAttribute("data-id")); if (susp) openEditSuspensionModal(susp); }); });
     tbody.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", () => deleteSuspension(btn.getAttribute("data-id"), btn.getAttribute("data-player"))));
 }
 
 function renderInjuryTable(injuries) {
-    const tbody = document.querySelector("#injuryTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    if (injuries.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No injuries recorded</td></tr>';
-        return;
-    }
+    const tbody = document.querySelector("#injuryTable tbody"); if (!tbody) return; tbody.innerHTML = "";
+    if (injuries.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No injuries recorded</td></tr>`; return; }
     injuries.filter(i => i.injuryGamesLeft > 0).forEach(inj => {
         const isHard = inj.injuryGamesLeft > 1;
         const typeBadge = isHard
-            ? '<span style="background:#c0392b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🔴 HARD</span>'
-            : '<span style="background:#b8860b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🟡 EASY</span>';
+            ? `<span style="background:#c0392b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🔴 HARD</span>`
+            : `<span style="background:#b8860b;color:#fff;padding:2px 7px;border-radius:10px;font-size:0.74em;margin-left:4px;">🟡 EASY</span>`;
         const tr = document.createElement("tr");
-        tr.innerHTML =
-            '<td data-label="Team"><span class="value">' + inj.team + '</span></td>' +
-            '<td data-label="Player"><span class="value">' + inj.player + ' <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">🏥 INJURED</span>' + typeBadge + '</span></td>' +
-            '<td data-label="Games Left"><span class="value" style="color:#e67e22;font-weight:bold;">' + inj.injuryGamesLeft + '</span></td>' +
-            '<td data-label="Status"><span class="value" style="color:#e74c3c;">❌ Not Available</span></td>' +
-            '<td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="' + inj.id + '" data-player="' + inj.player + '" data-games="' + inj.injuryGamesLeft + '">✏️ Edit</button><button class="delete-btn" data-id="' + inj.id + '" data-player="' + inj.player + '">🗑 Delete</button></td>';
+        tr.innerHTML = `<td data-label="Team"><span class="value">${inj.team}</span></td><td data-label="Player"><span class="value">${inj.player} <span style="background:#e67e22;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.76em;margin-left:4px;">🏥 INJURED</span>${typeBadge}</span></td><td data-label="Games Left"><span class="value" style="color:#e67e22;font-weight:bold;">${inj.injuryGamesLeft}</span></td><td data-label="Status"><span class="value" style="color:#e74c3c;">❌ Not Available</span></td><td data-label="Actions" style="white-space:nowrap;"><button class="edit-btn" data-id="${inj.id}" data-player="${inj.player}" data-games="${inj.injuryGamesLeft}">✏️ Edit</button><button class="delete-btn" data-id="${inj.id}" data-player="${inj.player}">🗑 Delete</button></td>`;
         tbody.appendChild(tr);
     });
     injuries.filter(i => i.injuryGamesLeft === 0).forEach(inj => {
-        const tr = document.createElement("tr");
-        tr.style.opacity = "0.5";
-        tr.innerHTML =
-            '<td data-label="Team"><span class="value">' + inj.team + '</span></td>' +
-            '<td data-label="Player"><span class="value">' + inj.player + '</span></td>' +
-            '<td data-label="Games Left"><span class="value">0</span></td>' +
-            '<td data-label="Status"><span class="value" style="color:#2ecc71;">✅ Recovered</span></td>' +
-            '<td data-label="Actions"><button class="delete-btn" data-id="' + inj.id + '" data-player="' + inj.player + '">🗑 Delete</button></td>';
+        const tr = document.createElement("tr"); tr.style.opacity = "0.5";
+        tr.innerHTML = `<td data-label="Team"><span class="value">${inj.team}</span></td><td data-label="Player"><span class="value">${inj.player}</span></td><td data-label="Games Left"><span class="value">0</span></td><td data-label="Status"><span class="value" style="color:#2ecc71;">✅ Recovered</span></td><td data-label="Actions"><button class="delete-btn" data-id="${inj.id}" data-player="${inj.player}">🗑 Delete</button></td>`;
         tbody.appendChild(tr);
     });
     tbody.querySelectorAll(".edit-btn[data-games]").forEach(btn => btn.addEventListener("click", () => openEditInjuryModal(btn.getAttribute("data-id"), btn.getAttribute("data-player"), btn.getAttribute("data-games"))));
@@ -201,42 +163,33 @@ function renderInjuryTable(injuries) {
 function openEditInjuryModal(id, player, gamesLeft) {
     let modal = document.getElementById("editInjuryModal");
     if (!modal) {
-        modal = document.createElement("div");
-        modal.id = "editInjuryModal";
+        modal = document.createElement("div"); modal.id = "editInjuryModal";
         modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;";
-        modal.innerHTML = '<div style="background:#1e2a3a;padding:24px;border-radius:14px;min-width:300px;color:#fff;box-shadow:0 8px 40px #000c;"><h3 style="margin-top:0;">✏️ Edit Injury</h3><p id="editInjuryLabel" style="color:#aaa;margin:0 0 14px;font-size:0.9em;"></p><label style="display:block;margin:10px 0;font-size:0.9em;">🏥 Games Left (0 = recovered): <input id="editInjuryGames" type="number" min="0" max="20" style="margin-left:8px;width:60px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><p style="color:#888;font-size:0.8em;margin:6px 0 16px;">Set to 0 to mark as recovered.</p><div style="display:flex;gap:10px;"><button id="saveEditInjuryBtn" style="background:#e67e22;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">💾 Save</button><button id="cancelEditInjuryBtn" style="background:#555;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">Cancel</button></div></div>';
+        modal.innerHTML = `<div style="background:#1e2a3a;padding:24px;border-radius:14px;min-width:300px;color:#fff;box-shadow:0 8px 40px #000c;"><h3 style="margin-top:0;">✏️ Edit Injury</h3><p id="editInjuryLabel" style="color:#aaa;margin:0 0 14px;font-size:0.9em;"></p><label style="display:block;margin:10px 0;font-size:0.9em;">🏥 Games Left (0 = recovered): <input id="editInjuryGames" type="number" min="0" max="20" style="margin-left:8px;width:60px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><p style="color:#888;font-size:0.8em;margin:6px 0 16px;">Set to 0 to mark as recovered.</p><div style="display:flex;gap:10px;"><button id="saveEditInjuryBtn" style="background:#e67e22;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">💾 Save</button><button id="cancelEditInjuryBtn" style="background:#555;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">Cancel</button></div></div>`;
         document.body.appendChild(modal);
     }
     document.getElementById("editInjuryLabel").textContent = player;
     document.getElementById("editInjuryGames").value = gamesLeft;
-    modal.style.display = "flex";
-    modal._editId = id;
+    modal.style.display = "flex"; modal._editId = id;
     document.getElementById("cancelEditInjuryBtn").onclick = () => { modal.style.display = "none"; };
     document.getElementById("saveEditInjuryBtn").onclick = () => {
         const games = Number(document.getElementById("editInjuryGames").value)||0;
         if (!window.db) return;
-        window.db.collection("playerInjuries").doc(modal._editId).update({ injuryGamesLeft: games })
-            .then(() => { modal.style.display = "none"; alert("✅ Injury updated!"); })
-            .catch(err => { console.error(err); alert("❌ Error"); });
+        window.db.collection("playerInjuries").doc(modal._editId).update({ injuryGamesLeft: games }).then(() => { modal.style.display = "none"; alert("✅ Injury updated!"); }).catch(err => { console.error(err); alert("❌ Error"); });
     };
 }
-
 function deleteInjury(id, player) {
-    const pass = prompt("Admin password to delete injury for " + player + ":");
-    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    const pass = prompt("Admin password to delete injury for " + player + ":"); if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
-    window.db.collection("playerInjuries").doc(id).delete()
-        .then(() => alert("✅ Injury deleted for " + player))
-        .catch(err => { console.error(err); alert("❌ Error"); });
+    window.db.collection("playerInjuries").doc(id).delete().then(() => alert("✅ Injury deleted for " + player)).catch(err => { console.error(err); alert("❌ Error"); });
 }
 
 function openEditSuspensionModal(susp) {
     let modal = document.getElementById("editSuspModal");
     if (!modal) {
-        modal = document.createElement("div");
-        modal.id = "editSuspModal";
+        modal = document.createElement("div"); modal.id = "editSuspModal";
         modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;";
-        modal.innerHTML = '<div style="background:#1e2a3a;padding:24px;border-radius:14px;min-width:320px;color:#fff;box-shadow:0 8px 40px #000c;"><h3 style="margin-top:0;">✏️ Edit Suspension</h3><p id="editSuspLabel" style="color:#aaa;margin:0 0 14px;font-size:0.9em;"></p><label style="display:block;margin:10px 0;font-size:0.9em;">🟡 Active Yellows (0-3): <input id="editActiveYellow" type="number" min="0" max="3" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><label style="display:block;margin:10px 0;font-size:0.9em;">🟡 Yellow Ban Left: <input id="editYellowBanLeft" type="number" min="0" max="1" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><label style="display:block;margin:10px 0;font-size:0.9em;">🔴 Red Ban Left: <input id="editRedBanLeft" type="number" min="0" max="3" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><div style="display:flex;gap:10px;margin-top:16px;"><button id="saveEditSuspBtn" style="background:#27ae60;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">💾 Save</button><button id="cancelEditSuspBtn" style="background:#555;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">Cancel</button></div></div>';
+        modal.innerHTML = `<div style="background:#1e2a3a;padding:24px;border-radius:14px;min-width:320px;color:#fff;box-shadow:0 8px 40px #000c;"><h3 style="margin-top:0;">✏️ Edit Suspension</h3><p id="editSuspLabel" style="color:#aaa;margin:0 0 14px;font-size:0.9em;"></p><label style="display:block;margin:10px 0;font-size:0.9em;">🟡 Active Yellows (0-3): <input id="editActiveYellow" type="number" min="0" max="3" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><label style="display:block;margin:10px 0;font-size:0.9em;">🟡 Yellow Ban Left: <input id="editYellowBanLeft" type="number" min="0" max="1" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><label style="display:block;margin:10px 0;font-size:0.9em;">🔴 Red Ban Left: <input id="editRedBanLeft" type="number" min="0" max="3" style="margin-left:8px;width:55px;padding:5px;border-radius:6px;border:none;background:#2d3f55;color:#fff;"/></label><div style="display:flex;gap:10px;margin-top:16px;"><button id="saveEditSuspBtn" style="background:#27ae60;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">💾 Save</button><button id="cancelEditSuspBtn" style="background:#555;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;">Cancel</button></div></div>`;
         document.body.appendChild(modal);
     }
     document.getElementById("editSuspLabel").textContent = susp.player + " (" + susp.team + ")";
@@ -247,50 +200,30 @@ function openEditSuspensionModal(susp) {
     document.getElementById("cancelEditSuspBtn").onclick = () => { modal.style.display = "none"; };
     document.getElementById("saveEditSuspBtn").onclick = () => {
         if (!window.db) return;
-        window.db.collection("playerSuspensions").doc(susp.id).update({
-            activeYellows: Number(document.getElementById("editActiveYellow").value)||0,
-            yellowBanLeft: Number(document.getElementById("editYellowBanLeft").value)||0,
-            redBanLeft: Number(document.getElementById("editRedBanLeft").value)||0
-        }).then(() => { modal.style.display = "none"; alert("✅ Updated!"); })
-          .catch(err => { console.error(err); alert("❌ Error"); });
+        window.db.collection("playerSuspensions").doc(susp.id).update({ activeYellows: Number(document.getElementById("editActiveYellow").value)||0, yellowBanLeft: Number(document.getElementById("editYellowBanLeft").value)||0, redBanLeft: Number(document.getElementById("editRedBanLeft").value)||0 }).then(() => { modal.style.display = "none"; alert("✅ Updated!"); }).catch(err => { console.error(err); alert("❌ Error"); });
     };
 }
-
 function deleteSuspension(id, player) {
-    const pass = prompt("Admin password to delete warnings for " + player + ":");
-    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+    const pass = prompt("Admin password to delete warnings for " + player + ":"); if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     if (!window.db) return;
-    window.db.collection("playerSuspensions").doc(id).delete()
-        .then(() => alert("✅ Deleted for " + player))
-        .catch(err => { console.error(err); alert("❌ Error"); });
+    window.db.collection("playerSuspensions").doc(id).delete().then(() => alert("✅ Deleted for " + player)).catch(err => { console.error(err); alert("❌ Error"); });
 }
 
 function getOrCreatePlayerSusp(team, player) {
     return window.db.collection("playerSuspensions").where("team","==",team).where("player","==",player).get().then(snap => {
-        if (!snap.empty) {
-            const doc = snap.docs[0], d = doc.data();
-            return { id: doc.id, team, player, activeYellows: Number(d.activeYellows)||0, yellowBanLeft: Number(d.yellowBanLeft)||0, redBanLeft: Number(d.redBanLeft)||0 };
-        }
-        return window.db.collection("playerSuspensions").add({ team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 })
-            .then(ref => ({ id: ref.id, team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 }));
+        if (!snap.empty) { const doc = snap.docs[0], d = doc.data(); return { id: doc.id, team, player, activeYellows: Number(d.activeYellows)||0, yellowBanLeft: Number(d.yellowBanLeft)||0, redBanLeft: Number(d.redBanLeft)||0 }; }
+        return window.db.collection("playerSuspensions").add({ team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 }).then(ref => ({ id: ref.id, team, player, activeYellows:0, yellowBanLeft:0, redBanLeft:0 }));
     });
 }
-
 function getOrCreatePlayerInjury(team, player) {
     return window.db.collection("playerInjuries").where("team","==",team).where("player","==",player).get().then(snap => {
-        if (!snap.empty) {
-            const doc = snap.docs[0], d = doc.data();
-            return { id: doc.id, team, player, injuryGamesLeft: Number(d.injuryGamesLeft)||0 };
-        }
-        return window.db.collection("playerInjuries").add({ team, player, injuryGamesLeft:0 })
-            .then(ref => ({ id: ref.id, team, player, injuryGamesLeft:0 }));
+        if (!snap.empty) { const doc = snap.docs[0], d = doc.data(); return { id: doc.id, team, player, injuryGamesLeft: Number(d.injuryGamesLeft)||0 }; }
+        return window.db.collection("playerInjuries").add({ team, player, injuryGamesLeft:0 }).then(ref => ({ id: ref.id, team, player, injuryGamesLeft:0 }));
     });
 }
 
 function saveCardWarning(matchTeam1, matchTeam2) {
-    const team = document.getElementById("cardTeam").value;
-    const player = document.getElementById("playerSelect").value;
-    const cardTypeRadio = document.querySelector('input[name="cardType"]:checked');
+    const team = document.getElementById("cardTeam").value, player = document.getElementById("playerSelect").value, cardTypeRadio = document.querySelector('input[name="cardType"]:checked');
     if (!team || !player) { alert("❌ Please select team and player"); return; }
     if (!cardTypeRadio) { alert("❌ Please select Yellow or Red card"); return; }
     if (team !== matchTeam1 && team !== matchTeam2) { alert("❌ Only " + matchTeam1 + " or " + matchTeam2 + " players"); return; }
@@ -303,8 +236,7 @@ function saveCardWarning(matchTeam1, matchTeam2) {
         return window.db.collection("playerSuspensions").doc(susp.id).update({ activeYellows, yellowBanLeft, redBanLeft });
     }).then(() => {
         alert(cardType === "red" ? "✅ 🔴 Red card — " + player + " banned for 3 " + team + " matches" : "✅ 🟡 Yellow card added for " + player);
-        document.getElementById("cardTeam").value = "";
-        document.getElementById("playerSelect").innerHTML = '<option value="">Select Player</option>';
+        document.getElementById("cardTeam").value = ""; document.getElementById("playerSelect").innerHTML = '<option value="">Select Player</option>';
         document.querySelectorAll('input[name="cardType"]').forEach(r => r.checked = false);
     }).catch(err => { console.error(err); alert("❌ Error saving card"); });
 }
@@ -330,128 +262,69 @@ function saveInjury(matchTeam1, matchTeam2) {
     }).catch(err => { console.error(err); alert("❌ Error saving injury"); });
 }
 
-function loadPlayersForTeam(selectedTeam, selectId) {
-    selectId = selectId || "playerSelect";
-    const playerSelect = document.getElementById(selectId);
-    if (!playerSelect || !window.db) return;
-    playerSelect.innerHTML = '<option value="">Select Player</option>';
-    if (!selectedTeam) return;
-    window.db.collection("players").where("team","==",selectedTeam).get()
-        .then(snap => snap.forEach(doc => {
-            const opt = document.createElement("option");
-            opt.value = doc.data().player;
-            opt.textContent = doc.data().player;
-            playerSelect.appendChild(opt);
-        }))
-        .catch(err => console.error(err));
+function loadPlayersForTeam(selectedTeam, selectId = "playerSelect") {
+    const playerSelect = document.getElementById(selectId); if (!playerSelect || !window.db) return;
+    playerSelect.innerHTML = '<option value="">Select Player</option>'; if (!selectedTeam) return;
+    window.db.collection("players").where("team","==",selectedTeam).get().then(snap => snap.forEach(doc => { const opt = document.createElement("option"); opt.value = doc.data().player; opt.textContent = doc.data().player; playerSelect.appendChild(opt); })).catch(err => console.error(err));
 }
 
 function checkGameEligibility() {
-    const team1 = document.getElementById("checkTeam1").value;
-    const team2 = document.getElementById("checkTeam2").value;
+    const team1 = document.getElementById("checkTeam1").value, team2 = document.getElementById("checkTeam2").value;
     if (!team1 || !team2 || team1 === team2) { alert("❌ Please select two different teams"); return; }
     if (!window.db) { alert("Database not initialized"); return; }
-    Promise.all([
-        window.db.collection("playerSuspensions").get(),
-        window.db.collection("playerInjuries").get()
-    ]).then(([suspSnap, injSnap]) => {
+    Promise.all([window.db.collection("playerSuspensions").get(), window.db.collection("playerInjuries").get()]).then(([suspSnap, injSnap]) => {
         const suspended = [], warnings = [], injured = [];
-        suspSnap.forEach(doc => {
-            const s = docToSuspension(doc);
-            if (s.team !== team1 && s.team !== team2) return;
-            if (s.redBanLeft > 0) suspended.push({s, type:"red"});
-            else if (s.yellowBanLeft > 0) suspended.push({s, type:"yellow"});
-            else if (s.activeYellows === 2) warnings.push(s);
-        });
-        injSnap.forEach(doc => {
-            const inj = docToInjury(doc);
-            if (inj.team !== team1 && inj.team !== team2) return;
-            if (inj.injuryGamesLeft > 0) injured.push(inj);
-        });
-        const resultDiv = document.getElementById("checkResult");
-        const bannedList = document.getElementById("bannedList");
+        suspSnap.forEach(doc => { const s = docToSuspension(doc); if (s.team !== team1 && s.team !== team2) return; if (s.redBanLeft > 0) suspended.push({s, type:"red"}); else if (s.yellowBanLeft > 0) suspended.push({s, type:"yellow"}); else if (s.activeYellows === 2) warnings.push(s); });
+        injSnap.forEach(doc => { const inj = docToInjury(doc); if (inj.team !== team1 && inj.team !== team2) return; if (inj.injuryGamesLeft > 0) injured.push(inj); });
+        const resultDiv = document.getElementById("checkResult"), bannedList = document.getElementById("bannedList");
         let html = "";
-        if (suspended.length === 0 && warnings.length === 0 && injured.length === 0) {
-            html += '<div style="background:#0a1f10;border-left:4px solid #2ecc71;padding:14px;border-radius:8px;"><span style="color:#2ecc71;font-size:1.05em;font-weight:bold;">✅ All players eligible for this match!</span></div>';
-        }
+        if (suspended.length === 0 && warnings.length === 0 && injured.length === 0) html += `<div style="background:#0a1f10;border-left:4px solid #2ecc71;padding:14px;border-radius:8px;"><span style="color:#2ecc71;font-size:1.05em;font-weight:bold;">✅ All players eligible for this match!</span></div>`;
         if (suspended.length > 0) {
-            html += '<h4 style="color:#e74c3c;margin:0 0 8px;">⛔ Suspended:</h4>';
-            suspended.forEach(function(item) {
-                const s = item.s, type = item.type;
-                if (type === "red") html += '<div style="background:#1e0a0a;border-left:4px solid #e74c3c;padding:12px;margin:6px 0;border-radius:8px;"><strong>' + s.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + s.team + ')</span><br/><span style="font-size:0.92em;">🔴 Red card ban — <strong>' + s.redBanLeft + ' ' + s.team + ' match(es) left</strong></span></div>';
-                else html += '<div style="background:#1a1400;border-left:4px solid #f1c40f;padding:12px;margin:6px 0;border-radius:8px;"><strong>' + s.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + s.team + ')</span><br/><span style="font-size:0.92em;">🟡 Yellow ban — <strong>' + s.yellowBanLeft + ' ' + s.team + ' match left</strong></span></div>';
+            html += `<h4 style="color:#e74c3c;margin:0 0 8px;">⛔ Suspended:</h4>`;
+            suspended.forEach(({s, type}) => {
+                if (type === "red") html += `<div style="background:#1e0a0a;border-left:4px solid #e74c3c;padding:12px;margin:6px 0;border-radius:8px;"><strong>${s.player}</strong> <span style="color:#999;font-size:0.85em;">(${s.team})</span><br/><span style="font-size:0.92em;">🔴 Red card ban — <strong>${s.redBanLeft} ${s.team} match(es) left</strong></span></div>`;
+                else html += `<div style="background:#1a1400;border-left:4px solid #f1c40f;padding:12px;margin:6px 0;border-radius:8px;"><strong>${s.player}</strong> <span style="color:#999;font-size:0.85em;">(${s.team})</span><br/><span style="font-size:0.92em;">🟡 Yellow ban — <strong>${s.yellowBanLeft} ${s.team} match left</strong></span></div>`;
             });
         }
         if (injured.length > 0) {
-            html += '<h4 style="color:#e67e22;margin:14px 0 8px;">🏥 Injured:</h4>';
-            injured.forEach(function(inj) {
+            html += `<h4 style="color:#e67e22;margin:14px 0 8px;">🏥 Injured:</h4>`;
+            injured.forEach(inj => {
                 const isHard = inj.injuryGamesLeft > 1;
                 const typeLabel = isHard ? '🔴 Hard Injury' : '🟡 Easy Injury';
                 const borderColor = isHard ? '#e74c3c' : '#f39c12';
                 const bgColor = isHard ? '#1e0a0a' : '#1e1200';
-                html += '<div style="background:' + bgColor + ';border-left:4px solid ' + borderColor + ';padding:12px;margin:6px 0;border-radius:8px;"><strong>' + inj.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + inj.team + ')</span><br/><span style="font-size:0.92em;">' + typeLabel + ' — <strong>' + inj.injuryGamesLeft + ' ' + inj.team + ' match(es) left</strong></span><br/><span style="font-size:0.82em;color:#2ecc71;">✅ Available after ' + inj.injuryGamesLeft + ' more ' + inj.team + ' match(es)</span></div>';
+                html += `<div style="background:${bgColor};border-left:4px solid ${borderColor};padding:12px;margin:6px 0;border-radius:8px;"><strong>${inj.player}</strong> <span style="color:#999;font-size:0.85em;">(${inj.team})</span><br/><span style="font-size:0.92em;">${typeLabel} — <strong>${inj.injuryGamesLeft} ${inj.team} match(es) left</strong></span><br/><span style="font-size:0.82em;color:#2ecc71;">✅ Available after ${inj.injuryGamesLeft} more ${inj.team} match(es)</span></div>`;
             });
         }
         if (warnings.length > 0) {
-            html += '<h4 style="color:#f39c12;margin:14px 0 8px;">⚠️ Yellow Warning:</h4>';
-            warnings.forEach(function(s) {
-                html += '<div style="background:#191100;border-left:4px solid #f39c12;padding:10px;margin:6px 0;border-radius:8px;"><strong>' + s.player + '</strong> <span style="color:#999;font-size:0.85em;">(' + s.team + ')</span><br/><span style="font-size:0.92em;">🟡 ' + s.activeYellows + '/3 yellows — <strong>1 more = ban!</strong></span></div>';
-            });
+            html += `<h4 style="color:#f39c12;margin:14px 0 8px;">⚠️ Yellow Warning:</h4>`;
+            warnings.forEach(s => { html += `<div style="background:#191100;border-left:4px solid #f39c12;padding:10px;margin:6px 0;border-radius:8px;"><strong>${s.player}</strong> <span style="color:#999;font-size:0.85em;">(${s.team})</span><br/><span style="font-size:0.92em;">🟡 ${s.activeYellows}/3 yellows — <strong>1 more = ban!</strong></span></div>`; });
         }
-        bannedList.innerHTML = html;
-        resultDiv.style.display = "block";
+        bannedList.innerHTML = html; resultDiv.style.display = "block";
     }).catch(err => { console.error(err); alert("❌ Error"); });
 }
 
 let _matchTeam1 = "", _matchTeam2 = "";
-
 function setupMatchWeek() {
-    const saveBtn = document.getElementById("saveMatchBtn");
-    const addCardBtn = document.getElementById("addCardBtn");
-    const addInjuryBtn = document.getElementById("addInjuryBtn");
-    const okBtn = document.getElementById("okBtn");
-    const cardTeamSelect = document.getElementById("cardTeam");
-    const injuryTeamSelect = document.getElementById("injuryTeam");
-
+    const saveBtn = document.getElementById("saveMatchBtn"), addCardBtn = document.getElementById("addCardBtn"), addInjuryBtn = document.getElementById("addInjuryBtn"), okBtn = document.getElementById("okBtn"), cardTeamSelect = document.getElementById("cardTeam"), injuryTeamSelect = document.getElementById("injuryTeam");
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
-            const pass = document.getElementById("adminPass").value || "";
-            if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
-            const team1 = document.getElementById("team1").value;
-            const team2 = document.getElementById("team2").value;
-            const score1 = Number(document.getElementById("score1").value);
-            const score2 = Number(document.getElementById("score2").value);
-            const date = document.getElementById("matchDate").value;
-            if (!team1 || !team2 || team1 === team2) { alert("❌ Choose two different teams"); return; }
-            if (!date) { alert("❌ Choose a date"); return; }
-            if (!Number.isFinite(score1) || !Number.isFinite(score2)) { alert("❌ Enter valid scores"); return; }
-            if (!window.db) { alert("Database not initialized"); return; }
+            const pass = document.getElementById("adminPass").value || ""; if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
+            const team1 = document.getElementById("team1").value, team2 = document.getElementById("team2").value, score1 = Number(document.getElementById("score1").value), score2 = Number(document.getElementById("score2").value), date = document.getElementById("matchDate").value;
+            if (!team1 || !team2 || team1 === team2) { alert("❌ Choose two different teams"); return; } if (!date) { alert("❌ Choose a date"); return; } if (!Number.isFinite(score1) || !Number.isFinite(score2)) { alert("❌ Enter valid scores"); return; } if (!window.db) { alert("Database not initialized"); return; }
             window.db.collection("matches").get().then(snap => {
                 const gameNumber = snap.size + 1;
-                return window.db.collection("matches").add({
-                    team1, team2, score1, score2, date, gameNumber,
-                    savedAt: new Date().toLocaleString()
-                }).then(() => decrementBansForMatch(team1, team2).then(() => ({ team1, team2, gameNumber, score1, score2 })));
-            }).then(({ team1, team2, gameNumber, score1, score2 }) => {
-                _matchTeam1 = team1;
-                _matchTeam2 = team2;
+                return window.db.collection("matches").add({ team1, team2, score1, score2, date, gameNumber, savedAt: new Date().toLocaleString() }).then(() => decrementBansForMatch(team1, team2).then(() => ({ team1, team2, gameNumber })));
+            }).then(({ team1, team2, gameNumber }) => {
+                _matchTeam1 = team1; _matchTeam2 = team2;
                 alert("✅ Match #" + gameNumber + " saved");
+                // Generate AI Kurdish match report
                 generateMatchReport(team1, team2, score1, score2, gameNumber);
-                ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = "";
-                });
-                const matchForm = document.getElementById("matchForm");
-                const cardForm = document.getElementById("cardForm");
-                if (matchForm) matchForm.style.display = "none";
-                if (cardForm) cardForm.style.display = "block";
-                const lbl = document.getElementById("currentGWLabel");
-                if (lbl) lbl.textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
-                ["cardTeam","injuryTeam"].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.innerHTML = '<option value="">Select Team</option><option value="' + team1 + '">' + team1 + '</option><option value="' + team2 + '">' + team2 + '</option>';
-                });
-            }).catch(err => { console.error(err); alert("❌ Error saving match: " + err.message); });
+                ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => { document.getElementById(id).value = ""; });
+                document.getElementById("matchForm").style.display = "none"; document.getElementById("cardForm").style.display = "block";
+                const lbl = document.getElementById("currentGWLabel"); if (lbl) lbl.textContent = "Match #" + gameNumber + ": " + team1 + " vs " + team2;
+                ["cardTeam","injuryTeam"].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<option value="">Select Team</option><option value="${team1}">${team1}</option><option value="${team2}">${team2}</option>`; });
+            }).catch(err => { console.error(err); alert("❌ Error saving match"); });
         });
     }
     if (cardTeamSelect) cardTeamSelect.addEventListener("change", e => loadPlayersForTeam(e.target.value, "playerSelect"));
@@ -461,389 +334,148 @@ function setupMatchWeek() {
     if (okBtn) okBtn.addEventListener("click", () => { alert("✅ All data saved!"); window.location.href = "index.html"; });
 }
 
-/* =============================================
-   SUPER ADMIN PANEL (password: 9999)
-   Edit Matches, Points, Players, Suspensions, Injuries
-   ============================================= */
-function loadSuperAdminPanel() {
-    if (!window.db) { setTimeout(loadSuperAdminPanel, 300); return; }
-
-    // --- Matches editor ---
-    const matchesTbody = document.querySelector("#saMatchesTable tbody");
-    if (matchesTbody) {
-        window.db.collection("matches").orderBy("gameNumber","asc").get().then(snap => {
-            matchesTbody.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                const tr = document.createElement("tr");
-                tr.innerHTML =
-                    '<td>GW' + (d.gameNumber||'-') + '</td>' +
-                    '<td>' + d.team1 + ' vs ' + d.team2 + '</td>' +
-                    '<td style="white-space:nowrap;">' +
-                        '<input type="number" min="0" id="s1_' + doc.id + '" value="' + (d.score1||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
-                        ' - ' +
-                        '<input type="number" min="0" id="s2_' + doc.id + '" value="' + (d.score2||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
-                    '</td>' +
-                    '<td><input type="date" id="dt_' + doc.id + '" value="' + (d.date||'') + '" style="padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
-                    '<td style="white-space:nowrap;">' +
-                        '<button onclick="saUpdateMatch(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾 Save</button>' +
-                        '<button onclick="saDeleteMatch(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
-                    '</td>';
-                matchesTbody.appendChild(tr);
-            });
-        }).catch(err => {
-            // fallback without orderBy
-            window.db.collection("matches").get().then(snap => {
-                matchesTbody.innerHTML = "";
-                const docs = [];
-                snap.forEach(doc => docs.push(doc));
-                docs.sort((a,b) => (a.data().gameNumber||0)-(b.data().gameNumber||0));
-                docs.forEach(doc => {
-                    const d = doc.data();
-                    const tr = document.createElement("tr");
-                    tr.innerHTML =
-                        '<td>GW' + (d.gameNumber||'-') + '</td>' +
-                        '<td>' + d.team1 + ' vs ' + d.team2 + '</td>' +
-                        '<td style="white-space:nowrap;">' +
-                            '<input type="number" min="0" id="s1_' + doc.id + '" value="' + (d.score1||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
-                            ' - ' +
-                            '<input type="number" min="0" id="s2_' + doc.id + '" value="' + (d.score2||0) + '" style="width:46px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" />' +
-                        '</td>' +
-                        '<td><input type="date" id="dt_' + doc.id + '" value="' + (d.date||'') + '" style="padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
-                        '<td style="white-space:nowrap;">' +
-                            '<button onclick="saUpdateMatch(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾 Save</button>' +
-                            '<button onclick="saDeleteMatch(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
-                        '</td>';
-                    matchesTbody.appendChild(tr);
-                });
-            });
-        });
-    }
-
-    // --- Suspensions editor ---
-    const suspTbody = document.querySelector("#saSuspTable tbody");
-    if (suspTbody) {
-        window.db.collection("playerSuspensions").get().then(snap => {
-            suspTbody.innerHTML = "";
-            if (snap.empty) { suspTbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4d6a85;padding:16px;">No suspensions</td></tr>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data();
-                const tr = document.createElement("tr");
-                tr.innerHTML =
-                    '<td>' + (d.team||'') + '</td>' +
-                    '<td>' + (d.player||'') + '</td>' +
-                    '<td><input type="number" min="0" max="3" id="ay_' + doc.id + '" value="' + (d.activeYellows||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
-                    '<td><input type="number" min="0" max="1" id="ybl_' + doc.id + '" value="' + (d.yellowBanLeft||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
-                    '<td><input type="number" min="0" max="3" id="rbl_' + doc.id + '" value="' + (d.redBanLeft||0) + '" style="width:50px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
-                    '<td style="white-space:nowrap;">' +
-                        '<button onclick="saUpdateSusp(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
-                        '<button onclick="saDeleteSusp(\'' + doc.id + '\',\'' + (d.player||'').replace(/'/g,"") + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
-                    '</td>';
-                suspTbody.appendChild(tr);
-            });
-        });
-    }
-
-    // --- Injuries editor ---
-    const injTbody = document.querySelector("#saInjTable tbody");
-    if (injTbody) {
-        window.db.collection("playerInjuries").get().then(snap => {
-            injTbody.innerHTML = "";
-            if (snap.empty) { injTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#4d6a85;padding:16px;">No injuries</td></tr>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data();
-                const tr = document.createElement("tr");
-                tr.innerHTML =
-                    '<td>' + (d.team||'') + '</td>' +
-                    '<td>' + (d.player||'') + '</td>' +
-                    '<td><input type="number" min="0" max="20" id="inj_' + doc.id + '" value="' + (d.injuryGamesLeft||0) + '" style="width:60px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;text-align:center;" /></td>' +
-                    '<td style="white-space:nowrap;">' +
-                        '<button onclick="saUpdateInj(\'' + doc.id + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
-                        '<button onclick="saDeleteInj(\'' + doc.id + '\',\'' + (d.player||'').replace(/'/g,"") + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
-                    '</td>';
-                injTbody.appendChild(tr);
-            });
-        });
-    }
-
-    // --- Players editor ---
-    const plTbody = document.querySelector("#saPlayersTable tbody");
-    if (plTbody) {
-        window.db.collection("players").get().then(snap => {
-            plTbody.innerHTML = "";
-            if (snap.empty) { plTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#4d6a85;padding:16px;">No players</td></tr>'; return; }
-            snap.forEach(doc => {
-                const d = doc.data();
-                const tr = document.createElement("tr");
-                tr.innerHTML =
-                    '<td>' + (d.team||'') + '</td>' +
-                    '<td><input type="text" id="pname_' + doc.id + '" value="' + (d.player||'').replace(/"/g,'&quot;') + '" style="width:160px;padding:4px;border-radius:6px;border:none;background:#1a2d42;color:#fff;" /></td>' +
-                    '<td style="white-space:nowrap;">' +
-                        '<button onclick="saUpdatePlayer(\'' + doc.id + '\',\'' + (d.team||'').replace(/'/g,"") + '\')" style="background:#27ae60;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:4px;">💾</button>' +
-                        '<button onclick="saDeletePlayer(\'' + doc.id + '\')" style="background:#c0392b;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;">🗑</button>' +
-                    '</td>';
-                plTbody.appendChild(tr);
-            });
-        });
-    }
-}
-
-/* Super admin action helpers */
-window.saUpdateMatch = function(id) {
-    if (!window.db) return;
-    const s1 = Number(document.getElementById("s1_"+id).value)||0;
-    const s2 = Number(document.getElementById("s2_"+id).value)||0;
-    const dt = document.getElementById("dt_"+id).value||"";
-    window.db.collection("matches").doc(id).update({ score1: s1, score2: s2, date: dt })
-        .then(() => alert("✅ Match updated!"))
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saDeleteMatch = function(id) {
-    if (!confirm("Delete this match? This cannot be undone.")) return;
-    if (!window.db) return;
-    window.db.collection("matches").doc(id).delete()
-        .then(() => { alert("✅ Match deleted"); loadSuperAdminPanel(); })
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saUpdateSusp = function(id) {
-    if (!window.db) return;
-    const ay  = Number(document.getElementById("ay_"+id).value)||0;
-    const ybl = Number(document.getElementById("ybl_"+id).value)||0;
-    const rbl = Number(document.getElementById("rbl_"+id).value)||0;
-    window.db.collection("playerSuspensions").doc(id).update({ activeYellows: ay, yellowBanLeft: ybl, redBanLeft: rbl })
-        .then(() => alert("✅ Suspension updated!"))
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saDeleteSusp = function(id, player) {
-    if (!confirm("Delete suspension for " + player + "?")) return;
-    if (!window.db) return;
-    window.db.collection("playerSuspensions").doc(id).delete()
-        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saUpdateInj = function(id) {
-    if (!window.db) return;
-    const g = Number(document.getElementById("inj_"+id).value)||0;
-    window.db.collection("playerInjuries").doc(id).update({ injuryGamesLeft: g })
-        .then(() => alert("✅ Injury updated!"))
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saDeleteInj = function(id, player) {
-    if (!confirm("Delete injury for " + player + "?")) return;
-    if (!window.db) return;
-    window.db.collection("playerInjuries").doc(id).delete()
-        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saUpdatePlayer = function(id, team) {
-    if (!window.db) return;
-    const name = document.getElementById("pname_"+id).value.trim();
-    if (!name) { alert("❌ Player name cannot be empty"); return; }
-    window.db.collection("players").doc(id).update({ player: name, team: team })
-        .then(() => alert("✅ Player updated!"))
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-window.saDeletePlayer = function(id) {
-    if (!confirm("Delete this player?")) return;
-    if (!window.db) return;
-    window.db.collection("players").doc(id).delete()
-        .then(() => { alert("✅ Deleted"); loadSuperAdminPanel(); })
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-
 function setupAdminPanel() {
-    const loginBtn = document.getElementById("loginBtn");
-    const addPlayerBtn = document.getElementById("addPlayerBtn");
-    if (loginBtn) {
-        loginBtn.addEventListener("click", () => {
-            const pw = document.getElementById("adminPassword").value;
-            if (pw === SUPER_ADMIN_PASSWORD) {
-                document.getElementById("passwordForm").style.display = "none";
-                const normalAdmin = document.getElementById("adminContent");
-                const superAdmin  = document.getElementById("superAdminContent");
-                if (normalAdmin) normalAdmin.style.display = "block";
-                if (superAdmin)  superAdmin.style.display  = "block";
-                loadPlayersTable();
-                loadSuperAdminPanel();
-            } else if (pw === ADMIN_PASSWORD) {
-                document.getElementById("passwordForm").style.display = "none";
-                document.getElementById("adminContent").style.display = "block";
-                loadPlayersTable();
-            } else {
-                alert("❌ Wrong password");
-            }
-        });
-    }
-    if (addPlayerBtn) {
-        addPlayerBtn.addEventListener("click", () => {
-            const team = document.getElementById("adminTeam").value;
-            const player = document.getElementById("adminPlayer").value;
-            if (!team || !player) { alert("❌ Please select team and enter player name"); return; }
-            if (!window.db) return;
-            window.db.collection("players").add({ team, player, addedAt: new Date().toLocaleString() })
-                .then(() => { alert("✅ Player added"); document.getElementById("adminTeam").value=""; document.getElementById("adminPlayer").value=""; loadPlayersTable(); })
-                .catch(err => { console.error(err); alert("❌ Error"); });
-        });
-    }
+    const loginBtn = document.getElementById("loginBtn"), addPlayerBtn = document.getElementById("addPlayerBtn");
+    if (loginBtn) { loginBtn.addEventListener("click", () => { const pw = document.getElementById("adminPassword").value; if (pw === ADMIN_PASSWORD) { document.getElementById("passwordForm").style.display = "none"; document.getElementById("adminContent").style.display = "block"; loadPlayersTable(); } else alert("❌ Wrong password"); }); }
+    if (addPlayerBtn) { addPlayerBtn.addEventListener("click", () => { const team = document.getElementById("adminTeam").value, player = document.getElementById("adminPlayer").value; if (!team || !player) { alert("❌ Please select team and enter player name"); return; } if (!window.db) return; window.db.collection("players").add({ team, player, addedAt: new Date().toLocaleString() }).then(() => { alert("✅ Player added"); document.getElementById("adminTeam").value=""; document.getElementById("adminPlayer").value=""; loadPlayersTable(); }).catch(err => { console.error(err); alert("❌ Error"); }); }); }
 }
-
 function loadPlayersTable() {
-    const tbody = document.querySelector("#playersTable tbody");
-    if (!tbody || !window.db) return;
-    window.db.collection("players").get().then(snap => {
-        tbody.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            const tr = document.createElement("tr");
-            tr.innerHTML = '<td>' + d.team + '</td><td>' + d.player + '</td><td><button class="delete-btn" onclick="deletePlayer(\'' + doc.id + '\')">Delete</button></td>';
-            tbody.appendChild(tr);
-        });
-    });
+    const tbody = document.querySelector("#playersTable tbody"); if (!tbody || !window.db) return;
+    window.db.collection("players").get().then(snap => { tbody.innerHTML = ""; snap.forEach(doc => { const d = doc.data(); const tr = document.createElement("tr"); tr.innerHTML = `<td>${d.team}</td><td>${d.player}</td><td><button class="delete-btn" onclick="deletePlayer('${doc.id}')">Delete</button></td>`; tbody.appendChild(tr); }); });
 }
-
-window.deletePlayer = function(id) {
-    const pass = prompt("Admin password to delete:");
-    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
-    if (!window.db) return;
-    window.db.collection("players").doc(id).delete()
-        .then(() => { alert("✅ Deleted"); loadPlayersTable(); })
-        .catch(err => { console.error(err); alert("❌ Error"); });
-};
-
-function onDeleteMatchClick(docId) {
-    const pass = prompt("Admin password to delete:");
-    if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
-    if (!window.db) return;
-    window.db.collection("matches").doc(docId).delete()
-        .then(() => alert("✅ Match deleted"))
-        .catch(err => { console.error(err); alert("❌ Error"); });
-}
-
-function setupCheckGames() {
-    const btn = document.getElementById("checkBtn");
-    if (btn) btn.addEventListener("click", checkGameEligibility);
-}
+window.deletePlayer = function(id) { const pass = prompt("Admin password to delete:"); if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; } if (!window.db) return; window.db.collection("players").doc(id).delete().then(() => { alert("✅ Deleted"); loadPlayersTable(); }).catch(err => { console.error(err); alert("❌ Error"); }); };
+function onDeleteMatchClick(docId) { const pass = prompt("Admin password to delete:"); if (pass !== ADMIN_PASSWORD) { alert("❌ Wrong password"); return; } if (!window.db) return; window.db.collection("matches").doc(docId).delete().then(() => alert("✅ Match deleted")).catch(err => { console.error(err); alert("❌ Error"); }); }
+function setupCheckGames() { const btn = document.getElementById("checkBtn"); if (btn) btn.addEventListener("click", checkGameEligibility); }
 
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
 
-    // Matches
-    window.db.collection("matches").orderBy("gameNumber","asc").onSnapshot(snap => {
-        const matches = [];
-        snap.forEach(doc => matches.push(docToMatch(doc)));
-        renderLeagueTable(matches);
-        renderHistoryList(matches);
-        loadEncounters(matches);
-    }, err => {
-        console.warn("Ordered matches failed, trying unordered:", err.message);
-        window.db.collection("matches").onSnapshot(snap => {
-            const matches = [];
-            snap.forEach(doc => matches.push(docToMatch(doc)));
-            matches.sort((a,b) => (a.gameNumber||0) - (b.gameNumber||0));
-            renderLeagueTable(matches);
-            renderHistoryList(matches);
-            loadEncounters(matches);
-        }, err2 => console.error("Matches error:", err2));
+    // Load overrides FIRST, then start match listener to avoid race condition
+    window.db.collection("tableOverrides").get().then(snap => {
+        window._tableOverrides = {};
+        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableOverrides[d.team] = d; });
+        console.log("✅ Overrides loaded:", Object.keys(window._tableOverrides));
+        _startMatchListeners();
+    }).catch(() => {
+        window._tableOverrides = {};
+        _startMatchListeners();
     });
+
+    // Live override listener — re-renders table whenever edit-table.html saves
+    window.db.collection("tableOverrides").onSnapshot(snap => {
+        window._tableOverrides = {};
+        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableOverrides[d.team] = d; });
+        if (window._lastMatches) renderLeagueTable(window._lastMatches);
+    }, err => console.warn("tableOverrides:", err.message));
 
     // Suspensions
     window.db.collection("playerSuspensions").onSnapshot(snap => {
-        const s = [];
-        snap.forEach(doc => s.push(docToSuspension(doc)));
-        renderCardTable(s);
-    }, err => console.error("Suspensions error:", err));
+        const s = []; snap.forEach(doc => s.push(docToSuspension(doc))); renderCardTable(s);
+    }, err => console.error("Suspensions:", err));
 
     // Injuries
     window.db.collection("playerInjuries").onSnapshot(snap => {
-        const inj = [];
-        snap.forEach(doc => inj.push(docToInjury(doc)));
-        renderInjuryTable(inj);
-    }, err => console.error("Injuries error:", err));
+        const inj = []; snap.forEach(doc => inj.push(docToInjury(doc))); renderInjuryTable(inj);
+    }, err => console.error("Injuries:", err));
 
     // Match Reports
     window.db.collection("matchReports").orderBy("createdAt","desc").onSnapshot(snap => {
-        const reports = [];
-        snap.forEach(doc => reports.push(Object.assign({id:doc.id}, doc.data())));
-        renderMatchReports(reports);
+        const r = []; snap.forEach(doc => r.push(Object.assign({id:doc.id},doc.data()))); renderMatchReports(r);
     }, err => {
         window.db.collection("matchReports").onSnapshot(snap => {
-            const reports = [];
-            snap.forEach(doc => reports.push(Object.assign({id:doc.id}, doc.data())));
-            reports.sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
-            renderMatchReports(reports);
-        }, err2 => console.error("Reports error:", err2));
+            const r = []; snap.forEach(doc => r.push(Object.assign({id:doc.id},doc.data())));
+            r.sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
+            renderMatchReports(r);
+        }, err2 => console.error("Reports:", err2));
     });
 }
 
-function loadEncounters(matches) {
-    const tbody = document.querySelector("#encountersTable tbody");
-    if (!tbody || !matches) return;
+function _startMatchListeners() {
+    if (!window.db) return;
+    const render = (matches) => {
+        window._lastMatches = matches;
+        renderLeagueTable(matches);
+        renderHistoryList(matches);
+        loadEncounters(matches);
+    };
+    window.db.collection("matches").orderBy("gameNumber","asc").onSnapshot(snap => {
+        const m = []; snap.forEach(doc => m.push(docToMatch(doc))); render(m);
+    }, err => {
+        console.warn("Ordered matches failed:", err.message);
+        window.db.collection("matches").onSnapshot(snap => {
+            const m = []; snap.forEach(doc => m.push(docToMatch(doc)));
+            m.sort((a,b)=>(a.gameNumber||0)-(b.gameNumber||0)); render(m);
+        }, err2 => console.error("Matches:", err2));
+    });
+}
+
+function loadEncounters(matches = null) {
+    const tbody = document.querySelector("#encountersTable tbody"); if (!tbody || !matches) return;
     const results = {};
-    matches.forEach(m => {
-        const t1 = m.team1, t2 = m.team2;
-        if (!results[t1]) results[t1] = {};
-        if (!results[t2]) results[t2] = {};
-        if (!results[t1][t2]) results[t1][t2] = {wins:0,losses:0};
-        if (!results[t2][t1]) results[t2][t1] = {wins:0,losses:0};
-        if (m.score1 > m.score2) { results[t1][t2].wins++; results[t2][t1].losses++; }
-        else if (m.score2 > m.score1) { results[t2][t1].wins++; results[t1][t2].losses++; }
-    });
+    matches.forEach(m => { const t1=m.team1,t2=m.team2; if (!results[t1]) results[t1]={}; if (!results[t2]) results[t2]={}; if (!results[t1][t2]) results[t1][t2]={wins:0,losses:0}; if (!results[t2][t1]) results[t2][t1]={wins:0,losses:0}; if (m.score1>m.score2){results[t1][t2].wins++;results[t2][t1].losses++;}else if(m.score2>m.score1){results[t2][t1].wins++;results[t1][t2].losses++;} });
     tbody.innerHTML = "";
-    Object.keys(results).forEach(team => {
-        Object.keys(results[team]).forEach(opp => {
-            const {wins,losses} = results[team][opp];
-            if (wins > 0 || losses > 0) {
-                const tr = document.createElement("tr");
-                tr.innerHTML = '<td>' + team + '</td><td>' + opp + '</td><td>' + wins + '</td><td>' + losses + '</td>';
-                tbody.appendChild(tr);
-            }
-        });
-    });
+    Object.keys(results).forEach(team => { Object.keys(results[team]).forEach(opp => { const {wins,losses}=results[team][opp]; if (wins>0||losses>0){const tr=document.createElement("tr");tr.innerHTML=`<td>${team}</td><td>${opp}</td><td>${wins}</td><td>${losses}</td>`;tbody.appendChild(tr);} }); });
 }
 
-/* =====================================================
-   KURDISH MATCH REPORT GENERATOR
-   ===================================================== */
+/* ==========================================================
+   AI KURDISH MATCH REPORT GENERATOR
+   Calls Anthropic API to write a Kurdish sports news report
+   ========================================================== */
 function generateMatchReport(team1, team2, score1, score2, gameNumber) {
     if (!window.db) return;
     const s1 = Number(score1), s2 = Number(score2);
     const winner = s1 > s2 ? team1 : s2 > s1 ? team2 : null;
     const loser  = s1 > s2 ? team2 : s2 > s1 ? team1 : null;
+    const isDraw = s1 === s2;
     const totalGoals = s1 + s2;
 
+    // Kurdish report templates
     const headlines = winner ? [
-        winner + " یارییەکەی بەسەر " + loser + "دا دەبات بە ئەنجامی " + s1 + "-" + s2,
-        "جەنگی سەختی GW" + gameNumber + ": " + winner + " سێ خاڵ وەردەگرێت",
-        winner + " بەرپرسێکی گرانبەهای دادەنرێت — بردنی " + s1 + "-" + s2 + " لە دژی " + loser
+        `${winner} یارییەکەی بەسەر ${loser}دا دەبات بە ئەنجامی ${s1}-${s2}`,
+        `جەنگی سەختی GW${gameNumber}: ${winner} سێ خاڵ وەردەگرێت`,
+        `${winner} بەرپرسێکی گرانبەهای دادەنرێت — بردنی ${s1}-${s2} لە دژی ${loser}`
     ] : [
-        "ماچی هەیجانئەنگیز: " + team1 + " و " + team2 + " خاڵ دابەشدەکەن",
-        "GW" + gameNumber + ": " + team1 + " " + s1 + "-" + s2 + " " + team2 + " — مساواتی جێکەوتن",
-        "دوو تیم خاڵ دابەش دەکەن لە GW" + gameNumber + "دا"
+        `ماچی هەیجانئەنگیز: ${team1} و ${team2} خاڵ دابەشدەکەن`,
+        `GW${gameNumber}: ${team1} ${s1}-${s2} ${team2} — مساواتی جێکەوتن`,
+        `دوو تیم خاڵ دابەش دەکەن لە GW${gameNumber}دا`
     ];
     const headline = headlines[Math.floor(Math.random() * headlines.length)];
 
+    // Build report body
     let body = "";
     if (winner) {
-        const goalWord = totalGoals === 1 ? "تەنیا یەک گۆڵ" : (totalGoals + " گۆڵ");
-        body = "لە جۆلەی یارییە " + gameNumber + "مدا، " + winner + " سەرکەوتنێکی بەرچاوی بەدەستهێنا لە دژی " + loser + "دا بە ئەنجامی دروشمی " + s1 + "-" + s2 + "دا.\n\n";
-        body += "یارییەکە بە " + goalWord + " تەواو بوو. " + winner + " ";
+        const goalWord = totalGoals === 1 ? "تەنیا یەک گۆڵ" : `${totalGoals} گۆڵ`;
+        body = `لە جۆلەی یارییە ${gameNumber}مدا، ${winner} سەرکەوتنێکی بەرچاوی بەدەستهێنا لە دژی ${loser}دا بە ئەنجامی دروشمی ${s1}-${s2}دا.
+
+`;
+        body += `یارییەکە بە ${goalWord} تەواو بوو. ${winner} `;
         if (s1 > s2 + 1 || s2 > s1 + 1) {
-            body += "بە شێوەیەکی بەهێز سەرکەوتوو بوو و کۆنترۆڵی یارییەکەی لە دەستدا بوو لە هەموو کاتەکاندا. ";
+            body += `بە شێوەیەکی بەهێز سەرکەوتوو بوو و کۆنترۆڵی یارییەکەی لە دەستدا بوو لە هەموو کاتەکاندا. `;
         } else {
-            body += "بردنی ئاسان نەبوو و " + loser + " تا دواترین خولەکەکان بەرجەستە ماوە. ";
+            body += `بردنی ئاسان نەبوو و ${loser} تا دواترین خولەکەکان بەرجەستە ماوە. `;
         }
-        body += "\n\nئەم سەرکەوتنە " + winner + " هێزێکی زیاتر دەبەخشێت بۆ قۆناغە داهاتووەکان، لەکاتێکدا " + loser + " پێویستە سەیری کێشەکانی بکاتەوە و پرسیارئامادەبێت.";
+        body += `
+
+ئەم سەرکەوتنە ${winner} هێزێکی زیاتر دەبەخشێت بۆ قۆناغە داهاتووەکان، لەکاتێکدا ${loser} پێویستە سەیری کێشەکانی بکاتەوە و پرسیارئامادەبێت.`;
     } else {
-        body = "لە جۆلەی یارییە " + gameNumber + "مدا، " + team1 + " و " + team2 + " بە مساواتی " + s1 + "-" + s2 + " جیابوونەوە لە ماچێکی ئاڵۆزدا.\n\n";
+        body = `لە جۆلەی یارییە ${gameNumber}مدا، ${team1} و ${team2} بە مساواتی ${s1}-${s2} جیابوونەوە لە ماچێکی ئاڵۆزدا.
+
+`;
         if (s1 === 0) {
-            body += "هەردوو تیم نەیانتوانی تۆڕەکەی هاوتەرەفیان بلەرزێنن، یارییەکە کورتبوو لە دەرفەتی ئامانجدار. ";
+            body += `هەردوو تیم نەیانتوانی تۆڕەکەی هاوتەرەفیان بلەرزێنن، یارییەکە کورتبوو لە دەرفەتی ئامانجدار. `;
         } else {
-            body += "یارییەکە ئامانجی بینی و هەردوو تیم نیشانی ئاستی باشیان دا. ";
+            body += `یارییەکە ئامانجی بینی و هەردوو تیم نیشانی ئاستی باشیان دا. `;
         }
-        body += "\n\nمساواتەکە بۆ هەردووکیان خاڵێک زیادکرد، بەڵام هیچ کامیک بەتەواوی ڕازی نابێت لە ئەنجامەکە.";
+        body += `
+
+مساواتەکە بۆ هەردووکیان خاڵێک زیادکرد، بەڵام هیچ کامیک بەتەواوی ڕازی نابێت لە ئەنجامەکە.`;
     }
 
-    const reportText = "📰 " + headline + "\n\n" + body + "\n\n⚽ ئەنجامی کۆتایی: " + team1 + " " + s1 + " - " + s2 + " " + team2 + " | GW" + gameNumber;
+    const reportText = `📰 ${headline}
+
+${body}
+
+⚽ ئەنجامی کۆتایی: ${team1} ${s1} - ${s2} ${team2} | GW${gameNumber}`;
 
     window.db.collection("matchReports").add({
         team1, team2,
@@ -858,12 +490,12 @@ function generateMatchReport(team1, team2, score1, score2, gameNumber) {
     });
 }
 
-/* ---------- Render Match Reports ---------- */
+/* ---------- Render Match Reports on news page ---------- */
 function renderMatchReports(reports) {
     const container = document.getElementById("reportsContainer");
     if (!container) return;
     if (reports.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#2d4a65;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;">هیچ ڕاپۆرتێک نییە هێشتا</div>';
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;">هیچ ڕاپۆرتێک نییە هێشتا</div>`;
         return;
     }
     container.innerHTML = "";
@@ -871,19 +503,17 @@ function renderMatchReports(reports) {
         const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" }) : "";
         const s1 = Number(r.score1), s2 = Number(r.score2);
         const winner = s1 > s2 ? r.team1 : s2 > s1 ? r.team2 : null;
-        const winBadge = winner
-            ? '<span style="font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">' + winner + ' بردی 🏆</span>'
-            : '<span style="font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">مساوات</span>';
         const card = document.createElement("div");
-        card.style.cssText = "background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;";
-        card.innerHTML =
-            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">' +
-                '<span style="font-size:0.85rem;letter-spacing:0.08em;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:16px;padding:3px 10px;color:#00c853;">GW' + r.gameNumber + '</span>' +
-                '<span style="font-size:0.9rem;font-weight:700;letter-spacing:0.04em;color:#fff;">' + r.team1 + ' <span style="color:#00c853;">' + r.score1 + ' - ' + r.score2 + '</span> ' + r.team2 + '</span>' +
-                winBadge +
-                '<span style="margin-left:auto;font-size:0.7rem;color:#2d4a65;letter-spacing:0.06em;">' + date + '</span>' +
-            '</div>' +
-            '<div style="font-size:0.92rem;line-height:1.7;color:#c8d8e8;direction:rtl;text-align:right;white-space:pre-wrap;">' + r.report + '</div>';
+        card.style.cssText = `background:linear-gradient(135deg,#0a1420,#0d1828);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;animation:slideUp .4s ease ${i*0.08}s both;`;
+        card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:0.08em;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.2);border-radius:16px;padding:3px 10px;color:#00c853;">GW${r.gameNumber}</span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.04em;color:#fff;">${r.team1} <span style="color:#00c853;">${r.score1} - ${r.score2}</span> ${r.team2}</span>
+                ${winner ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">${winner} بردی 🏆</span>` : `<span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:#ffd600;">مساوات</span>`}
+                <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;color:#2d4a65;letter-spacing:0.06em;">${date}</span>
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.92rem;line-height:1.7;color:#c8d8e8;direction:rtl;text-align:right;white-space:pre-wrap;">${r.report}</div>
+        `;
         container.appendChild(card);
     });
 }
@@ -898,7 +528,8 @@ function waitForDB(callback) {
             callback(window.db);
         } else if (attempts > 50) {
             clearInterval(interval);
-            console.error("❌ Firebase DB not available after 5s");
+            console.error("❌ Firebase DB not available after 5s. Check firebase.js");
+            // Show error on page if visible
             const errEl = document.getElementById("dbError");
             if (errEl) errEl.style.display = "block";
         }
