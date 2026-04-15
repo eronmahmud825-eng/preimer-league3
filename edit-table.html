@@ -54,6 +54,10 @@ body{background:#04080f;}
 .back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#2d4a65!important;}
 .back-btn:hover{border-color:rgba(255,214,0,0.3)!important;color:rgba(255,214,0,0.6)!important;}
 
+/* Reset button */
+.reset-btn{width:100%;margin-top:10px;padding:10px;background:rgba(231,76,60,0.1);border:1.5px solid rgba(231,76,60,0.3);border-radius:10px;color:#e74c3c;font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.reset-btn:hover{background:rgba(231,76,60,0.2);border-color:#e74c3c;}
+
 /* Toast */
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:999;background:#ffd600;color:#000;padding:10px 24px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;letter-spacing:0.06em;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -89,6 +93,7 @@ body{background:#04080f;}
     </div>
 
     <button class="save-all-btn" onclick="saveAll()">💾 Save All Changes</button>
+    <button class="reset-btn" onclick="resetAllOverrides()">🗑️ Reset to Match Data (Remove Overrides)</button>
 
     <div class="note" style="text-align:center;margin-top:10px;">
       گۆڕانکاریەکان ڕاستەوخۆ لە Firestore تۆمار دەبن — پەیجی تەختەکە نوێبکەرەوە بۆ دیتنی گۆڕانکارییەکان
@@ -108,9 +113,9 @@ body{background:#04080f;}
 <script src="firebase.js"></script>
 <script>
 const SECRET_PASS = "9999";
+// IMPORTANT: team names must exactly match what script.js uses
 const TEAMS = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
 
-// Each team's editable fields
 const FIELDS = [
     { key:"game",  label:"Games",  cls:"" },
     { key:"win",   label:"Win",    cls:"" },
@@ -122,7 +127,7 @@ const FIELDS = [
     { key:"point", label:"Points", cls:"pts" },
 ];
 
-// In-memory state: { teamName: { game, win, lose, draw, gf, ga, diff, point, _docId } }
+// In-memory state
 let tableState = {};
 
 function checkGate() {
@@ -147,11 +152,9 @@ function waitForDB(cb) {
     }, 100);
 }
 
-// ── Load current table data from matches (compute live) + any manual overrides ──
 function loadTableData() {
     if (!window.db) return;
 
-    // Load matches and compute real stats
     window.db.collection("matches").get().then(snap => {
         const matches = [];
         snap.forEach(doc => matches.push(doc.data()));
@@ -171,22 +174,22 @@ function loadTableData() {
         });
         TEAMS.forEach(t => { if(computed[t]) computed[t].diff = computed[t].gf - computed[t].ga; });
 
-        // Check for manual overrides in tableOverrides collection
+        // Load manual overrides
+        // Doc ID = team name with underscores (e.g. "PARISANT_GERMAN")
         window.db.collection("tableOverrides").get().then(oSnap => {
             const overrides = {};
             oSnap.forEach(doc => {
                 const d = doc.data();
+                // Index by team name with spaces (canonical form)
                 if (d.team) overrides[d.team] = { ...d, _docId: doc.id };
             });
 
-            // Merge: override takes priority if it exists
             TEAMS.forEach(t => {
                 tableState[t] = { ...(computed[t] || {}), ...(overrides[t] || {}), _docId: overrides[t]?._docId || null };
             });
 
             renderCards();
         }).catch(() => {
-            // No overrides yet — just use computed
             TEAMS.forEach(t => { tableState[t] = { ...(computed[t]||{}), _docId: null }; });
             renderCards();
         });
@@ -199,23 +202,24 @@ function renderCards() {
     const container = document.getElementById("teamCards");
     container.innerHTML = "";
 
-    // Sort by points desc
     const sorted = [...TEAMS].sort((a,b) => (tableState[b]?.point||0) - (tableState[a]?.point||0));
 
     sorted.forEach((team, idx) => {
         const d = tableState[team] || {};
         const rankEmoji = ["🥇","🥈","🥉"][idx] || (idx+1);
+        // Use underscore ID for HTML element IDs (no spaces)
+        const safeId = team.replace(/ /g,"_");
 
         const card = document.createElement("div");
         card.className = "team-card";
-        card.id = "card-" + team.replace(/ /g,"_");
+        card.id = "card-" + safeId;
 
         let fieldsHtml = FIELDS.map(f => `
             <div class="field-wrap">
                 <label class="field-lbl">${f.label}</label>
                 <input class="field-input ${f.cls}" 
                     type="number" 
-                    id="f_${team.replace(/ /g,'_')}_${f.key}" 
+                    id="f_${safeId}_${f.key}" 
                     value="${d[f.key] !== undefined ? d[f.key] : 0}"
                     oninput="onFieldChange('${team}','${f.key}',this.value)"/>
             </div>
@@ -228,7 +232,7 @@ function renderCards() {
                 <span class="team-rank">${d.point || 0} pts</span>
             </div>
             <div class="fields-grid">${fieldsHtml}</div>
-            <button class="save-team-btn" id="btn-${team.replace(/ /g,'_')}" onclick="saveTeam('${team}')">
+            <button class="save-team-btn" id="btn-${safeId}" onclick="saveTeam('${team}')">
                 💾 Save ${team}
             </button>
         `;
@@ -244,7 +248,8 @@ function onFieldChange(team, key, val) {
         const gf = tableState[team].gf || 0;
         const ga = tableState[team].ga || 0;
         tableState[team].diff = gf - ga;
-        const diffEl = document.getElementById(`f_${team.replace(/ /g,'_')}_diff`);
+        const safeId = team.replace(/ /g,"_");
+        const diffEl = document.getElementById(`f_${safeId}_diff`);
         if (diffEl) diffEl.value = gf - ga;
     }
 }
@@ -252,8 +257,14 @@ function onFieldChange(team, key, val) {
 function saveTeam(team) {
     if (!window.db) { showToast("❌ DB not ready"); return; }
     const data = tableState[team] || {};
+    
+    // CRITICAL FIX: store team name WITH spaces so script.js can find it
+    // Doc ID uses underscores (no spaces allowed in Firestore doc IDs... actually spaces ARE allowed,
+    // but using underscores is cleaner). The `team` FIELD must use spaces to match teamsList in script.js.
+    const docId = team.replace(/ /g, "_");
+    
     const payload = {
-        team,
+        team:  team,          // <-- spaces preserved: "PARISANT GERMAN" not "PARISANT_GERMAN"
         game:  Number(data.game)  || 0,
         win:   Number(data.win)   || 0,
         lose:  Number(data.lose)  || 0,
@@ -265,29 +276,42 @@ function saveTeam(team) {
         updatedAt: new Date().toISOString()
     };
 
-    const btnId = "btn-" + team.replace(/ /g,"_");
-    const btn = document.getElementById(btnId);
+    const safeId = team.replace(/ /g,"_");
+    const btn = document.getElementById("btn-" + safeId);
     if (btn) { btn.textContent = "⏳ Saving..."; btn.disabled = true; }
 
-    // Use team name as doc ID so it always overwrites the same doc
-    const docId = team.replace(/ /g, "_");
     tableState[team]._docId = docId;
-    const promise = window.db.collection("tableOverrides").doc(docId).set(payload);
 
-    promise.then(() => {
-        showToast("✅ " + team + " saved!");
-        if (btn) { btn.className = "save-team-btn saved"; btn.textContent = "✅ Saved"; btn.disabled = false; }
-        // Update rank pill
-        const rankPill = document.querySelector("#card-" + team.replace(/ /g,"_") + " .team-rank");
-        if (rankPill) rankPill.textContent = payload.point + " pts";
-    }).catch(err => {
-        showToast("❌ Error: " + err.message);
-        if (btn) { btn.textContent = "💾 Save " + team; btn.disabled = false; }
-    });
+    window.db.collection("tableOverrides").doc(docId).set(payload)
+        .then(() => {
+            showToast("✅ " + team + " saved!");
+            if (btn) { btn.className = "save-team-btn saved"; btn.textContent = "✅ Saved"; btn.disabled = false; }
+            const rankPill = document.querySelector("#card-" + safeId + " .team-rank");
+            if (rankPill) rankPill.textContent = payload.point + " pts";
+        })
+        .catch(err => {
+            showToast("❌ Error: " + err.message);
+            if (btn) { btn.textContent = "💾 Save " + team; btn.disabled = false; }
+        });
 }
 
 function saveAll() {
     TEAMS.forEach(t => saveTeam(t));
+}
+
+// Delete all overrides so table reverts to match-computed data
+function resetAllOverrides() {
+    if (!confirm("This will remove all manual overrides. The table will go back to showing stats calculated from match results. Continue?")) return;
+    if (!window.db) { showToast("❌ DB not ready"); return; }
+    
+    const batch = window.db.batch();
+    TEAMS.forEach(team => {
+        const docId = team.replace(/ /g, "_");
+        batch.delete(window.db.collection("tableOverrides").doc(docId));
+    });
+    batch.commit()
+        .then(() => { showToast("✅ Overrides removed — table reset to match data"); loadTableData(); })
+        .catch(err => { showToast("❌ Error: " + err.message); });
 }
 
 function showToast(msg) {
