@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Fix Table Data</title>
+  <style>
+    body { font-family: sans-serif; background: #0a1420; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .card { background: #0d1828; border: 1px solid #1e3048; border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; }
+    h2 { margin: 0 0 8px; color: #00c853; }
+    p { color: #8aa; margin: 0 0 24px; font-size: 0.9em; }
+    .team-block { background: #0a1f35; border: 1px solid #1e3048; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+    .team-name { font-weight: bold; color: #ffd600; margin-bottom: 10px; font-size: 1em; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.85em; color: #8aa; }
+    .stats span { color: #fff; }
+    button { width: 100%; padding: 14px; background: #00c853; color: #000; border: none; border-radius: 10px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 8px; }
+    button:hover { background: #00e676; }
+    #status { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; font-size: 0.9em; text-align: center; }
+    .success { background: #0a2e14; border: 1px solid #00c853; color: #00c853; }
+    .error   { background: #2e0a0a; border: 1px solid #e74c3c; color: #e74c3c; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>🔧 Fix League Table Data</h2>
+  <p>This will save the correct stats for all 3 teams into Firebase <code>tableOverrides</code>. Run once and done.</p>
+
+  <div class="team-block">
+    <div class="team-name">1. PARISANT GERMAN</div>
+    <div class="stats">
+      <div>Games: <span>8</span></div>
+      <div>Win: <span>7</span></div>
+      <div>Lose: <span>0</span></div>
+      <div>Draw: <span>1</span></div>
+      <div>GF: <span>63</span></div>
+      <div>GA: <span>34</span></div>
+      <div>Diff: <span>+29</span></div>
+      <div>Points: <span>22</span></div>
+    </div>
+  </div>
+
+  <div class="team-block">
+    <div class="team-name">2. LIVERPOOL</div>
+    <div class="stats">
+      <div>Games: <span>7</span></div>
+      <div>Win: <span>1</span></div>
+      <div>Lose: <span>5</span></div>
+      <div>Draw: <span>1</span></div>
+      <div>GF: <span>29</span></div>
+      <div>GA: <span>54</span></div>
+      <div>Diff: <span>-25</span></div>
+      <div>Points: <span>4</span></div>
+    </div>
+  </div>
+
+  <div class="team-block">
+    <div class="team-name">3. BARCELONA</div>
+    <div class="stats">
+      <div>Games: <span>7</span></div>
+      <div>Win: <span>0</span></div>
+      <div>Lose: <span>0</span></div>
+      <div>Draw: <span>0</span></div>
+      <div>GF: <span>0</span></div>
+      <div>GA: <span>0</span></div>
+      <div>Diff: <span>0</span></div>
+      <div>Points: <span>0</span></div>
+    </div>
+  </div>
+
+  <button onclick="saveAll()">💾 Save All Teams to Firebase</button>
+  <div id="status"></div>
+</div>
+
+<!-- Use the SAME Firebase version as your site -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<!-- ⬇ This loads YOUR firebase config -->
+<script src="firebase.js"></script>
+
+<script>
+  const TEAMS_DATA = [
+    {
+      docId: "PARISANT_GERMAN",
+      team:  "PARISANT GERMAN",
+      game: 8, win: 7, lose: 0, draw: 1,
+      gf: 63, ga: 34, diff: 29, point: 22
+    },
+    {
+      docId: "LIVERPOOL",
+      team:  "LIVERPOOL",
+      game: 7, win: 1, lose: 5, draw: 1,
+      gf: 29, ga: 54, diff: -25, point: 4
+    },
+    {
+      docId: "BARCELONA",
+      team:  "BARCELONA",
+      game: 7, win: 0, lose: 0, draw: 0,
+      gf: 0, ga: 0, diff: 0, point: 0
+    }
+  ];
+
+  function showStatus(msg, type) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = type;
+    el.style.display = "block";
+  }
+
+  function waitForDB(cb) {
+    let tries = 0;
+    const t = setInterval(() => {
+      tries++;
+      if (window.db) { clearInterval(t); cb(); }
+      else if (tries > 50) { clearInterval(t); showStatus("❌ Firebase not connected. Make sure firebase.js is in the same folder.", "error"); }
+    }, 100);
+  }
+
+  function saveAll() {
+    const btn = document.querySelector("button");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    showStatus("Connecting to Firebase...", "success");
+
+    waitForDB(() => {
+      const db = window.db;
+      const promises = TEAMS_DATA.map(t => {
+        const { docId, ...data } = t;
+        return db.collection("tableOverrides").doc(docId).set(data);
+      });
+
+      Promise.all(promises)
+        .then(() => {
+          showStatus("✅ All 3 teams saved! Go back to your league table — it will now show the correct stats.", "success");
+          btn.textContent = "✅ Done!";
+        })
+        .catch(err => {
+          showStatus("❌ Error: " + err.message, "error");
+          btn.disabled = false;
+          btn.textContent = "💾 Save All Teams to Firebase";
+        });
+    });
+  }
+</script>
+</body>
+</html>
