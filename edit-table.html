@@ -174,7 +174,10 @@ function loadTableData() {
         // Check for manual overrides in tableOverrides collection
         window.db.collection("tableOverrides").get().then(oSnap => {
             const overrides = {};
-            oSnap.forEach(doc => { overrides[doc.data().team] = { ...doc.data(), _docId: doc.id }; });
+            oSnap.forEach(doc => {
+                const d = doc.data();
+                if (d.team) overrides[d.team] = { ...d, _docId: doc.id };
+            });
 
             // Merge: override takes priority if it exists
             TEAMS.forEach(t => {
@@ -266,14 +269,10 @@ function saveTeam(team) {
     const btn = document.getElementById(btnId);
     if (btn) { btn.textContent = "⏳ Saving..."; btn.disabled = true; }
 
-    let promise;
-    if (data._docId) {
-        promise = window.db.collection("tableOverrides").doc(data._docId).set(payload);
-    } else {
-        promise = window.db.collection("tableOverrides").add(payload).then(ref => {
-            tableState[team]._docId = ref.id;
-        });
-    }
+    // Use team name as doc ID so it always overwrites the same doc
+    const docId = team.replace(/ /g, "_");
+    tableState[team]._docId = docId;
+    const promise = window.db.collection("tableOverrides").doc(docId).set(payload);
 
     promise.then(() => {
         showToast("✅ " + team + " saved!");
