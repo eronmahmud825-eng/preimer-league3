@@ -21,27 +21,26 @@ function applyMatchToTeams(match, teams) {
     a.game++; b.game++; a.gf += match.score1; a.ga += match.score2; b.gf += match.score2; b.ga += match.score1;
     if (match.score1 > match.score2) { a.win++; b.lose++; } else if (match.score1 < match.score2) { b.win++; a.lose++; } else { a.draw++; b.draw++; }
 }
-// Global store for manual table overrides
-window._tableOverrides = {};
 window._lastMatches = [];
+window._tableAdj = {}; // adjustments from edit-table.html
 
 function computeTeamsFromMatches(matches) {
     const teams = teamsList.map(name => ({ name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0 }));
     matches.forEach(m => applyMatchToTeams(m, teams));
     teams.forEach(t => {
-        t.diff = t.gf - t.ga;
+        t.diff  = t.gf - t.ga;
         t.point = t.win * 3 + t.draw;
-        // Apply manual overrides if they exist
-        const ov = window._tableOverrides[t.name];
-        if (ov) {
-            if (ov.game  !== undefined) t.game  = ov.game;
-            if (ov.win   !== undefined) t.win   = ov.win;
-            if (ov.lose  !== undefined) t.lose  = ov.lose;
-            if (ov.draw  !== undefined) t.draw  = ov.draw;
-            if (ov.gf    !== undefined) t.gf    = ov.gf;
-            if (ov.ga    !== undefined) t.ga    = ov.ga;
-            if (ov.diff  !== undefined) t.diff  = ov.diff;
-            if (ov.point !== undefined) t.point = ov.point;
+        // Add adjustments from edit-table.html on top of real data
+        const adj = window._tableAdj[t.name];
+        if (adj) {
+            t.game  += adj.game  || 0;
+            t.win   += adj.win   || 0;
+            t.lose  += adj.lose  || 0;
+            t.draw  += adj.draw  || 0;
+            t.gf    += adj.gf    || 0;
+            t.ga    += adj.ga    || 0;
+            t.diff  += adj.diff  || 0;
+            t.point += adj.point || 0;
         }
     });
     teams.sort((x, y) => y.point !== x.point ? y.point - x.point : y.diff !== x.diff ? y.diff - x.diff : (y.gf||0) - (x.gf||0));
@@ -314,7 +313,7 @@ function setupMatchWeek() {
             if (!team1 || !team2 || team1 === team2) { alert("❌ Choose two different teams"); return; } if (!date) { alert("❌ Choose a date"); return; } if (!Number.isFinite(score1) || !Number.isFinite(score2)) { alert("❌ Enter valid scores"); return; } if (!window.db) { alert("Database not initialized"); return; }
             window.db.collection("matches").get().then(snap => {
                 const gameNumber = snap.size + 1;
-                return window.db.collection("matches").add({ team1, team2, score1, score2, date, gameNumber, savedAt: new Date().toLocaleString() }).then(() => decrementBansForMatch(team1, team2)).then(() => clearTableOverrides()).then(() => ({ team1, team2, gameNumber, score1, score2 }));
+                return window.db.collection("matches").add({ team1, team2, score1, score2, date, gameNumber, savedAt: new Date().toLocaleString() }).then(() => decrementBansForMatch(team1, team2)).then(() => ({ team1, team2, gameNumber, score1, score2 }));
             }).then(({ team1, team2, gameNumber }) => {
                 _matchTeam1 = team1; _matchTeam2 = team2;
                 alert("✅ Match #" + gameNumber + " saved");
@@ -350,23 +349,19 @@ function setupCheckGames() { const btn = document.getElementById("checkBtn"); if
 function startRealtimeListeners() {
     if (!window.db) { console.error("db not available"); return; }
 
-    // Load overrides FIRST, then start match listener to avoid race condition
-    window.db.collection("tableOverrides").get().then(snap => {
-        window._tableOverrides = {};
-        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableOverrides[d.team] = d; });
-        console.log("✅ Overrides loaded:", Object.keys(window._tableOverrides));
+    // Load adjustments first, then start match listeners
+    window.db.collection("tableAdjustments").get().then(snap => {
+        window._tableAdj = {};
+        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableAdj[d.team] = d; });
         _startMatchListeners();
-    }).catch(() => {
-        window._tableOverrides = {};
-        _startMatchListeners();
-    });
+    }).catch(() => { window._tableAdj = {}; _startMatchListeners(); });
 
-    // Live override listener — re-renders table whenever edit-table.html saves
-    window.db.collection("tableOverrides").onSnapshot(snap => {
-        window._tableOverrides = {};
-        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableOverrides[d.team] = d; });
+    // Live listener — updates table when edit-table.html saves
+    window.db.collection("tableAdjustments").onSnapshot(snap => {
+        window._tableAdj = {};
+        snap.forEach(doc => { const d = doc.data(); if (d.team) window._tableAdj[d.team] = d; });
         if (window._lastMatches) renderLeagueTable(window._lastMatches);
-    }, err => console.warn("tableOverrides:", err.message));
+    }, err => console.warn("tableAdj:", err.message));
 
     // Suspensions
     window.db.collection("playerSuspensions").onSnapshot(snap => {
@@ -421,22 +416,7 @@ function loadEncounters(matches = null) {
    AI KURDISH MATCH REPORT GENERATOR
    Calls Anthropic API to write a Kurdish sports news report
    ========================================================== */
-/* ---------- Clear table overrides when new match is added ---------- */
-/* This ensures real match data always shows correctly */
-function clearTableOverrides() {
-    if (!window.db) return Promise.resolve();
-    return window.db.collection("tableOverrides").get().then(snap => {
-        if (snap.empty) return Promise.resolve();
-        const batch = window.db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        return batch.commit();
-    }).then(() => {
-        window._tableOverrides = {};
-        console.log("✅ Table overrides cleared — showing real match data");
-    }).catch(err => {
-        console.warn("Could not clear overrides:", err.message);
-    });
-}
+
 
 function generateMatchReport(team1, team2, score1, score2, gameNumber) {
     if (!window.db) return;
