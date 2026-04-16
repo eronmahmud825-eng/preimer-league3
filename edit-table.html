@@ -9,98 +9,128 @@
 body{background:#04080f;}
 .container{max-width:700px;padding:24px 14px 60px;}
 
-/* Gate */
 .gate{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:340px;margin:60px auto;text-align:center;}
 .gate h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.1em;color:#fff;margin-bottom:6px;}
 .gate p{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:#2d4a65;margin-bottom:20px;}
-.gate input{width:100%;padding:12px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1.2rem;font-family:inherit;text-align:center;letter-spacing:0.3em;outline:none;transition:border-color .2s;}
+.gate input{width:100%;padding:12px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1.4rem;font-family:inherit;text-align:center;letter-spacing:0.3em;outline:none;transition:border-color .2s;}
 .gate input:focus{border-color:#ffd600;}
-.gate-btn{margin-top:12px;width:100%;padding:12px;background:#ffd600;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.gate-btn{margin-top:12px;width:100%;padding:12px;background:#ffd600;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
 .gate-btn:hover{background:#ffb300;}
 .gate-err{color:#ff5252;font-size:0.82rem;margin-top:10px;display:none;font-family:'Barlow Condensed',sans-serif;}
 
-/* Page header */
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,3rem);letter-spacing:0.1em;color:#ffd600;text-align:center;margin-bottom:6px;text-shadow:0 0 30px rgba(255,214,0,0.3);}
-.page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;color:#2d4a65;text-align:center;margin-bottom:24px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,2.8rem);letter-spacing:0.1em;color:#ffd600;text-align:center;margin-bottom:4px;text-shadow:0 0 30px rgba(255,214,0,0.3);}
+.page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#2d4a65;text-align:center;margin-bottom:20px;}
 
-/* Warning box */
-.warn-box{background:rgba(255,214,0,0.05);border:1px solid rgba(255,214,0,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.06em;color:rgba(255,214,0,0.6);line-height:1.5;}
+.info-box{background:rgba(0,200,83,0.06);border:1px solid rgba(0,200,83,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.04em;color:rgba(0,200,83,0.8);line-height:1.6;}
+
+/* Live table preview */
+.live-preview{background:#0d1620;border:1px solid #1e3048;border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.lp-header{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#2d4a65;padding:10px 16px;border-bottom:1px solid #1e3048;display:flex;align-items:center;gap:6px;}
+.lp-row{display:grid;grid-template-columns:30px 1fr repeat(8,42px);gap:0;align-items:center;padding:10px 12px;border-bottom:1px solid #0a1520;transition:background .15s;}
+.lp-row:last-child{border-bottom:none;}
+.lp-row:hover{background:#111e2e;}
+.lp-rank{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#2d4a65;}
+.lp-rank.r1{color:#ffd600;}
+.lp-rank.r2{color:#c0c0c0;}
+.lp-rank.r3{color:#cd7f32;}
+.lp-name{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;color:#fff;padding-left:4px;}
+.lp-val{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;color:#8a9bb0;text-align:center;}
+.lp-val.pts{color:#ffd600;font-size:1rem;}
+.lp-val.pos{color:#00e676;}
+.lp-val.neg{color:#ff5252;}
+.lp-col-headers{display:grid;grid-template-columns:30px 1fr repeat(8,42px);gap:0;padding:6px 12px;background:#070d14;}
+.lp-col{font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;text-align:center;}
+.lp-col.left{text-align:left;padding-left:4px;}
 
 /* Team edit cards */
-.team-card{background:linear-gradient(135deg,#0d1620,#111e2e);border:1px solid #1e3048;border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;transition:border-color .2s;}
-.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ffd600,transparent);opacity:0.3;}
-.team-card:hover{border-color:rgba(255,214,0,0.25);}
-.team-name-label{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.08em;color:#ffd600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.team-rank{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.2);color:rgba(255,214,0,0.6);}
+.team-card{background:linear-gradient(135deg,#0d1620,#111e2e);border:1px solid #1e3048;border-radius:14px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .2s;}
+.team-card:hover{border-color:rgba(255,214,0,0.2);}
+.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ffd600,transparent);opacity:0.25;}
+.tc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.tc-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.06em;color:#ffd600;}
+.tc-pts-badge{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;padding:2px 10px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.25);color:#ffd600;}
 
-.fields-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-@media(max-width:500px){.fields-grid{grid-template-columns:repeat(2,1fr);}}
+.fields-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:480px){.fields-grid{grid-template-columns:repeat(2,1fr);}}
 
 .field-wrap{}
-.field-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#2d4a65;margin-bottom:5px;display:block;}
-.field-input{width:100%;padding:9px 10px;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;outline:none;transition:border-color .2s;text-align:center;}
-.field-input:focus{border-color:#ffd600;}
-.field-input.pts{border-color:rgba(255,214,0,0.3);color:#ffd600;}
-.field-input.pts:focus{border-color:#ffd600;}
+.field-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;margin-bottom:4px;display:block;}
+.field-input{width:100%;padding:8px;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;outline:none;transition:border-color .2s;text-align:center;}
+.field-input:focus{border-color:#ffd600;background:#0a1218;}
+.field-input.pts-input{border-color:rgba(255,214,0,0.25);color:#ffd600;}
+.field-input.pts-input:focus{border-color:#ffd600;}
 
-/* Actions */
-.save-team-btn{width:100%;margin-top:12px;padding:10px;background:rgba(255,214,0,0.1);border:1.5px solid rgba(255,214,0,0.3);border-radius:10px;color:#ffd600;font-family:'Barlow Condensed',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.save-team-btn{width:100%;margin-top:12px;padding:10px;background:rgba(255,214,0,0.08);border:1.5px solid rgba(255,214,0,0.25);border-radius:10px;color:#ffd600;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .save-team-btn:hover{background:rgba(255,214,0,0.15);border-color:#ffd600;}
-.save-team-btn.saved{background:rgba(0,200,83,0.1);border-color:rgba(0,200,83,0.4);color:#00c853;}
+.save-team-btn:disabled{opacity:.4;cursor:not-allowed;}
 
-.save-all-btn{width:100%;padding:14px;background:#ffd600;color:#000;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.1em;cursor:pointer;margin-top:8px;transition:all .2s;}
-.save-all-btn:hover{background:#ffb300;transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,214,0,0.3);}
+.save-all-btn{width:100%;padding:14px;background:#ffd600;color:#000;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.1em;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 0 20px rgba(255,214,0,0.2);}
+.save-all-btn:hover{background:#ffb300;transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,214,0,0.35);}
+.save-all-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
-.back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#2d4a65!important;}
-.back-btn:hover{border-color:rgba(255,214,0,0.3)!important;color:rgba(255,214,0,0.6)!important;}
+.back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#2d4a65!important;font-family:'Barlow Condensed',sans-serif!important;font-size:0.85rem!important;letter-spacing:0.08em;text-transform:uppercase;padding:10px 20px!important;border-radius:10px!important;cursor:pointer;transition:all .2s;}
+.back-btn:hover{border-color:rgba(255,214,0,0.3)!important;color:rgba(255,214,0,0.7)!important;}
 
-/* Toast */
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:999;background:#ffd600;color:#000;padding:10px 24px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;letter-spacing:0.06em;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:999;padding:10px 24px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:0.06em;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-
-.note{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.06em;color:#2d4a65;margin-top:6px;line-height:1.5;}
+.toast.ok{background:#00e676;color:#000;}
+.toast.err{background:#ff5252;color:#fff;}
 </style>
 </head>
 <body>
 
-<!-- Password Gate -->
 <div id="gateWrap">
   <div class="gate">
     <h2>🔐 Secret Panel</h2>
-    <p>Enter admin code to edit table</p>
+    <p>Enter admin code</p>
     <input id="gateInput" type="password" placeholder="••••" maxlength="10" autocomplete="off"/>
     <button class="gate-btn" onclick="checkGate()">Enter</button>
     <div id="gateErr" class="gate-err">❌ Wrong password</div>
   </div>
 </div>
 
-<!-- Edit Panel -->
 <div id="editPanel" style="display:none;">
-  <div class="container">
-    <div class="page-title">⚙️ Edit Table</div>
-    <div class="page-sub">Secret Admin — Direct Firebase Edit</div>
+<div class="container">
+  <div class="page-title">⚙️ Edit Table</div>
+  <div class="page-sub">Secret Admin — Direct Edit</div>
 
-    <div class="warn-box">
-      ⚠️ <strong>گرنگ:</strong> ئەم گۆڕانکاریانە وەک Override کار دەکەن.<br/>
-      ✅ کاتێک ماچی نوێ لە Match Week سەمبیت دەکرێت — overrideەکان بەخۆماتیک دەسڕێندرێوە و داتای ڕاستەقینەی ماچەکان دەردەکەوێت.<br/>
-      📌 ئەمە بۆ گۆڕینی موقەتی یان درووستکردنی هەڵەیە.
-    </div>
-
-    <div id="teamCards">
-      <div style="text-align:center;padding:30px;color:#2d4a65;font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;letter-spacing:0.1em;">Loading data...</div>
-    </div>
-
-    <button class="save-all-btn" onclick="saveAll()">💾 Save All Changes</button>
-
-    <div class="note" style="text-align:center;margin-top:10px;">
-      گۆڕانکاریەکان ڕاستەوخۆ لە Firestore تۆمار دەبن — پەیجی تەختەکە نوێبکەرەوە بۆ دیتنی گۆڕانکارییەکان
-    </div>
-
-    <div class="btn-row" style="margin-top:20px;">
-      <button class="back-btn" onclick="location.href='index.html'">⬅ گەڕانەوە</button>
-      <button class="back-btn" onclick="location.href='table.html'" style="margin-left:8px;border-color:rgba(0,200,83,0.3)!important;color:#00c853!important;">🏆 View Table</button>
-    </div>
+  <div class="info-box">
+    ✅ <strong>چۆن کار دەکات:</strong><br/>
+    گۆڕانکاریەکان ڕاستەوخۆ لە Firestore تۆمار دەبن و تەختەکە بەخۆماتیک نوێدەبێتەوە.<br/>
+    کاتێک ماچی نوێ زیاد دەکرێت، ژمارەکان لە ماچە ڕاستەقینەکانەوە هیساب دەکرێن و زیادی لێ دەکرێتەوە.
   </div>
+
+  <!-- Live table preview -->
+  <div class="live-preview">
+    <div class="lp-header">📊 Live Table Preview</div>
+    <div class="lp-col-headers">
+      <div class="lp-col">#</div>
+      <div class="lp-col left">Team</div>
+      <div class="lp-col">G</div>
+      <div class="lp-col">W</div>
+      <div class="lp-col">D</div>
+      <div class="lp-col">L</div>
+      <div class="lp-col">GF</div>
+      <div class="lp-col">GA</div>
+      <div class="lp-col">Diff</div>
+      <div class="lp-col">Pts</div>
+    </div>
+    <div id="liveTableRows"></div>
+  </div>
+
+  <div id="teamCards"></div>
+
+  <button class="save-all-btn" id="saveAllBtn" onclick="saveAll()">💾 Save All Changes</button>
+
+  <div style="text-align:center;margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;color:#2d4a65;letter-spacing:0.06em;">
+    گۆڕانکارییەکان ڕاستەوخۆ لە Firebase تۆمار دەبن
+  </div>
+
+  <div class="btn-row" style="margin-top:20px;gap:8px;">
+    <button class="back-btn" onclick="location.href='index.html'">⬅ گەڕانەوە</button>
+    <button class="back-btn" onclick="location.href='table.html'" style="border-color:rgba(0,200,83,0.3)!important;color:#00c853!important;">🏆 View Table</button>
+  </div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -112,27 +142,17 @@ body{background:#04080f;}
 const SECRET_PASS = "9999";
 const TEAMS = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
 
-// Each team's editable fields
-const FIELDS = [
-    { key:"game",  label:"Games",  cls:"" },
-    { key:"win",   label:"Win",    cls:"" },
-    { key:"lose",  label:"Lose",   cls:"" },
-    { key:"draw",  label:"Draw",   cls:"" },
-    { key:"gf",    label:"GF",     cls:"" },
-    { key:"ga",    label:"GA",     cls:"" },
-    { key:"diff",  label:"Diff",   cls:"" },
-    { key:"point", label:"Points", cls:"pts" },
-];
-
-// In-memory state: { teamName: { game, win, lose, draw, gf, ga, diff, point, _docId } }
-let tableState = {};
+// State: real computed stats + adjustments
+let realStats   = {};  // computed from actual matches
+let adjustments = {};  // loaded from Firebase "tableAdjustments"
+let adjDocIds   = {};  // doc IDs for each team's adjustment
+let db;
 
 function checkGate() {
-    const val = document.getElementById("gateInput").value;
-    if (val === SECRET_PASS) {
+    if (document.getElementById("gateInput").value === SECRET_PASS) {
         document.getElementById("gateWrap").style.display = "none";
         document.getElementById("editPanel").style.display = "block";
-        waitForDB(() => loadTableData());
+        waitDB(() => { loadAll(); });
     } else {
         document.getElementById("gateErr").style.display = "block";
         document.getElementById("gateInput").value = "";
@@ -140,163 +160,232 @@ function checkGate() {
 }
 document.getElementById("gateInput").addEventListener("keydown", e => { if(e.key==="Enter") checkGate(); });
 
-function waitForDB(cb) {
+function waitDB(cb) {
     let t = 0;
     const iv = setInterval(() => {
-        t++;
-        if (window.db) { clearInterval(iv); cb(); }
-        else if (t > 60) { clearInterval(iv); showToast("❌ Firebase not ready"); }
+        if (window.db) { clearInterval(iv); db = window.db; cb(); }
+        else if (++t > 60) { clearInterval(iv); showToast("❌ Firebase not ready", "err"); }
     }, 100);
 }
 
-// ── Load current table data from matches (compute live) + any manual overrides ──
-function loadTableData() {
-    if (!window.db) return;
-
-    // Load matches and compute real stats
-    window.db.collection("matches").get().then(snap => {
+// ── Load everything ──
+function loadAll() {
+    // Load matches → compute real stats
+    db.collection("matches").get().then(snap => {
         const matches = [];
         snap.forEach(doc => matches.push(doc.data()));
 
-        // Compute from matches
-        const computed = {};
-        TEAMS.forEach(t => computed[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
+        // Compute real stats from matches
+        TEAMS.forEach(t => realStats[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
         matches.forEach(m => {
-            const h = computed[m.team1], a = computed[m.team2];
+            const h = realStats[m.team1], a = realStats[m.team2];
             if (!h || !a) return;
-            const s1=Number(m.score1), s2=Number(m.score2);
+            const s1=+m.score1, s2=+m.score2;
             h.game++; a.game++;
             h.gf+=s1; h.ga+=s2; a.gf+=s2; a.ga+=s1;
             if(s1>s2){h.win++;h.point+=3;a.lose++;}
             else if(s2>s1){a.win++;a.point+=3;h.lose++;}
             else{h.draw++;a.draw++;h.point++;a.point++;}
         });
-        TEAMS.forEach(t => { if(computed[t]) computed[t].diff = computed[t].gf - computed[t].ga; });
+        TEAMS.forEach(t => { realStats[t].diff = realStats[t].gf - realStats[t].ga; });
 
-        // Check for manual overrides in tableOverrides collection
-        window.db.collection("tableOverrides").get().then(oSnap => {
-            const overrides = {};
-            oSnap.forEach(doc => {
-                const d = doc.data();
-                if (d.team) overrides[d.team] = { ...d, _docId: doc.id };
-            });
-
-            // Merge: override takes priority if it exists
-            TEAMS.forEach(t => {
-                tableState[t] = { ...(computed[t] || {}), ...(overrides[t] || {}), _docId: overrides[t]?._docId || null };
-            });
-
-            renderCards();
-        }).catch(() => {
-            // No overrides yet — just use computed
-            TEAMS.forEach(t => { tableState[t] = { ...(computed[t]||{}), _docId: null }; });
-            renderCards();
+        // Load adjustments
+        return db.collection("tableAdjustments").get();
+    }).then(snap => {
+        adjustments = {};
+        adjDocIds   = {};
+        snap.forEach(doc => {
+            const d = doc.data();
+            if (d.team) {
+                adjustments[d.team] = d;
+                adjDocIds[d.team]   = doc.id;
+            }
         });
-    }).catch(err => {
-        showToast("❌ Error loading: " + err.message);
-    });
+        renderAll();
+
+        // Live listener for real-time preview update
+        db.collection("matches").onSnapshot(() => {
+            db.collection("matches").get().then(snap2 => {
+                const ms = [];
+                snap2.forEach(doc => ms.push(doc.data()));
+                TEAMS.forEach(t => realStats[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
+                ms.forEach(m => {
+                    const h = realStats[m.team1], a = realStats[m.team2];
+                    if (!h || !a) return;
+                    const s1=+m.score1, s2=+m.score2;
+                    h.game++; a.game++;
+                    h.gf+=s1; h.ga+=s2; a.gf+=s2; a.ga+=s1;
+                    if(s1>s2){h.win++;h.point+=3;a.lose++;}
+                    else if(s2>s1){a.win++;a.point+=3;h.lose++;}
+                    else{h.draw++;a.draw++;h.point++;a.point++;}
+                });
+                TEAMS.forEach(t => { realStats[t].diff = realStats[t].gf - realStats[t].ga; });
+                renderAll();
+            });
+        });
+    }).catch(err => showToast("❌ " + err.message, "err"));
 }
 
+// ── Get final value = real + adjustment ──
+function getFinal(team, key) {
+    const real = realStats[team]?.[key] || 0;
+    const adj  = adjustments[team]?.[key] || 0;
+    return real + adj;
+}
+
+// ── Render live table preview ──
+function renderLiveTable() {
+    const sorted = [...TEAMS].sort((a,b) => {
+        const pa = getFinal(a,"point"), pb = getFinal(b,"point");
+        const da = getFinal(a,"diff"),  db_ = getFinal(b,"diff");
+        const ga = getFinal(a,"gf"),    gb  = getFinal(b,"gf");
+        return pb!==pa ? pb-pa : db_!==da ? db_-da : gb-ga;
+    });
+    const rankCls = ["r1","r2","r3"];
+    const rows = sorted.map((t,i) => {
+        const diff = getFinal(t,"diff");
+        return `<div class="lp-row">
+            <div class="lp-rank ${rankCls[i]||''}">${i+1}</div>
+            <div class="lp-name">${t}</div>
+            <div class="lp-val">${getFinal(t,"game")}</div>
+            <div class="lp-val">${getFinal(t,"win")}</div>
+            <div class="lp-val">${getFinal(t,"draw")}</div>
+            <div class="lp-val">${getFinal(t,"lose")}</div>
+            <div class="lp-val">${getFinal(t,"gf")}</div>
+            <div class="lp-val">${getFinal(t,"ga")}</div>
+            <div class="lp-val ${diff>0?'pos':diff<0?'neg':''}">${diff>0?'+':''}${diff}</div>
+            <div class="lp-val pts">${getFinal(t,"point")}</div>
+        </div>`;
+    }).join("");
+    document.getElementById("liveTableRows").innerHTML = rows;
+}
+
+// ── Render edit cards ──
 function renderCards() {
     const container = document.getElementById("teamCards");
     container.innerHTML = "";
+    const FIELDS = [
+        {key:"game",  lbl:"Games"},
+        {key:"win",   lbl:"Win"},
+        {key:"draw",  lbl:"Draw"},
+        {key:"lose",  lbl:"Lose"},
+        {key:"gf",    lbl:"GF"},
+        {key:"ga",    lbl:"GA"},
+        {key:"diff",  lbl:"Diff"},
+        {key:"point", lbl:"Points", pts:true}
+    ];
 
-    // Sort by points desc
-    const sorted = [...TEAMS].sort((a,b) => (tableState[b]?.point||0) - (tableState[a]?.point||0));
+    const sorted = [...TEAMS].sort((a,b) => getFinal(b,"point") - getFinal(a,"point"));
+    const rankEmoji = ["🥇","🥈","🥉"];
 
     sorted.forEach((team, idx) => {
-        const d = tableState[team] || {};
-        const rankEmoji = ["🥇","🥈","🥉"][idx] || (idx+1);
-
         const card = document.createElement("div");
         card.className = "team-card";
-        card.id = "card-" + team.replace(/ /g,"_");
+        card.id = "card_" + team.replace(/ /g,"_");
 
-        let fieldsHtml = FIELDS.map(f => `
-            <div class="field-wrap">
-                <label class="field-lbl">${f.label}</label>
-                <input class="field-input ${f.cls}" 
-                    type="number" 
-                    id="f_${team.replace(/ /g,'_')}_${f.key}" 
-                    value="${d[f.key] !== undefined ? d[f.key] : 0}"
-                    oninput="onFieldChange('${team}','${f.key}',this.value)"/>
-            </div>
-        `).join("");
+        const fieldsHtml = FIELDS.map(f => {
+            const finalVal = getFinal(team, f.key);
+            return `<div class="field-wrap">
+                <label class="field-lbl">${f.lbl}</label>
+                <input class="field-input ${f.pts?'pts-input':''}"
+                    type="number" id="inp_${team.replace(/ /g,'_')}_${f.key}"
+                    value="${finalVal}"
+                    oninput="onInput('${team}','${f.key}',this.value)"/>
+            </div>`;
+        }).join("");
 
         card.innerHTML = `
-            <div class="team-name-label">
-                <span>${rankEmoji}</span>
-                <span>${team}</span>
-                <span class="team-rank">${d.point || 0} pts</span>
+            <div class="tc-header">
+                <span class="tc-name">${rankEmoji[idx]||''} ${team}</span>
+                <span class="tc-pts-badge" id="ptsbadge_${team.replace(/ /g,'_')}">${getFinal(team,"point")} pts</span>
             </div>
             <div class="fields-grid">${fieldsHtml}</div>
-            <button class="save-team-btn" id="btn-${team.replace(/ /g,'_')}" onclick="saveTeam('${team}')">
-                💾 Save ${team}
-            </button>
-        `;
+            <button class="save-team-btn" id="savebtn_${team.replace(/ /g,'_')}"
+                onclick="saveTeam('${team}')">💾 Save ${team}</button>`;
         container.appendChild(card);
     });
 }
 
-function onFieldChange(team, key, val) {
-    if (!tableState[team]) tableState[team] = {};
-    tableState[team][key] = Number(val) || 0;
-    // Auto-calc diff when gf/ga change
-    if (key === "gf" || key === "ga") {
-        const gf = tableState[team].gf || 0;
-        const ga = tableState[team].ga || 0;
-        tableState[team].diff = gf - ga;
-        const diffEl = document.getElementById(`f_${team.replace(/ /g,'_')}_diff`);
-        if (diffEl) diffEl.value = gf - ga;
-    }
+function renderAll() {
+    renderLiveTable();
+    renderCards();
 }
 
+// ── When user types — update adjustment and re-render preview ──
+function onInput(team, key, val) {
+    const num = Number(val) || 0;
+    const real = realStats[team]?.[key] || 0;
+    // Adjustment = what user typed MINUS the real value
+    if (!adjustments[team]) adjustments[team] = { team };
+    adjustments[team][key] = num - real;
+
+    // Auto-recalc diff
+    if (key === "gf" || key === "ga") {
+        const finalGF = getFinal(team, "gf");
+        const finalGA = getFinal(team, "ga");
+        const newDiff = finalGF - finalGA;
+        adjustments[team]["diff"] = newDiff - (realStats[team]?.diff || 0);
+        const diffEl = document.getElementById(`inp_${team.replace(/ /g,'_')}_diff`);
+        if (diffEl) diffEl.value = newDiff;
+    }
+
+    // Update pts badge live
+    const badge = document.getElementById("ptsbadge_" + team.replace(/ /g,"_"));
+    if (badge) badge.textContent = getFinal(team, "point") + " pts";
+
+    renderLiveTable();
+}
+
+// ── Save one team ──
 function saveTeam(team) {
-    if (!window.db) { showToast("❌ DB not ready"); return; }
-    const data = tableState[team] || {};
-    const payload = {
-        team,
-        game:  Number(data.game)  || 0,
-        win:   Number(data.win)   || 0,
-        lose:  Number(data.lose)  || 0,
-        draw:  Number(data.draw)  || 0,
-        gf:    Number(data.gf)    || 0,
-        ga:    Number(data.ga)    || 0,
-        diff:  Number(data.diff)  || 0,
-        point: Number(data.point) || 0,
-        updatedAt: new Date().toISOString()
-    };
+    if (!db) { showToast("❌ DB not ready", "err"); return; }
 
-    const btnId = "btn-" + team.replace(/ /g,"_");
-    const btn = document.getElementById(btnId);
-    if (btn) { btn.textContent = "⏳ Saving..."; btn.disabled = true; }
+    const adj = adjustments[team] || { team };
+    adj.team = team;
+    adj.updatedAt = new Date().toISOString();
 
-    // Use team name as doc ID so it always overwrites the same doc
+    const btn = document.getElementById("savebtn_" + team.replace(/ /g,"_"));
+    if (btn) { btn.disabled = true; btn.textContent = "⏳ Saving..."; }
+
+    // Use team name as doc ID (consistent)
     const docId = team.replace(/ /g, "_");
-    tableState[team]._docId = docId;
-    const promise = window.db.collection("tableOverrides").doc(docId).set(payload);
+    adjDocIds[team] = docId;
 
-    promise.then(() => {
-        showToast("✅ " + team + " saved!");
-        if (btn) { btn.className = "save-team-btn saved"; btn.textContent = "✅ Saved"; btn.disabled = false; }
-        // Update rank pill
-        const rankPill = document.querySelector("#card-" + team.replace(/ /g,"_") + " .team-rank");
-        if (rankPill) rankPill.textContent = payload.point + " pts";
+    db.collection("tableAdjustments").doc(docId).set(adj)
+        .then(() => {
+            showToast("✅ " + team + " saved!", "ok");
+            if (btn) { btn.disabled = false; btn.textContent = "✅ Saved — " + team; btn.style.borderColor="rgba(0,200,83,0.4)"; btn.style.color="#00c853"; }
+        })
+        .catch(err => {
+            showToast("❌ " + err.message, "err");
+            if (btn) { btn.disabled = false; btn.textContent = "💾 Save " + team; }
+        });
+}
+
+// ── Save all ──
+function saveAll() {
+    const btn = document.getElementById("saveAllBtn");
+    btn.disabled = true; btn.textContent = "⏳ Saving...";
+    Promise.all(TEAMS.map(t => {
+        const adj = adjustments[t] || { team: t };
+        adj.team = t;
+        adj.updatedAt = new Date().toISOString();
+        const docId = t.replace(/ /g, "_");
+        return db.collection("tableAdjustments").doc(docId).set(adj);
+    })).then(() => {
+        showToast("✅ All saved!", "ok");
+        btn.disabled = false; btn.textContent = "💾 Save All Changes";
     }).catch(err => {
-        showToast("❌ Error: " + err.message);
-        if (btn) { btn.textContent = "💾 Save " + team; btn.disabled = false; }
+        showToast("❌ " + err.message, "err");
+        btn.disabled = false; btn.textContent = "💾 Save All Changes";
     });
 }
 
-function saveAll() {
-    TEAMS.forEach(t => saveTeam(t));
-}
-
-function showToast(msg) {
+function showToast(msg, type) {
     const t = document.getElementById("toast");
     t.textContent = msg;
-    t.className = "toast show";
-    setTimeout(() => t.className = "toast", 2800);
+    t.className = "toast show " + (type||"ok");
+    setTimeout(() => t.className = "toast " + (type||"ok"), 2800);
 }
 </script>
 </body>
