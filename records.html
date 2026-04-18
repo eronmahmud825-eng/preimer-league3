@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>History Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@400;500&display=swap"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#04080f;--bg2:#0a1018;--bg3:#0e1620;--bg4:#121e2c;
+  --border:#1a2535;--border2:#22304a;
+  --gold:#ffd600;--gold2:#ffb300;
+  --green:#00e676;--blue:#448aff;--red:#ff5252;--purple:#ce93d8;--orange:#ffb74d;
+  --text:#f0f4f8;--text2:#8a9bb0;--text3:#3d5068;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% -5%,rgba(255,214,0,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 30% at 90% 80%,rgba(68,138,255,0.04) 0%,transparent 50%),
+    radial-gradient(ellipse 30% 20% at 5% 50%,rgba(0,230,118,0.03) 0%,transparent 50%);}
+
+.wrap{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:28px 14px 70px;}
+
+/* ── HEADER ── */
+.hero{text-align:center;margin-bottom:36px;animation:fadeDown .7s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:.7;}50%{opacity:1;}}
+
+.hero-icon{font-size:60px;display:block;margin-bottom:10px;
+  animation:trophyBounce 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 24px rgba(255,214,0,0.6));}
+@keyframes trophyBounce{
+  0%,100%{transform:translateY(0) rotate(-3deg);filter:drop-shadow(0 0 16px rgba(255,214,0,0.5));}
+  50%{transform:translateY(-8px) rotate(3deg);filter:drop-shadow(0 0 40px rgba(255,214,0,1));}}
+
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,8vw,4rem);
+  letter-spacing:0.1em;color:var(--gold);line-height:1;
+  text-shadow:0 0 50px rgba(255,214,0,0.4);}
+.hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.75rem;
+  letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-top:6px;}
+
+/* ── SECTION TITLE ── */
+.sec-title{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;
+  font-weight:700;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--text3);margin:28px 0 12px;
+  padding-bottom:8px;border-bottom:1px solid var(--border);}
+.sec-title-icon{font-size:16px;}
+
+/* ── RECORD CARD ── */
+.rec-card{
+  position:relative;border-radius:16px;overflow:hidden;
+  margin-bottom:12px;cursor:pointer;
+  animation:slideUp .4s ease both;
+  transition:transform .2s, box-shadow .2s;
+  border:1px solid var(--border);
+}
+.rec-card:hover{transform:translateY(-3px);}
+.rec-card:active{transform:scale(0.98);}
+
+/* Color variants */
+.rec-card.gold  { background:linear-gradient(135deg,#1a1200,#251a00); border-color:rgba(255,214,0,0.25); }
+.rec-card.gold:hover  { box-shadow:0 8px 32px rgba(255,214,0,0.12); border-color:rgba(255,214,0,0.45); }
+.rec-card.green { background:linear-gradient(135deg,#001a0a,#002510); border-color:rgba(0,230,118,0.2); }
+.rec-card.green:hover { box-shadow:0 8px 32px rgba(0,230,118,0.1); border-color:rgba(0,230,118,0.4); }
+.rec-card.blue  { background:linear-gradient(135deg,#001228,#001a38); border-color:rgba(68,138,255,0.2); }
+.rec-card.blue:hover  { box-shadow:0 8px 32px rgba(68,138,255,0.1); border-color:rgba(68,138,255,0.4); }
+.rec-card.red   { background:linear-gradient(135deg,#1a0005,#250008); border-color:rgba(255,82,82,0.2); }
+.rec-card.red:hover   { box-shadow:0 8px 32px rgba(255,82,82,0.1); border-color:rgba(255,82,82,0.4); }
+.rec-card.purple{ background:linear-gradient(135deg,#120820,#1a0e2c); border-color:rgba(206,147,216,0.2); }
+.rec-card.purple:hover{ box-shadow:0 8px 32px rgba(206,147,216,0.1); border-color:rgba(206,147,216,0.4); }
+.rec-card.orange{ background:linear-gradient(135deg,#1a0c00,#251200); border-color:rgba(255,183,77,0.2); }
+.rec-card.orange:hover{ box-shadow:0 8px 32px rgba(255,183,77,0.1); border-color:rgba(255,183,77,0.4); }
+
+/* top glow line */
+.rec-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0.5;}
+.rec-card.gold::before  {background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.rec-card.green::before {background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.rec-card.blue::before  {background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.rec-card.red::before   {background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.rec-card.purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent);}
+.rec-card.orange::before{background:linear-gradient(90deg,transparent,var(--orange),transparent);}
+
+/* inner layout */
+.rec-inner{display:flex;align-items:center;gap:14px;padding:16px 18px;}
+.rec-emoji{font-size:32px;flex-shrink:0;filter:drop-shadow(0 0 8px currentColor);}
+.rec-body{flex:1;min-width:0;}
+.rec-label{font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;
+  font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:3px;}
+.rec-card.gold   .rec-label{color:rgba(255,214,0,0.6);}
+.rec-card.green  .rec-label{color:rgba(0,230,118,0.6);}
+.rec-card.blue   .rec-label{color:rgba(68,138,255,0.6);}
+.rec-card.red    .rec-label{color:rgba(255,82,82,0.6);}
+.rec-card.purple .rec-label{color:rgba(206,147,216,0.6);}
+.rec-card.orange .rec-label{color:rgba(255,183,77,0.6);}
+
+.rec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.1rem,3.5vw,1.4rem);
+  letter-spacing:0.06em;color:var(--text);line-height:1.1;}
+
+.rec-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.rec-value{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);
+  letter-spacing:0.04em;line-height:1;}
+.rec-card.gold   .rec-value{color:var(--gold);text-shadow:0 0 20px rgba(255,214,0,0.4);}
+.rec-card.green  .rec-value{color:var(--green);text-shadow:0 0 20px rgba(0,230,118,0.4);}
+.rec-card.blue   .rec-value{color:var(--blue);text-shadow:0 0 20px rgba(68,138,255,0.4);}
+.rec-card.red    .rec-value{color:var(--red);text-shadow:0 0 20px rgba(255,82,82,0.4);}
+.rec-card.purple .rec-value{color:var(--purple);text-shadow:0 0 20px rgba(206,147,216,0.4);}
+.rec-card.orange .rec-value{color:var(--orange);text-shadow:0 0 20px rgba(255,183,77,0.4);}
+
+.rec-holder{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;
+  font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.rec-card.gold   .rec-holder{background:rgba(255,214,0,0.12);border:1px solid rgba(255,214,0,0.3);color:var(--gold);}
+.rec-card.green  .rec-holder{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);color:var(--green);}
+.rec-card.blue   .rec-holder{background:rgba(68,138,255,0.1);border:1px solid rgba(68,138,255,0.25);color:var(--blue);}
+.rec-card.red    .rec-holder{background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.25);color:var(--red);}
+.rec-card.purple .rec-holder{background:rgba(206,147,216,0.1);border:1px solid rgba(206,147,216,0.25);color:var(--purple);}
+.rec-card.orange .rec-holder{background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.25);color:var(--orange);}
+
+/* stagger animations */
+.rec-card:nth-child(1){animation-delay:.05s;}
+.rec-card:nth-child(2){animation-delay:.10s;}
+.rec-card:nth-child(3){animation-delay:.15s;}
+.rec-card:nth-child(4){animation-delay:.20s;}
+.rec-card:nth-child(5){animation-delay:.25s;}
+.rec-card:nth-child(6){animation-delay:.30s;}
+.rec-card:nth-child(7){animation-delay:.35s;}
+.rec-card:nth-child(8){animation-delay:.40s;}
+
+/* ── TOTAL COUNT ── */
+.total-bar{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:24px;flex-wrap:wrap;}
+.total-item{text-align:center;}
+.total-val{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold);line-height:1;}
+.total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.6rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);}
+.total-sep{width:1px;height:32px;background:var(--border2);}
+
+/* ── BACK BUTTON ── */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:11px 22px;background:transparent;
+  border:1.5px solid var(--border2);border-radius:10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;
+  letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);
+  cursor:pointer;transition:all .2s;margin-top:20px;}
+.back-btn:hover{border-color:rgba(255,214,0,0.4);color:rgba(255,214,0,0.7);}
+
+/* ── NEW RECORD BUTTON ── */
+.add-btn{
+  width:100%;padding:14px;background:var(--bg3);
+  border:1.5px dashed var(--border2);border-radius:14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;
+  font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text3);cursor:pointer;transition:all .2s;margin-top:8px;}
+.add-btn:hover{border-color:rgba(255,214,0,0.4);color:rgba(255,214,0,0.7);background:rgba(255,214,0,0.04);}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  animation:fadeIn .2s ease both;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:18px;
+  padding:24px 20px;width:100%;max-width:420px;
+  animation:modalPop .25s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes modalPop{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+.modal h3{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.08em;
+  color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.modal label{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;
+  font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);display:block;margin-bottom:5px;margin-top:12px;}
+.modal input,.modal select{width:100%;padding:10px 12px;
+  background:#070d14;border:1.5px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;
+  outline:none;transition:border-color .2s;}
+.modal input:focus,.modal select:focus{border-color:var(--gold);}
+.modal-btns{display:flex;gap:10px;margin-top:18px;}
+.modal-save{flex:1;padding:11px;background:var(--gold);color:#000;border:none;
+  border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;
+  font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.modal-save:hover{background:var(--gold2);}
+.modal-cancel{padding:11px 18px;background:transparent;border:1.5px solid var(--border2);
+  border-radius:10px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;
+  font-size:0.88rem;cursor:pointer;transition:all .2s;}
+.modal-cancel:hover{border-color:var(--red);color:var(--red);}
+
+/* delete btn on card */
+.rec-del{position:absolute;top:8px;right:10px;background:rgba(255,82,82,0.1);
+  border:1px solid rgba(255,82,82,0.2);border-radius:6px;color:rgba(255,82,82,0.5);
+  font-size:0.65rem;padding:2px 7px;cursor:pointer;opacity:0;transition:opacity .2s;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;}
+.rec-card:hover .rec-del{opacity:1;}
+.rec-del:hover{background:rgba(255,82,82,0.2);color:var(--red);}
+
+@media(max-width:480px){
+  .rec-inner{padding:14px;}
+  .rec-emoji{font-size:26px;}
+  .rec-value{font-size:1.6rem;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-icon">🏅</span>
+    <h1 class="hero-title">History Records</h1>
+    <p class="hero-sub">All Time Records — Football League</p>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="total-bar" id="totalBar">
+    <div class="total-item"><div class="total-val" id="totalRec">5</div><div class="total-lbl">Records</div></div>
+    <div class="total-sep"></div>
+    <div class="total-item"><div class="total-val" id="totalHolders">3</div><div class="total-lbl">Holders</div></div>
+    <div class="total-sep"></div>
+    <div class="total-item"><div class="total-val">🏆</div><div class="total-lbl">All Time</div></div>
+  </div>
+
+  <!-- Records list -->
+  <div class="sec-title"><span class="sec-title-icon">⚡</span> Speed Records</div>
+  <div id="speedRecords"></div>
+
+  <div class="sec-title"><span class="sec-title-icon">⚽</span> Goal Records</div>
+  <div id="goalRecords"></div>
+
+  <div class="sec-title"><span class="sec-title-icon">📊</span> Performance Records</div>
+  <div id="perfRecords"></div>
+
+  <button class="add-btn" onclick="openAddModal()">＋ Add New Record</button>
+
+  <div>
+    <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>🏅 Add New Record</h3>
+    <label>Category</label>
+    <select id="mCat">
+      <option value="speed">⚡ Speed Records</option>
+      <option value="goal">⚽ Goal Records</option>
+      <option value="perf">📊 Performance Records</option>
+    </select>
+    <label>Record Title</label>
+    <input id="mTitle" type="text" placeholder="e.g. Fastest Goal"/>
+    <label>Value / Result</label>
+    <input id="mValue" type="text" placeholder="e.g. 1:12 or 15 Goals"/>
+    <label>Emoji Icon</label>
+    <input id="mEmoji" type="text" placeholder="⚡" maxlength="4" value="🏅"/>
+    <label>Color Theme</label>
+    <select id="mColor">
+      <option value="gold">🟡 Gold</option>
+      <option value="green">🟢 Green</option>
+      <option value="blue">🔵 Blue</option>
+      <option value="red">🔴 Red</option>
+      <option value="purple">🟣 Purple</option>
+      <option value="orange">🟠 Orange</option>
+    </select>
+    <label>Record Holder Name</label>
+    <input id="mHolder" type="text" placeholder="e.g. ERON"/>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveRecord()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+// ── DEFAULT RECORDS ──
+const DEFAULT_RECORDS = [
+  { id:"default1", cat:"speed", emoji:"⚡", title:"Fastest Goal",     value:"1:12",     holder:"ERON",  color:"gold"   },
+  { id:"default2", cat:"speed", emoji:"🥊", title:"Fastest Hat-Trick", value:"7 Minutes", holder:"LAWIN", color:"orange" },
+  { id:"default3", cat:"goal",  emoji:"🧤", title:"Longest Clean Sheet", value:"9-0",    holder:"ERON",  color:"green"  },
+  { id:"default4", cat:"goal",  emoji:"🎯", title:"Highest Goals in a Match", value:"15 Goals", holder:"ARIN",color:"red"},
+  { id:"default5", cat:"perf",  emoji:"⭐", title:"Highest Points",    value:"91 Points", holder:"ERON",  color:"gold"   },
+];
+
+let allRecords = [];
+let db;
+
+// Wait for Firebase
+function waitDB(cb) {
+  let t = 0;
+  const iv = setInterval(() => {
+    if (window.db) { clearInterval(iv); db = window.db; cb(); }
+    else if (++t > 40) { clearInterval(iv); loadFallback(); }
+  }, 100);
+}
+
+// Load fallback (no Firebase)
+function loadFallback() {
+  allRecords = [...DEFAULT_RECORDS];
+  render();
+}
+
+// Load from Firebase
+function loadRecords() {
+  db.collection("historyRecords").onSnapshot(snap => {
+    let firestoreRecs = [];
+    snap.forEach(doc => firestoreRecs.push({ id: doc.id, ...doc.data() }));
+
+    if (firestoreRecs.length === 0) {
+      // First time — save defaults to Firebase
+      const batch = db.batch();
+      DEFAULT_RECORDS.forEach(r => {
+        const ref = db.collection("historyRecords").doc(r.id);
+        batch.set(ref, r);
+      });
+      batch.commit().then(() => console.log("✅ Default records saved")).catch(console.error);
+      allRecords = [...DEFAULT_RECORDS];
+    } else {
+      allRecords = firestoreRecs;
+    }
+    render();
+  }, err => { console.error(err); loadFallback(); });
+}
+
+// Render all cards
+function render() {
+  const speed  = allRecords.filter(r => r.cat === "speed");
+  const goal   = allRecords.filter(r => r.cat === "goal");
+  const perf   = allRecords.filter(r => r.cat === "perf");
+
+  renderSection("speedRecords", speed);
+  renderSection("goalRecords",  goal);
+  renderSection("perfRecords",  perf);
+
+  // Update totals
+  const holders = [...new Set(allRecords.map(r => r.holder))];
+  document.getElementById("totalRec").textContent     = allRecords.length;
+  document.getElementById("totalHolders").textContent = holders.length;
+}
+
+function renderSection(containerId, records) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (records.length === 0) {
+    container.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">No records yet</div>`;
+    return;
+  }
+
+  container.innerHTML = "";
+  records.forEach((r, i) => {
+    const card = document.createElement("div");
+    card.className = "rec-card " + (r.color || "gold");
+    card.style.animationDelay = (i * 0.07) + "s";
+    card.innerHTML = `
+      <button class="rec-del" onclick="deleteRecord('${r.id}', event)">✕ Delete</button>
+      <div class="rec-inner">
+        <div class="rec-emoji">${r.emoji || "🏅"}</div>
+        <div class="rec-body">
+          <div class="rec-label">${r.cat === "speed" ? "⚡ Speed Record" : r.cat === "goal" ? "⚽ Goal Record" : "📊 Performance"}</div>
+          <div class="rec-title">${r.title}</div>
+        </div>
+        <div class="rec-right">
+          <div class="rec-value">${r.value}</div>
+          <div class="rec-holder">${r.holder}</div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+// Modal
+function openAddModal() {
+  document.getElementById("modal").style.display = "flex";
+}
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  ["mTitle","mValue","mHolder"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("mEmoji").value = "🏅";
+  document.getElementById("mColor").value = "gold";
+}
+
+function saveRecord() {
+  const title  = document.getElementById("mTitle").value.trim();
+  const value  = document.getElementById("mValue").value.trim();
+  const holder = document.getElementById("mHolder").value.trim();
+  const emoji  = document.getElementById("mEmoji").value.trim() || "🏅";
+  const color  = document.getElementById("mColor").value;
+  const cat    = document.getElementById("mCat").value;
+
+  if (!title || !value || !holder) { alert("❌ Please fill all fields"); return; }
+
+  const rec = { cat, emoji, title, value, holder, color, createdAt: new Date().toISOString() };
+
+  if (db) {
+    db.collection("historyRecords").add(rec)
+      .then(() => { closeModal(); })
+      .catch(err => alert("❌ " + err.message));
+  } else {
+    rec.id = "local_" + Date.now();
+    allRecords.push(rec);
+    render();
+    closeModal();
+  }
+}
+
+function deleteRecord(id, e) {
+  e.stopPropagation();
+  if (!confirm("Delete this record?")) return;
+  if (db && !id.startsWith("local_")) {
+    db.collection("historyRecords").doc(id).delete()
+      .then(() => console.log("Deleted"))
+      .catch(err => alert("❌ " + err.message));
+  } else {
+    allRecords = allRecords.filter(r => r.id !== id);
+    render();
+  }
+}
+
+// Init
+waitDB(loadRecords);
+</script>
+</body>
+</html>
