@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Football System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400&display=swap"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;}
+
+body{
+font-family:‘Barlow’,sans-serif;
+background:#030608;
+display:flex;align-items:center;justify-content:center;
+min-height:100vh;
+}
+
+/* ── ANIMATED BACKGROUND ── */
+.bg-layer{
+position:fixed;inset:0;z-index:0;
+background:
+radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,200,83,0.07) 0%,transparent 60%),
+radial-gradient(ellipse 60% 40% at 20% 80%,rgba(30,136,229,0.05) 0%,transparent 50%),
+radial-gradient(ellipse 50% 30% at 80% 10%,rgba(255,214,0,0.04) 0%,transparent 50%);
+}
+
+/* Floating particles */
+.particles{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.p{position:absolute;border-radius:50%;animation:floatUp linear infinite;}
+@keyframes floatUp{
+0%{transform:translateY(110vh) rotate(0deg);opacity:0;}
+10%{opacity:1;}
+90%{opacity:.4;}
+100%{transform:translateY(-20vh) rotate(720deg);opacity:0;}
+}
+
+/* ── PITCH LINES (background) ── */
+.pitch{
+position:fixed;inset:0;z-index:0;opacity:0.04;
+background:
+linear-gradient(transparent 49.5%,#00c853 49.5%,#00c853 50.5%,transparent 50.5%),
+radial-gradient(circle at 50% 50%,transparent 18%,#00c853 18%,#00c853 19%,transparent 19%);
+background-size:100% 100%;
+}
+
+/* ── MAIN CONTAINER ── */
+.container{
+position:relative;z-index:10;
+display:flex;flex-direction:column;align-items:center;
+justify-content:center;text-align:center;
+padding:24px 20px;
+animation:containerIn 1s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes containerIn{
+from{opacity:0;transform:scale(.92);}
+to{opacity:1;transform:scale(1);}
+}
+
+/* ── FOOTBALL ICON ── */
+.football-wrap{
+position:relative;margin-bottom:24px;
+animation:ballIn .8s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+@keyframes ballIn{from{opacity:0;transform:scale(0) rotate(-180deg);}to{opacity:1;transform:scale(1) rotate(0deg);}}
+
+.football{
+font-size:clamp(60px,12vw,90px);
+display:block;line-height:1;
+animation:ballSpin 8s linear infinite, ballFloat 3s ease-in-out infinite;
+filter:drop-shadow(0 0 30px rgba(0,200,83,0.5));
+}
+@keyframes ballSpin{0%{filter:drop-shadow(0 0 20px rgba(0,200,83,0.4));}50%{filter:drop-shadow(0 0 50px rgba(0,200,83,0.8));}100%{filter:drop-shadow(0 0 20px rgba(0,200,83,0.4));}}
+@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+
+/* ── WELCOME TEXT ── */
+.welcome-label{
+font-family:‘Barlow Condensed’,sans-serif;
+font-size:clamp(0.7rem,2vw,0.85rem);
+letter-spacing:0.35em;text-transform:uppercase;
+color:rgba(0,200,83,0.7);margin-bottom:8px;
+animation:fadeSlide .6s ease .4s both;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.title-main{
+font-family:‘Bebas Neue’,sans-serif;
+font-size:clamp(2.8rem,10vw,5.5rem);
+letter-spacing:0.06em;line-height:1;
+color:#fff;
+text-shadow:0 0 60px rgba(0,200,83,0.3),0 0 120px rgba(0,200,83,0.1);
+animation:titleIn .8s cubic-bezier(.16,1,.3,1) .5s both;
+}
+@keyframes titleIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.title-accent{color:#00e676;}
+
+.title-sub{
+font-family:‘Bebas Neue’,sans-serif;
+font-size:clamp(1.5rem,5vw,2.8rem);
+letter-spacing:0.12em;color:rgba(255,255,255,0.4);
+animation:titleIn .8s cubic-bezier(.16,1,.3,1) .65s both;
+margin-bottom:32px;
+}
+
+/* ── FLAGS ROW ── */
+.flags-row{
+display:flex;align-items:center;gap:clamp(16px,4vw,32px);
+margin-bottom:32px;
+animation:flagsIn .8s cubic-bezier(.16,1,.3,1) .8s both;
+}
+@keyframes flagsIn{from{opacity:0;transform:translateY(24px) scale(.9);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+.flag-card{
+display:flex;flex-direction:column;align-items:center;gap:10px;
+position:relative;
+}
+
+/* Flag frame */
+.flag-frame{
+position:relative;
+width:clamp(80px,18vw,120px);
+height:clamp(54px,12vw,80px);
+border-radius:10px;overflow:hidden;
+box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.08);
+animation:flagWave 4s ease-in-out infinite;
+}
+@keyframes flagWave{
+0%,100%{transform:perspective(200px) rotateY(0deg);}
+25%{transform:perspective(200px) rotateY(3deg);}
+75%{transform:perspective(200px) rotateY(-3deg);}
+}
+
+/* Manchester City flag — sky blue with white */
+.flag-mcity{
+background:linear-gradient(180deg,#6CABDD 0%,#6CABDD 100%);
+display:flex;align-items:center;justify-content:center;
+}
+.flag-mcity::before{
+content:’’;position:absolute;inset:0;
+background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%,rgba(0,0,0,0.1) 100%);
+}
+/* City crest using CSS */
+.city-crest{
+position:relative;z-index:1;
+width:50%;height:80%;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+gap:2px;
+}
+.city-ship{font-size:clamp(18px,5vw,28px);line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
+.city-stars{font-size:clamp(5px,1.2vw,8px);letter-spacing:2px;color:rgba(255,255,255,0.9);}
+.city-name{font-family:‘Bebas Neue’,sans-serif;font-size:clamp(6px,1.5vw,9px);
+letter-spacing:0.1em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+
+/* Divider */
+.flag-divider{
+display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.flag-vs{
+font-family:‘Bebas Neue’,sans-serif;
+font-size:clamp(1rem,3vw,1.4rem);
+letter-spacing:0.1em;color:rgba(255,255,255,0.15);
+}
+.flag-x{
+font-size:clamp(18px,4vw,26px);
+animation:rotateX 6s linear infinite;
+filter:drop-shadow(0 0 10px rgba(0,200,83,0.5));
+}
+@keyframes rotateX{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+/* Kurdistan flag — red, white, green with sun */
+.flag-kurdistan{
+background:linear-gradient(180deg,
+#E2231A 0%,
+#E2231A 33.3%,
+#FFFFFF 33.3%,
+#FFFFFF 66.6%,
+#007A3D 66.6%,
+#007A3D 100%
+);
+}
+.flag-kurdistan::before{
+content:’’;position:absolute;inset:0;
+background:linear-gradient(135deg,rgba(255,255,255,0.1) 0%,transparent 50%,rgba(0,0,0,0.08) 100%);
+}
+.kurd-sun{
+position:absolute;top:50%;left:50%;
+transform:translate(-50%,-50%);
+z-index:1;
+font-size:clamp(20px,6vw,32px);
+filter:drop-shadow(0 0 6px rgba(255,165,0,0.6));
+animation:sunSpin 10s linear infinite;
+}
+@keyframes sunSpin{0%{transform:translate(-50%,-50%) rotate(0deg);}100%{transform:translate(-50%,-50%) rotate(360deg);}}
+
+/* Flag labels */
+.flag-label{
+font-family:‘Barlow Condensed’,sans-serif;
+font-size:clamp(0.6rem,1.5vw,0.72rem);
+letter-spacing:0.1em;text-transform:uppercase;
+color:rgba(255,255,255,0.4);text-align:center;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{
+width:clamp(200px,60vw,320px);
+animation:fadeSlide .6s ease 1s both;
+}
+.progress-label{
+font-family:‘Barlow Condensed’,sans-serif;
+font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;
+color:rgba(255,255,255,0.3);margin-bottom:8px;
+display:flex;align-items:center;justify-content:space-between;
+}
+.progress-bar{
+height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;
+position:relative;
+}
+.progress-fill{
+height:100%;width:0%;
+background:linear-gradient(90deg,#00c853,#69f0ae);
+border-radius:2px;
+transition:width .1s linear;
+box-shadow:0 0 10px rgba(0,200,83,0.6);
+}
+.progress-glow{
+position:absolute;top:-3px;right:0;width:20px;height:9px;
+background:radial-gradient(circle,rgba(0,200,83,0.8),transparent 70%);
+border-radius:50%;
+}
+.progress-dots{
+display:flex;align-items:center;justify-content:center;gap:6px;
+margin-top:10px;
+}
+.pdot{
+width:5px;height:5px;border-radius:50%;
+background:rgba(255,255,255,0.15);
+animation:dotPulse 1.5s ease-in-out infinite;
+}
+.pdot:nth-child(2){animation-delay:.2s;}
+.pdot:nth-child(3){animation-delay:.4s;}
+@keyframes dotPulse{0%,100%{background:rgba(0,200,83,0.3);}50%{background:rgba(0,200,83,0.9);transform:scale(1.4);}}
+
+/* ── EXIT ANIMATION ── */
+body.exit .container{
+animation:exitAnim .7s cubic-bezier(.4,0,1,1) forwards;
+}
+body.exit .bg-layer, body.exit .pitch, body.exit .particles{
+animation:bgFade .7s ease forwards;
+}
+@keyframes exitAnim{
+0%{opacity:1;transform:scale(1);}
+100%{opacity:0;transform:scale(1.05);}
+}
+@keyframes bgFade{to{opacity:0;}}
+
+/* Shimmer overlay on exit */
+body.exit::after{
+content:’’;position:fixed;inset:0;z-index:999;
+background:#030608;
+animation:shimmerIn .7s ease .1s both;
+}
+@keyframes shimmerIn{from{opacity:0;}to{opacity:1;}}
+</style>
+
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="pitch"></div>
+
+<!-- Particles -->
+
+<div class="particles" id="particles"></div>
+
+<!-- Main Content -->
+
+<div class="container">
+
+  <!-- Football -->
+
+  <div class="football-wrap">
+    <span class="football">⚽</span>
+  </div>
+
+  <!-- Text -->
+
+  <div class="welcome-label">Welcome to</div>
+  <div class="title-main">FOOTBALL <span class="title-accent">SYSTEM</span></div>
+  <div class="title-sub">Season 4 — 2026</div>
+
+  <!-- Flags -->
+
+  <div class="flags-row">
+
+```
+<!-- Manchester City Flag -->
+<div class="flag-card">
+  <div class="flag-frame flag-mcity">
+    <div class="city-crest">
+      <div class="city-ship">⚓</div>
+      <div class="city-stars">★ ★ ★</div>
+      <div class="city-name">MAN CITY</div>
+    </div>
+  </div>
+  <div class="flag-label">Manchester City</div>
+</div>
+
+<!-- Divider -->
+<div class="flag-divider">
+  <div class="flag-vs">×</div>
+  <div class="flag-x">⚽</div>
+  <div class="flag-vs">×</div>
+</div>
+
+<!-- Kurdistan Flag -->
+<div class="flag-card">
+  <div class="flag-frame flag-kurdistan">
+    <div class="kurd-sun">☀️</div>
+  </div>
+  <div class="flag-label">Kurdistan</div>
+</div>
+```
+
+  </div>
+
+  <!-- Progress -->
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Loading...</span>
+      <span id="pctText">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-glow" id="progressGlow"></div>
+    </div>
+    <div class="progress-dots">
+      <div class="pdot"></div>
+      <div class="pdot"></div>
+      <div class="pdot"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Generate particles ──
+const pc = document.getElementById("particles");
+const colors = ["#00c853","#00e676","#69f0ae","#ffd600","#448aff","#fff"];
+for (let i = 0; i < 25; i++) {
+  const p = document.createElement("div");
+  p.className = "p";
+  const size = 2 + Math.random() * 4;
+  p.style.cssText = `
+    width:${size}px;height:${size}px;
+    left:${Math.random()*100}%;
+    bottom:0;
+    background:${colors[Math.floor(Math.random()*colors.length)]};
+    opacity:${.2+Math.random()*.6};
+    animation-duration:${5+Math.random()*10}s;
+    animation-delay:${Math.random()*8}s;
+  `;
+  pc.appendChild(p);
+}
+
+// ── Progress bar animation ──
+const fill = document.getElementById("progressFill");
+const glow = document.getElementById("progressGlow");
+const pct  = document.getElementById("pctText");
+const DURATION = 3000; // 3 seconds
+const start = performance.now();
+
+function animateProgress(now) {
+  const elapsed = now - start;
+  const progress = Math.min(elapsed / DURATION, 1);
+  // Ease-in-out
+  const eased = progress < 0.5
+    ? 2 * progress * progress
+    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+  const pctVal = Math.round(eased * 100);
+  fill.style.width = pctVal + "%";
+  pct.textContent  = pctVal + "%";
+
+  if (progress < 1) {
+    requestAnimationFrame(animateProgress);
+  } else {
+    // Slight delay then exit
+    setTimeout(goToIndex, 200);
+  }
+}
+requestAnimationFrame(animateProgress);
+
+// ── Go to index ──
+function goToIndex() {
+  document.body.classList.add("exit");
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 750);
+}
+</script>
+
+</body>
+</html>
