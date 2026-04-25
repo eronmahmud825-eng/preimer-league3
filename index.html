@@ -1,206 +1,524 @@
+cat > /mnt/user-data/outputs/index.html << 'INDEXEOF'
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Football League — Season 4</title>
-    <link rel="stylesheet" href="style.css" />
-    <style>
-        .season-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2);
-            border-radius: 20px; padding: 5px 16px; margin-bottom: 20px;
-            font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem;
-            letter-spacing: 0.2em; text-transform: uppercase; color: #00c853;
-        }
-        .new-dot { width: 7px; height: 7px; border-radius: 50%; background: #00c853;
-            animation: blink 1.2s ease-in-out infinite; }
-        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Football System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+
+/* ══════════════════════════════════════
+   SPLASH SCREEN — Cinematic Welcome
+══════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #020507;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+/* Grid lines background */
+#splash::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,83,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,83,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { to { background-position: 60px 60px; } }
+
+/* Radial vignette */
+#splash::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, #020507 100%);
+  pointer-events: none;
+}
+
+/* ── Particles canvas ── */
+#pCanvas { position: absolute; inset: 0; z-index: 0; }
+
+/* ── Main content ── */
+.sp-content {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 20px;
+  animation: spContentIn 1.2s cubic-bezier(.16,1,.3,1) .1s both;
+}
+@keyframes spContentIn {
+  from { opacity: 0; transform: translateY(30px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Logo ball ── */
+.sp-ball-wrap {
+  position: relative;
+  width: clamp(80px,18vw,110px);
+  height: clamp(80px,18vw,110px);
+  margin-bottom: 20px;
+}
+.sp-ball-ring {
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,200,83,0.2);
+  animation: ringPulse 2s ease-in-out infinite;
+}
+.sp-ball-ring2 {
+  position: absolute; inset: -18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,200,83,0.08);
+  animation: ringPulse 2s ease-in-out .4s infinite;
+}
+@keyframes ringPulse {
+  0%,100% { transform: scale(1); opacity: .6; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+.sp-ball {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #1a3a28, #030d07);
+  border: 1px solid rgba(0,200,83,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(36px,9vw,56px);
+  animation: ballSpin 12s linear infinite, ballBreathe 3s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0,200,83,0.15), inset 0 0 30px rgba(0,0,0,0.5);
+}
+@keyframes ballSpin { to { --r: 360deg; } }
+@keyframes ballBreathe {
+  0%,100% { box-shadow: 0 0 30px rgba(0,200,83,0.12), inset 0 0 30px rgba(0,0,0,0.5); }
+  50% { box-shadow: 0 0 60px rgba(0,200,83,0.28), inset 0 0 30px rgba(0,0,0,0.5); }
+}
+
+/* ── Welcome text ── */
+.sp-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(0.65rem, 2vw, 0.78rem);
+  letter-spacing: 0.4em; text-transform: uppercase;
+  color: rgba(0,200,83,0.55);
+  margin-bottom: 6px;
+  animation: fadeUp .6s ease .6s both;
+}
+.sp-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 11vw, 6rem);
+  letter-spacing: 0.04em; line-height: 0.9;
+  color: #fff;
+  animation: fadeUp .7s ease .7s both;
+  position: relative;
+}
+.sp-title .accent {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,200,83,0.7);
+}
+.sp-season {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  margin-top: 6px; margin-bottom: 28px;
+  animation: fadeUp .6s ease .8s both;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Divider line ── */
+.sp-line {
+  width: clamp(40px, 10vw, 60px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,200,83,0.4), transparent);
+  margin: 0 auto 24px;
+  animation: lineExpand .8s ease .9s both;
+}
+@keyframes lineExpand { from { width:0; opacity:0; } to { opacity:1; } }
+
+/* ── FLAGS ── */
+.sp-flags {
+  display: flex; align-items: center;
+  justify-content: center;
+  gap: clamp(12px,4vw,28px);
+  margin-bottom: 28px;
+  animation: fadeUp .7s ease 1s both;
+}
+
+.sp-flag-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+}
+
+.sp-flag {
+  width: clamp(88px,20vw,128px);
+  height: clamp(58px,13vw,84px);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  animation: flagFloat 5s ease-in-out infinite;
+}
+.sp-flag-item:nth-child(3) .sp-flag { animation-delay: .7s; }
+
+@keyframes flagFloat {
+  0%,100% { transform: translateY(0) rotateX(0deg); }
+  25% { transform: translateY(-3px) rotateX(1deg); }
+  75% { transform: translateY(2px) rotateX(-1deg); }
+}
+
+/* Manchester City flag */
+.flag-mcity {
+  background: linear-gradient(160deg, #7ec8f5 0%, #5bb3e8 40%, #4aa0d5 100%);
+}
+.flag-mcity::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%),
+    linear-gradient(90deg, rgba(0,0,0,0.08) 0%, transparent 30%);
+}
+.city-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+}
+.city-emblem {
+  width: 54%; aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1px;
+}
+.city-anchor { font-size: clamp(14px,4vw,20px); }
+.city-stars  { font-size: 5px; letter-spacing: 2px; color: rgba(255,255,255,0.9); }
+.city-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5px,1.3vw,7px);
+  letter-spacing: 0.08em; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* Kurdistan flag */
+.flag-kurdistan {
+  background: linear-gradient(180deg,
+    #CE1126 0%, #CE1126 33.33%,
+    #F5F5F5 33.33%, #F5F5F5 66.66%,
+    #007A3D 66.66%, #007A3D 100%
+  );
+}
+.flag-kurdistan::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.1) 0%, transparent 40%, rgba(0,0,0,0.06) 100%);
+}
+.kurd-sun-wrap {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.kurd-sun {
+  font-size: clamp(22px,6vw,32px);
+  filter: drop-shadow(0 0 8px rgba(255,165,0,0.5));
+  animation: sunRotate 12s linear infinite;
+  position: relative; z-index: 1;
+}
+@keyframes sunRotate { to { transform: rotate(360deg); } }
+
+/* Flag label */
+.sp-flag-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(0.58rem,1.4vw,0.68rem);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+
+/* VS divider */
+.sp-vs {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.1);
+}
+.vs-line { width: 1px; height: 20px; background: rgba(255,255,255,0.08); }
+.vs-ball {
+  font-size: clamp(16px,4vw,22px);
+  animation: vsBounce 2s ease-in-out infinite;
+}
+@keyframes vsBounce {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ── Progress ── */
+.sp-progress-wrap {
+  width: clamp(220px,60vw,340px);
+  animation: fadeUp .6s ease 1.1s both;
+}
+.sp-progress-row {
+  display: flex; justify-content: space-between;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.18);
+  margin-bottom: 8px;
+}
+.sp-progress-track {
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 1px; overflow: hidden;
+  position: relative;
+}
+.sp-progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #00c853, #69f0ae);
+  border-radius: 1px;
+  transition: width .05s linear;
+  position: relative;
+}
+.sp-progress-fill::after {
+  content: '';
+  position: absolute; right: 0; top: -3px;
+  width: 10px; height: 8px;
+  background: radial-gradient(circle, rgba(105,240,174,0.8), transparent 70%);
+  border-radius: 50%;
+}
+.sp-dots {
+  display: flex; justify-content: center;
+  gap: 5px; margin-top: 10px;
+}
+.sp-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(0,200,83,0.3);
+  animation: dotPop 1.4s ease-in-out infinite;
+}
+.sp-dot:nth-child(2) { animation-delay: .2s; }
+.sp-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes dotPop {
+  0%,100% { background: rgba(0,200,83,0.25); transform: scale(1); }
+  50% { background: rgba(0,200,83,0.9); transform: scale(1.6); }
+}
+
+/* ── Exit animation ── */
+#splash.exit {
+  animation: splashExit .8s cubic-bezier(.4,0,1,1) forwards;
+}
+@keyframes splashExit {
+  0%  { opacity: 1; transform: scale(1); }
+  100%{ opacity: 0; transform: scale(1.03); }
+}
+
+/* ── INDEX PAGE ── */
+.container { text-align: center; }
+.season-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2);
+  border-radius: 20px; padding: 5px 16px; margin-bottom: 20px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem;
+  letter-spacing: 0.2em; text-transform: uppercase; color: #00c853;
+}
+.new-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #00c853;
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+</style>
 </head>
 <body>
 
-<!-- ═══ WELCOME SPLASH (shows 3 sec, then hides) ═══ -->
+<!-- ══════════════════════════════════════
+     CINEMATIC SPLASH SCREEN
+══════════════════════════════════════ -->
+<div id="splash">
+  <canvas id="pCanvas"></canvas>
 
-<div id="splash" style="
-  position:fixed;inset:0;z-index:9999;
-  background:#030608;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:24px;
-  transition:opacity .7s ease, transform .7s ease;
-">
+  <div class="sp-content">
 
-  <!-- BG glow -->
+    <!-- Ball -->
+    <div class="sp-ball-wrap">
+      <div class="sp-ball-ring2"></div>
+      <div class="sp-ball-ring"></div>
+      <div class="sp-ball">⚽</div>
+    </div>
 
-  <div style="position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,200,83,0.07) 0%,transparent 60%),
-               radial-gradient(ellipse 50% 30% at 20% 80%,rgba(30,136,229,0.05) 0%,transparent 50%);"></div>
+    <!-- Text -->
+    <div class="sp-eyebrow">Welcome to</div>
+    <div class="sp-title">FOOTBALL<br/><span class="accent">SYSTEM</span></div>
+    <div class="sp-season">Season 4 &nbsp;·&nbsp; 2026</div>
 
-  <!-- Pitch lines -->
+    <div class="sp-line"></div>
 
-  <div style="position:absolute;inset:0;opacity:0.035;pointer-events:none;
-    background:linear-gradient(transparent 49.5%,#00c853 49.5%,#00c853 50.5%,transparent 50.5%),
-               radial-gradient(circle at 50% 50%,transparent 18%,#00c853 18%,#00c853 19%,transparent 19%);"></div>
+    <!-- Flags -->
+    <div class="sp-flags">
 
-  <div id="splashContent" style="position:relative;z-index:1;animation:splashIn .9s cubic-bezier(.16,1,.3,1) both;">
+      <!-- Man City -->
+      <div class="sp-flag-item">
+        <div class="sp-flag flag-mcity">
+          <div class="city-inner">
+            <div class="city-emblem">
+              <div class="city-anchor">⚓</div>
+              <div class="city-stars">★★★</div>
+            </div>
+            <div class="city-name">MAN CITY</div>
+          </div>
+        </div>
+        <div class="sp-flag-label">Manchester City</div>
+      </div>
 
-```
-<!-- Ball -->
-<div style="font-size:clamp(60px,12vw,88px);margin-bottom:20px;
-  animation:ballGlow 2s ease-in-out infinite;
-  filter:drop-shadow(0 0 28px rgba(0,200,83,0.6));">⚽</div>
+      <!-- VS -->
+      <div class="sp-vs">
+        <div class="vs-line"></div>
+        <div class="vs-ball">⚽</div>
+        <div class="vs-line"></div>
+      </div>
 
-<!-- Welcome -->
-<div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(0.7rem,2vw,0.85rem);
-  letter-spacing:0.35em;text-transform:uppercase;color:rgba(0,200,83,0.7);margin-bottom:6px;">
-  Welcome to
-</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(2.6rem,9vw,5rem);
-  letter-spacing:0.06em;line-height:1;color:#fff;margin-bottom:4px;
-  text-shadow:0 0 60px rgba(0,200,83,0.3);">
-  FOOTBALL <span style="color:#00e676;">SYSTEM</span>
-</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(1.2rem,4vw,2rem);
-  letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-bottom:28px;">
-  Season 4 — 2026
-</div>
+      <!-- Kurdistan -->
+      <div class="sp-flag-item">
+        <div class="sp-flag flag-kurdistan">
+          <div class="kurd-sun-wrap">
+            <div class="kurd-sun">☀️</div>
+          </div>
+        </div>
+        <div class="sp-flag-label">Kurdistan</div>
+      </div>
 
-<!-- FLAGS -->
-<div style="display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,30px);margin-bottom:28px;">
+    </div>
 
-  <!-- Man City Flag -->
-  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-    <div style="width:clamp(80px,18vw,114px);height:clamp(54px,12vw,76px);border-radius:10px;overflow:hidden;
-      background:#6CABDD;position:relative;
-      box-shadow:0 8px 28px rgba(0,0,0,0.6),0 0 0 2px rgba(255,255,255,0.08);
-      animation:flagWave 4s ease-in-out infinite;">
-      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%,rgba(0,0,0,0.1) 100%);"></div>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
-        <div style="font-size:clamp(18px,5vw,26px);filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">⚓</div>
-        <div style="font-size:clamp(4px,1.2vw,7px);letter-spacing:3px;color:rgba(255,255,255,0.9);">★ ★ ★</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(6px,1.5vw,8px);letter-spacing:0.12em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);">MAN CITY</div>
+    <!-- Progress bar -->
+    <div class="sp-progress-wrap">
+      <div class="sp-progress-row">
+        <span>Entering System</span>
+        <span id="spPct">0%</span>
+      </div>
+      <div class="sp-progress-track">
+        <div class="sp-progress-fill" id="spFill"></div>
+      </div>
+      <div class="sp-dots">
+        <div class="sp-dot"></div>
+        <div class="sp-dot"></div>
+        <div class="sp-dot"></div>
       </div>
     </div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(0.58rem,1.4vw,0.7rem);letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Manchester City</div>
-  </div>
-
-  <!-- VS divider -->
-  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(0.9rem,2.5vw,1.2rem);letter-spacing:0.1em;color:rgba(255,255,255,0.12);">×</div>
-    <div style="font-size:clamp(16px,4vw,24px);animation:spinSlow 6s linear infinite;filter:drop-shadow(0 0 10px rgba(0,200,83,0.5));">⚽</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(0.9rem,2.5vw,1.2rem);letter-spacing:0.1em;color:rgba(255,255,255,0.12);">×</div>
-  </div>
-
-  <!-- Kurdistan Flag -->
-  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-    <div style="width:clamp(80px,18vw,114px);height:clamp(54px,12vw,76px);border-radius:10px;overflow:hidden;
-      position:relative;
-      box-shadow:0 8px 28px rgba(0,0,0,0.6),0 0 0 2px rgba(255,255,255,0.08);
-      animation:flagWave 4s ease-in-out .5s infinite;">
-      <!-- Kurdistan 3 stripes -->
-      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#E2231A 0%,#E2231A 33.3%,#FFFFFF 33.3%,#FFFFFF 66.6%,#007A3D 66.6%,#007A3D 100%);"></div>
-      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1) 0%,transparent 50%,rgba(0,0,0,0.08) 100%);"></div>
-      <!-- Sun -->
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-        font-size:clamp(20px,6vw,30px);animation:sunSpin 8s linear infinite;
-        filter:drop-shadow(0 0 6px rgba(255,165,0,0.7));">☀️</div>
-    </div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(0.58rem,1.4vw,0.7rem);letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Kurdistan</div>
-  </div>
-
-</div>
-
-<!-- Progress -->
-<div style="width:clamp(200px,55vw,300px);margin:0 auto;">
-  <div style="display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;
-    font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
-    color:rgba(255,255,255,0.25);margin-bottom:7px;">
-    <span>Loading</span><span id="splashPct">0%</span>
-  </div>
-  <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;position:relative;">
-    <div id="splashFill" style="height:100%;width:0%;background:linear-gradient(90deg,#00c853,#69f0ae);
-      border-radius:2px;transition:width .08s linear;box-shadow:0 0 10px rgba(0,200,83,0.7);"></div>
-  </div>
-  <div style="display:flex;justify-content:center;gap:6px;margin-top:10px;">
-    <div style="width:5px;height:5px;border-radius:50%;background:#00c853;opacity:.4;animation:dp 1.5s .0s infinite ease-in-out;"></div>
-    <div style="width:5px;height:5px;border-radius:50%;background:#00c853;opacity:.4;animation:dp 1.5s .2s infinite ease-in-out;"></div>
-    <div style="width:5px;height:5px;border-radius:50%;background:#00c853;opacity:.4;animation:dp 1.5s .4s infinite ease-in-out;"></div>
-  </div>
-</div>
-```
 
   </div>
 </div>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;700&display=swap');
-@keyframes splashIn{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
-@keyframes ballGlow{0%,100%{filter:drop-shadow(0 0 20px rgba(0,200,83,0.5));}50%{filter:drop-shadow(0 0 50px rgba(0,200,83,1));}}
-@keyframes flagWave{0%,100%{transform:perspective(200px) rotateY(0deg);}25%{transform:perspective(200px) rotateY(3deg);}75%{transform:perspective(200px) rotateY(-3deg);}}
-@keyframes spinSlow{to{transform:rotate(360deg);}}
-@keyframes sunSpin{to{transform:translate(-50%,-50%) rotate(360deg);}}
-@keyframes dp{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.5);}}
-</style>
+<!-- ══════════════════════════════════════
+     INDEX PAGE
+══════════════════════════════════════ -->
+<div class="container" style="text-align:center;">
+  <div class="season-badge"><span class="new-dot"></span> Season 4 — Fresh Start</div>
+  <h1>⚽ Football League</h1>
+  <div class="buttons">
+    <button onclick="location.href='table.html'">🏆 Table</button>
+    <button onclick="location.href='matchweek.html'">⚽ Match Week</button>
+    <button onclick="location.href='history.html'">📜 History</button>
+    <button onclick="location.href='encounters.html'">🤝 Encounters</button>
+    <button class="warning-btn" onclick="location.href='card-warning.html'">🟡 Card Warning</button>
+    <button class="check-btn" onclick="location.href='check-games.html'">🔍 Check Games</button>
+    <button onclick="location.href='injuries.html'" style="border-color:rgba(255,111,0,0.3);">🏥 Injuries</button>
+    <button class="admin-btn" onclick="location.href='admin.html'">🔐 Admin</button>
+    <button onclick="location.href='betting.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">🎰 Betting</button>
+    <button onclick="location.href='champions.html'" style="border-color:rgba(255,214,0,0.4);color:#ffd600;">🏆 Champions</button>
+    <button onclick="location.href='news.html'" style="border-color:rgba(0,200,83,0.3);color:#00c853;">📰 ئەخبارەکان</button>
+    <button onclick="location.href='records.html'" style="border-color:rgba(255,183,77,0.4);color:#ffb74d;">🏅 History Records</button>
+  </div>
+</div>
 
 <script>
+/* ── Particle System ── */
 (function(){
-  // Check if already shown this session
-  if (sessionStorage.getItem("splashShown")) {
-    document.getElementById("splash").style.display = "none";
+  const canvas = document.getElementById("pCanvas");
+  const ctx    = canvas.getContext("2d");
+  let W, H, particles = [];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function randomParticle(){
+    return {
+      x: Math.random() * W,
+      y: H + Math.random() * 100,
+      vx: (Math.random() - .5) * .5,
+      vy: -(0.4 + Math.random() * 1.2),
+      r: 1 + Math.random() * 2.5,
+      alpha: .1 + Math.random() * .5,
+      color: Math.random() > .6 ? "#00e676" : Math.random() > .5 ? "#ffd600" : "#ffffff"
+    };
+  }
+
+  for(let i=0;i<55;i++){
+    const p = randomParticle();
+    p.y = Math.random() * H;
+    particles.push(p);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.0005;
+      if(p.y < -10 || p.alpha <= 0){
+        Object.assign(p, randomParticle());
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  let animId;
+  function loop(){ animId = requestAnimationFrame(loop); draw(); }
+  loop();
+
+  /* ── Progress & Exit ── */
+  const splash  = document.getElementById("splash");
+  const fill    = document.getElementById("spFill");
+  const pctEl   = document.getElementById("spPct");
+  const DURATION = 3000;
+
+  if(sessionStorage.getItem("splashDone")){
+    splash.style.display = "none";
+    cancelAnimationFrame(animId);
     return;
   }
 
-  const fill = document.getElementById("splashFill");
-  const pct  = document.getElementById("splashPct");
-  const DURATION = 3000;
-  const startTime = performance.now();
-
-  function tick(now) {
-    const progress = Math.min((now - startTime) / DURATION, 1);
-    const eased = progress < .5 ? 2*progress*progress : 1 - Math.pow(-2*progress+2,2)/2;
-    const val = Math.round(eased * 100);
-    fill.style.width = val + "%";
-    pct.textContent  = val + "%";
-    if (progress < 1) { requestAnimationFrame(tick); }
-    else { hideSplash(); }
+  const t0 = performance.now();
+  function tick(now){
+    const p = Math.min((now - t0) / DURATION, 1);
+    const e = p < .5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
+    const v = Math.round(e * 100);
+    fill.style.width = v + "%";
+    pctEl.textContent = v + "%";
+    if(p < 1){ requestAnimationFrame(tick); }
+    else { exit(); }
   }
   requestAnimationFrame(tick);
 
-  function hideSplash() {
-    sessionStorage.setItem("splashShown", "1");
-    const splash = document.getElementById("splash");
-    splash.style.opacity = "0";
-    splash.style.transform = "scale(1.04)";
-    setTimeout(() => splash.style.display = "none", 700);
+  function exit(){
+    sessionStorage.setItem("splashDone","1");
+    splash.classList.add("exit");
+    setTimeout(()=>{
+      splash.style.display = "none";
+      cancelAnimationFrame(animId);
+    }, 800);
   }
 })();
 </script>
 
-```
-<div class="container" style="text-align:center;">
-    <div class="season-badge"><span class="new-dot"></span> Season 4 — Fresh Start</div>
-    <h1>⚽ Football League</h1>
-    <div class="buttons">
-        <button onclick="location.href='table.html'">🏆 Table</button>
-        <button onclick="location.href='matchweek.html'">⚽ Match Week</button>
-        <button onclick="location.href='history.html'">📜 History</button>
-        <button onclick="location.href='encounters.html'">🤝 Encounters</button>
-        <button class="warning-btn" onclick="location.href='card-warning.html'">🟡 Card Warning</button>
-        <button class="check-btn" onclick="location.href='check-games.html'">🔍 Check Games</button>
-        <button onclick="location.href='injuries.html'" style="border-color:rgba(255,111,0,0.3);">🏥 Injuries</button>
-        <button class="admin-btn" onclick="location.href='admin.html'">🔐 Admin</button>
-        <button onclick="location.href='betting.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">🎰 Betting</button>
-        <button onclick="location.href='news.html'" style="border-color:rgba(0,200,83,0.3);color:#00c853;">📰 ئەخبارەکان</button>
-        <button onclick="location.href='champions.html'" style="border-color:rgba(255,214,0,0.4);color:#ffd600;">🏆 Champions</button>
-        <button onclick="location.href='records.html'" style="border-color:rgba(255,183,77,0.4);color:#ffb74d;">🏅 History Records</button>
-    </div>
-</div>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="firebase.js"></script>
-<script src="script.js"></script>
-```
-
 </body>
 </html>
+INDEXEOF
+echo "index.html done: $(wc -l < /mnt/user-data/outputs/index.html) lines"
