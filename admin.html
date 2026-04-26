@@ -26,17 +26,15 @@
 
         <!-- Admin Content -->
         <div id="adminContent" style="display:none;">
-
-            <!-- Add Player -->
             <div class="form-card">
                 <h3>➕ Add Player</h3>
                 <div class="form-container">
                     <label>Team
                         <select id="adminTeam">
                             <option value="">Select Team</option>
+                            <option value="MANCHESTER CITY">MANCHESTER CITY</option>
+                            <option value="BAYER MUNICH">BAYER MUNICH</option>
                             <option value="PARISANT GERMAN">PARISANT GERMAN</option>
-                            <option value="LIVERPOOL">LIVERPOOL</option>
-                            <option value="BARCELONA">BARCELONA</option>
                         </select>
                     </label>
                     <label>Player Name
@@ -48,16 +46,11 @@
                 </div>
             </div>
 
-            <!-- Players Table -->
             <div class="table-card">
                 <div class="table-container">
                     <table id="playersTable" aria-label="Players list">
                         <thead>
-                            <tr>
-                                <th>Team</th>
-                                <th>Player</th>
-                                <th>Action</th>
-                            </tr>
+                            <tr><th>Team</th><th>Player</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <tr><td colspan="3" style="text-align:center;color:#4d6a85;padding:20px;">Loading...</td></tr>
@@ -71,12 +64,13 @@
             </div>
         </div>
     </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
     <script src="script.js"></script>
     <script>
-    // Secret: if user types "9999" anywhere on admin page, go to edit-table
+    // Secret: type "9999" anywhere to go to edit-table
     document.addEventListener("keydown", function(e) {
         if (!window._secretBuf) window._secretBuf = "";
         window._secretBuf += e.key;
