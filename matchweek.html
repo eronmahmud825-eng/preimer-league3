@@ -11,37 +11,29 @@
         <h1 class="title">⚽ Match Week</h1>
 
         <!-- Match Form -->
-        <div class="form-card" id="matchForm">
+        <div id="matchForm" class="form-card">
             <h3>Add Match Result</h3>
             <div class="form-container">
-                <label>Admin Password
-                    <input id="adminPass" type="password" placeholder="Enter password" />
-                </label>
                 <label>Team 1
                     <select id="team1">
                         <option value="">Select Team</option>
+                        <option>MANCHESTER CITY</option>
+                        <option>BAYER MUNICH</option>
                         <option>PARISANT GERMAN</option>
-                        <option>LIVERPOOL</option>
-                        <option>BARCELONA</option>
                     </select>
                 </label>
-                <label>Score 1
-                    <input id="score1" type="number" min="0" placeholder="0" />
-                </label>
+                <label>Score 1 <input id="score1" type="number" min="0" placeholder="0" /></label>
                 <label>Team 2
                     <select id="team2">
                         <option value="">Select Team</option>
+                        <option>MANCHESTER CITY</option>
+                        <option>BAYER MUNICH</option>
                         <option>PARISANT GERMAN</option>
-                        <option>LIVERPOOL</option>
-                        <option>BARCELONA</option>
                     </select>
                 </label>
-                <label>Score 2
-                    <input id="score2" type="number" min="0" placeholder="0" />
-                </label>
-                <label>Date
-                    <input id="matchDate" type="date" />
-                </label>
+                <label>Score 2 <input id="score2" type="number" min="0" placeholder="0" /></label>
+                <label>Date <input id="matchDate" type="date" /></label>
+                <label>Admin Password <input id="adminPass" type="password" placeholder="Password" /></label>
                 <div class="form-actions">
                     <button id="saveMatchBtn">💾 Save Match</button>
                     <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
@@ -49,66 +41,64 @@
             </div>
         </div>
 
-        <!-- Cards + Injuries Form -->
-        <div class="form-card" id="cardForm" style="display:none;">
-            <span id="currentGWLabel"></span>
+        <!-- Card & Injury Form (shown after match saved) -->
+        <div id="cardForm" style="display:none;">
+            <div class="form-card">
+                <h3 id="currentGWLabel">Current Match</h3>
+            </div>
 
-            <!-- Card Warning -->
-            <h3 style="color:#fdd835;">🟡🔴 Card Warning</h3>
-            <div class="form-container">
-                <label>Team
-                    <select id="cardTeam"><option value="">Select Team</option></select>
-                </label>
-                <label>Player
-                    <select id="playerSelect"><option value="">Select Player</option></select>
-                </label>
-                <label>Card Type</label>
-                <div class="card-radio-group">
-                    <label class="card-radio-label yellow">
-                        <input type="radio" name="cardType" value="yellow" />
-                        🟡 Yellow Card
+            <!-- Cards -->
+            <div class="form-card">
+                <h3>🟡🔴 Card Warning</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="cardTeam">
+                            <option value="">Select Team</option>
+                        </select>
                     </label>
-                    <label class="card-radio-label red">
-                        <input type="radio" name="cardType" value="red" />
-                        🔴 Red Card
+                    <label>Player
+                        <select id="playerSelect">
+                            <option value="">Select Player</option>
+                        </select>
                     </label>
-                </div>
-                <div class="form-actions">
-                    <button id="addCardBtn">➕ Add Card</button>
+                    <label>Card Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="cardType" value="yellow" /> 🟡 Yellow Card</label>
+                        <label><input type="radio" name="cardType" value="red" /> 🔴 Red Card (3 match ban)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addCardBtn">➕ Add Card</button>
+                    </div>
                 </div>
             </div>
 
-            <hr class="section-divider" />
-
-            <!-- Injury -->
-            <h3 style="color:#ff6f00;">🏥 Injury Report</h3>
-            <div class="form-container">
-                <label>Team
-                    <select id="injuryTeam"><option value="">Select Team</option></select>
-                </label>
-                <label>Player
-                    <select id="injuryPlayerSelect"><option value="">Select Player</option></select>
-                </label>
-                <label>Injury Type</label>
-                <div class="card-radio-group">
-                    <label class="card-radio-label" style="border-color:rgba(255,193,7,0.3);">
-                        <input type="radio" name="injuryType" value="easy" />
-                        🟡 Easy — 1 Game
+            <!-- Injuries -->
+            <div class="form-card">
+                <h3>🏥 Record Injury</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="injuryTeam">
+                            <option value="">Select Team</option>
+                        </select>
                     </label>
-                    <label class="card-radio-label" style="border-color:rgba(244,67,54,0.3);">
-                        <input type="radio" name="injuryType" value="hard" />
-                        🔴 Hard — 5 Games
+                    <label>Player
+                        <select id="injuryPlayerSelect">
+                            <option value="">Select Player</option>
+                        </select>
                     </label>
-                </div>
-                <div class="form-actions">
-                    <button id="addInjuryBtn">🏥 Add Injury</button>
+                    <label>Injury Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="injuryType" value="easy" /> 🟡 Easy Injury (3 matches)</label>
+                        <label><input type="radio" name="injuryType" value="hard" /> 🔴 Hard Injury (5 matches)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addInjuryBtn">➕ Add Injury</button>
+                    </div>
                 </div>
             </div>
 
-            <hr class="section-divider" />
-
-            <div class="form-actions">
-                <button id="okBtn" class="ok-btn">✅ Done — Go Home</button>
+            <div class="btn-row">
+                <button id="okBtn" style="background:linear-gradient(135deg,#00c853,#00e676);color:#000;font-weight:700;">✅ Done — Save All</button>
             </div>
         </div>
     </div>
