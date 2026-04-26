@@ -11,7 +11,6 @@
         * { box-sizing: border-box; }
         body { background: #04080f; overflow-x: hidden; min-height: 100vh; }
 
-        /* Animated background */
         body::before {
             content: '';
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -23,7 +22,6 @@
 
         .container { position: relative; z-index: 1; max-width: 680px; padding: 36px 16px 60px; }
 
-        /* ── Page Header ── */
         .page-header { text-align: center; margin-bottom: 44px; animation: fadeDown 0.7s ease both; }
         .trophy-main {
             font-size: 80px; display: block; margin-bottom: 10px;
@@ -50,25 +48,52 @@
             color: #2d4a65; margin-top: 8px;
         }
 
+        /* ── NEW WINNER BADGE ── */
+        .new-champion-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,214,0,0.1); border: 1.5px solid rgba(255,214,0,0.4);
+            border-radius: 20px; padding: 6px 18px; margin-bottom: 20px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: #ffd600;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        .new-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #ffd600;
+            animation: blink 1.2s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+        @keyframes badgePulse {
+            0%,100%{box-shadow:0 0 0 rgba(255,214,0,0);}
+            50%{box-shadow:0 0 16px rgba(255,214,0,0.2);}
+        }
+
         /* ── Latest Winner — BIG CARD ── */
         .latest-winner {
             position: relative;
             background: linear-gradient(135deg, #1a1200 0%, #2a1e00 50%, #1a1200 100%);
-            border: 2px solid rgba(255,214,0,0.5);
+            border: 2px solid rgba(255,214,0,0.55);
             border-radius: 20px;
             padding: 28px 24px;
             margin-bottom: 28px;
             text-align: center;
             overflow: hidden;
             animation: slideUp 0.5s ease 0.2s both;
-            box-shadow: 0 0 60px rgba(255,214,0,0.12), inset 0 0 60px rgba(255,214,0,0.04);
+            box-shadow: 0 0 60px rgba(255,214,0,0.14), inset 0 0 60px rgba(255,214,0,0.04);
+            cursor: pointer;
         }
         .latest-winner::before {
             content: '';
             position: absolute; inset: 0;
             background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,214,0,0.08) 0%, transparent 60%);
-            pointer-events: none;
         }
+        .latest-winner::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,214,0,0.9), transparent);
+        }
+        .latest-winner:hover { transform: translateY(-2px); box-shadow: 0 8px 60px rgba(255,214,0,0.2); }
+        .latest-winner:active { transform: translateY(0); }
         .latest-label {
             font-family: 'Barlow Condensed', sans-serif;
             font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase;
@@ -77,23 +102,51 @@
             border: 1px solid rgba(255,214,0,0.2);
             border-radius: 20px; padding: 4px 14px;
             display: inline-block; margin-bottom: 16px;
+            position: relative; z-index: 1;
         }
-        .latest-trophy { font-size: 52px; display: block; margin-bottom: 10px; animation: confetti 2s ease-in-out infinite; }
+        .latest-trophy { font-size: 56px; display: block; margin-bottom: 10px; animation: confetti 2s ease-in-out infinite; position: relative; z-index: 1; }
         .latest-name {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(2rem, 7vw, 3.5rem);
+            font-size: clamp(2.2rem, 8vw, 4rem);
             letter-spacing: 0.08em; color: #ffd600; line-height: 1;
             text-shadow: 0 0 40px rgba(255,214,0,0.6);
+            position: relative; z-index: 1;
         }
         .latest-date {
             font-family: 'Barlow Condensed', sans-serif;
-            font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase;
+            font-size: 0.88rem; letter-spacing: 0.15em; text-transform: uppercase;
             color: rgba(255,214,0,0.6); margin-top: 6px;
+            position: relative; z-index: 1;
         }
-        .latest-stars { font-size: 20px; margin-top: 12px; letter-spacing: 4px; opacity: 0.6; }
+        .latest-stars { font-size: 20px; margin-top: 12px; letter-spacing: 4px; opacity: 0.6; position: relative; z-index: 1; }
 
-        /* Confetti particles */
-        .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        /* Final standings strip */
+        .final-strip {
+            display: flex; gap: 8px; margin-top: 16px; justify-content: center;
+            flex-wrap: wrap; position: relative; z-index: 1;
+        }
+        .fs-pill {
+            background: rgba(255,214,0,0.06); border: 1px solid rgba(255,214,0,0.15);
+            border-radius: 8px; padding: 6px 12px; text-align: center;
+        }
+        .fs-val {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+            letter-spacing: 0.04em; color: #ffd600; line-height: 1;
+        }
+        .fs-lbl {
+            font-family: 'Barlow Condensed', sans-serif; font-size: 0.58rem;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: rgba(255,214,0,0.35); margin-top: 2px;
+        }
+        .latest-tap {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: rgba(255,214,0,0.3); margin-top: 14px;
+            position: relative; z-index: 1;
+        }
+
+        /* Confetti */
+        .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
         .particle {
             position: absolute; width: 6px; height: 6px; border-radius: 1px;
             opacity: 0; animation: fall linear infinite;
@@ -102,6 +155,58 @@
             0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
             100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
         }
+
+        /* ── Season 4 Final Table Preview ── */
+        .season4-table {
+            background: linear-gradient(135deg, #0a1420, #0d1828);
+            border: 1px solid rgba(255,214,0,0.15);
+            border-radius: 14px; padding: 18px 20px;
+            margin-bottom: 28px;
+            animation: slideUp 0.5s ease 0.35s both;
+        }
+        .s4-header {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
+            color: rgba(255,214,0,0.5); margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .s4-header::after { content:''; flex:1; height:1px; background: rgba(255,214,0,0.1); }
+        .s4-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .s4-row:last-child { border-bottom: none; }
+        .s4-rank {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .s4-rank.r1 { background: rgba(255,214,0,0.12); color: #ffd600; border: 1.5px solid rgba(255,214,0,0.4); }
+        .s4-rank.r2 { background: rgba(192,192,192,0.08); color: #c0c0c0; border: 1.5px solid rgba(192,192,192,0.25); }
+        .s4-rank.r3 { background: rgba(205,127,50,0.08); color: #cd7f32; border: 1.5px solid rgba(205,127,50,0.25); }
+        .s4-team {
+            flex: 1;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.92rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+            color: #fff;
+        }
+        .s4-stats {
+            display: flex; gap: 12px;
+        }
+        .s4-stat { text-align: right; }
+        .s4-stat-val {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.04em;
+            color: #fff; line-height: 1;
+        }
+        .s4-stat-lbl {
+            font-family: 'Barlow Condensed', sans-serif; font-size: 0.55rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+        }
+        .s4-pts { color: #ffd600 !important; }
+        @media(max-width:400px) { .s4-stats { gap:8px; } }
 
         /* ── History Section ── */
         .history-title {
@@ -114,10 +219,9 @@
 
         .champions-list { display: flex; flex-direction: column; gap: 10px; }
 
-        /* ── Champion Card (history) ── */
         .champ-card {
             background: linear-gradient(135deg, #0d1620 0%, #101e30 60%, #0d1620 100%);
-            border: 1px solid rgba(255,214,0,0.15);
+            border: 1px solid rgba(255,214,0,0.12);
             border-radius: 14px; padding: 16px 18px;
             display: flex; align-items: center; gap: 16px;
             animation: slideUp 0.4s ease both;
@@ -126,22 +230,21 @@
         }
         .champ-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,214,0,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,214,0,0.2), transparent);
         }
         .champ-card:hover {
             transform: translateY(-2px);
-            border-color: rgba(255,214,0,0.35);
-            box-shadow: 0 6px 30px rgba(255,214,0,0.08);
+            border-color: rgba(255,214,0,0.3);
+            box-shadow: 0 6px 30px rgba(255,214,0,0.07);
         }
         .champ-rank {
             flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255,214,0,0.06); border: 1.5px solid rgba(255,214,0,0.2);
+            background: rgba(255,214,0,0.06); border: 1.5px solid rgba(255,214,0,0.18);
             display: flex; align-items: center; justify-content: center;
             font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: rgba(255,214,0,0.7);
         }
-        .champ-rank.gold   { border-color:rgba(255,214,0,0.6); color:#ffd600; background:rgba(255,214,0,0.1); }
-        .champ-rank.silver { border-color:rgba(192,192,192,0.4); color:#c0c0c0; background:rgba(192,192,192,0.06); }
-        .champ-rank.bronze { border-color:rgba(205,127,50,0.4); color:#cd7f32; background:rgba(205,127,50,0.06); }
+        .champ-rank.silver { border-color:rgba(192,192,192,0.35); color:#c0c0c0; background:rgba(192,192,192,0.06); }
+        .champ-rank.bronze { border-color:rgba(205,127,50,0.35); color:#cd7f32; background:rgba(205,127,50,0.06); }
         .champ-icon { flex-shrink: 0; font-size: 26px; }
         .champ-info { flex: 1; min-width: 0; }
         .champ-name {
@@ -153,7 +256,7 @@
         .champ-date {
             font-family: 'Barlow Condensed', sans-serif;
             font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
-            color: rgba(255,214,0,0.55); margin-top: 2px;
+            color: rgba(255,214,0,0.5); margin-top: 2px;
         }
         .champ-edition {
             font-family: 'Barlow Condensed', sans-serif;
@@ -163,7 +266,6 @@
             color: rgba(255,214,0,0.5); white-space: nowrap; flex-shrink: 0;
         }
 
-        /* Total badge */
         .total-badge {
             display: inline-flex; align-items: center; gap: 6px;
             background: rgba(255,214,0,0.06); border: 1px solid rgba(255,214,0,0.15);
@@ -173,7 +275,6 @@
             color: rgba(255,214,0,0.6); margin-bottom: 28px;
         }
 
-        /* Back button */
         .back-btn {
             background: transparent; color: #2d4a65;
             border: 1.5px solid #1e3048; border-radius: 10px;
@@ -199,29 +300,91 @@
         <p class="page-subtitle">All Time League Winners</p>
     </div>
 
-    <!-- Total Badge -->
+    <!-- New Champion Badge -->
     <div style="text-align:center;">
-        <div class="total-badge">⭐ 3 Champions — All Time</div>
+        <div class="new-champion-badge"><span class="new-dot"></span> New Champion — Season 4</div>
     </div>
 
-    <!-- LATEST WINNER — BIG FEATURED CARD -->
-    <div class="latest-winner" onclick="location.href='champion-arin.html'" style="cursor:pointer;" title="Click to see full stats">
+    <!-- Total Badge -->
+    <div style="text-align:center;margin-top:10px;">
+        <div class="total-badge">⭐ 4 Champions — All Time</div>
+    </div>
+
+    <!-- ══ SEASON 4 LATEST WINNER — BIG FEATURED CARD ══ -->
+    <div class="latest-winner" onclick="location.href='champion-eron-s4.html'" title="View full Season 4 stats">
         <div class="particles" id="particles"></div>
-        <div class="latest-label">🥇 Latest Champion</div>
+        <div class="latest-label">🥇 Season 4 Champion · 2026</div>
         <span class="latest-trophy">🏆</span>
-        <div class="latest-name">ARIN MAHMOOD</div>
-        <div class="latest-date">🗓 April 2025 — Season 3</div>
+        <div class="latest-name">ERON MAHMOOD</div>
+        <div class="latest-date">🗓 2025 – 2026 &nbsp;·&nbsp; PARISANT GERMAN</div>
         <div class="latest-stars">★ ★ ★ ★ ★</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,214,0,0.35);margin-top:10px;">Tap to view full stats →</div>
+
+        <!-- Season 4 Stats -->
+        <div class="final-strip">
+            <div class="fs-pill"><div class="fs-val">78</div><div class="fs-lbl">Points</div></div>
+            <div class="fs-pill"><div class="fs-val">38</div><div class="fs-lbl">Games</div></div>
+            <div class="fs-pill"><div class="fs-val">24</div><div class="fs-lbl">Wins</div></div>
+            <div class="fs-pill"><div class="fs-val">229</div><div class="fs-lbl">Goals For</div></div>
+            <div class="fs-pill"><div class="fs-val">+67</div><div class="fs-lbl">Diff</div></div>
+        </div>
+
+        <div class="latest-tap">Tap to view full season stats →</div>
     </div>
 
-    <!-- History -->
+    <!-- ══ SEASON 4 FINAL TABLE ══ -->
+    <div class="season4-table">
+        <div class="s4-header">⚽ Season 4 — Final Standings</div>
+
+        <!-- 1st -->
+        <div class="s4-row">
+            <div class="s4-rank r1">1</div>
+            <div class="s4-team">🏆 PARISANT GERMAN</div>
+            <div class="s4-stats">
+                <div class="s4-stat"><div class="s4-stat-val">38</div><div class="s4-stat-lbl">GP</div></div>
+                <div class="s4-stat"><div class="s4-stat-val">24W 8L 6D</div><div class="s4-stat-lbl">Record</div></div>
+                <div class="s4-stat"><div class="s4-stat-val s4-pts">78</div><div class="s4-stat-lbl">Pts</div></div>
+            </div>
+        </div>
+        <!-- 2nd -->
+        <div class="s4-row">
+            <div class="s4-rank r2">2</div>
+            <div class="s4-team">LIVERPOOL</div>
+            <div class="s4-stats">
+                <div class="s4-stat"><div class="s4-stat-val">38</div><div class="s4-stat-lbl">GP</div></div>
+                <div class="s4-stat"><div class="s4-stat-val">15W 17L 6D</div><div class="s4-stat-lbl">Record</div></div>
+                <div class="s4-stat"><div class="s4-stat-val s4-pts" style="color:#c0c0c0!important;">51</div><div class="s4-stat-lbl">Pts</div></div>
+            </div>
+        </div>
+        <!-- 3rd -->
+        <div class="s4-row">
+            <div class="s4-rank r3">3</div>
+            <div class="s4-team">BARCELONA</div>
+            <div class="s4-stats">
+                <div class="s4-stat"><div class="s4-stat-val">38</div><div class="s4-stat-lbl">GP</div></div>
+                <div class="s4-stat"><div class="s4-stat-val">16W 18L 4D</div><div class="s4-stat-lbl">Record</div></div>
+                <div class="s4-stat"><div class="s4-stat-val s4-pts" style="color:#cd7f32!important;">46</div><div class="s4-stat-lbl">Pts</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PREVIOUS CHAMPIONS ══ -->
     <div class="history-title">Previous Champions</div>
 
     <div class="champions-list">
 
-        <!-- Winner 2 -->
+        <!-- Season 3 -->
         <div class="champ-card" style="animation-delay:0.1s;cursor:pointer;" onclick="location.href='champion-arin.html'">
+            <div class="champ-rank" style="border-color:rgba(255,214,0,0.35);color:#ffd600;background:rgba(255,214,0,0.08);">3</div>
+            <div class="champ-icon">🥇</div>
+            <div class="champ-info">
+                <div class="champ-name">ARIN MAHMOOD</div>
+                <div class="champ-date">🗓 April 2025</div>
+            </div>
+            <div class="champ-edition">Season 3</div>
+        </div>
+
+        <!-- Season 2 -->
+        <div class="champ-card" style="animation-delay:0.2s;cursor:pointer;" onclick="location.href='champion-arin.html'">
             <div class="champ-rank silver">2</div>
             <div class="champ-icon">🥈</div>
             <div class="champ-info">
@@ -231,8 +394,8 @@
             <div class="champ-edition">Season 2</div>
         </div>
 
-        <!-- Winner 1 -->
-        <div class="champ-card" style="animation-delay:0.2s;cursor:pointer;" onclick="location.href='champion-eron.html'">
+        <!-- Season 1 -->
+        <div class="champ-card" style="animation-delay:0.3s;cursor:pointer;" onclick="location.href='champion-eron.html'">
             <div class="champ-rank bronze">1</div>
             <div class="champ-icon">🥉</div>
             <div class="champ-info">
@@ -252,9 +415,9 @@
 
 <script>
 // Confetti particles
-const colors = ['#ffd600','#fff176','#ffb300','#ffffff','#ffe57f'];
+const colors = ['#ffd600','#fff176','#ffb300','#ffffff','#ffe57f','#ff6f00'];
 const p = document.getElementById('particles');
-for (let i = 0; i < 18; i++) {
+for (let i = 0; i < 22; i++) {
     const el = document.createElement('div');
     el.className = 'particle';
     el.style.cssText = `
