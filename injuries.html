@@ -9,6 +9,14 @@
 <body>
     <div class="container">
         <h1 class="title">🏥 Injury List</h1>
+
+        <div class="rules-box">
+            <h4>📋 Injury Rules</h4>
+            <p>🟡 <strong>Easy Injury</strong> = <strong>3 match ban</strong> — auto countdown each team match</p>
+            <p>🔴 <strong>Hard Injury</strong> = <strong>5 match ban</strong> — auto countdown each team match</p>
+            <p>⚠️ Only counts down when <strong>the injured player's team</strong> plays</p>
+        </div>
+
         <div class="table-card">
             <div class="table-container">
                 <table id="injuryTable" aria-label="Injury list">
@@ -21,26 +29,17 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody><tr><td colspan="5" style="text-align:center;color:#4d6a85;padding:20px;">Loading...</td></tr></tbody>
+                    <tbody>
+                        <tr><td colspan="5" style="text-align:center;color:#4d6a85;padding:20px;">Loading...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
-        <p class="muted">Countdown only reduces when the player's team plays. Other teams' matches don't count.</p>
+
         <div class="btn-row">
             <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
         </div>
     </div>
-    <script>
-        setTimeout(() => {
-            if (window.db) {
-                window.db.collection("playerInjuries").onSnapshot(snap => {
-                    const injuries = [];
-                    snap.forEach(doc => injuries.push(docToInjury(doc)));
-                    renderInjuryTable(injuries);
-                });
-            }
-        }, 1000);
-    </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
