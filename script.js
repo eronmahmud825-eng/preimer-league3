@@ -2,24 +2,24 @@
 const ADMIN_PASSWORD = "123321";
 const SUPER_ADMIN_PASSWORD = "9999";
 
-const teamsList = ["MANCHESTER CITY", "BAYER MUNICH", "PARISANT GERMAN"];
+const teamsList = ["BARCELONA", "BAYER MUNICH", "PARISANT GERMAN"];
 
 // ─── Stadium config ────────────────────────────────────────────
 // Key format: "TEAM_A vs TEAM_B" (alphabetical order)
 const STADIUMS = {
-    "MANCHESTER CITY": { name: "Etihad Stadium",    emoji: "🏟️" },
+    "BARCELONA":       { name: "Spotify Camp Nou",  emoji: "🏟️" },
     "PARISANT GERMAN": { name: "Parc des Princes",  emoji: "🏟️" },
     "BAYER MUNICH":    { name: "Allianz Arena",      emoji: "🏟️" }
 };
 
 // First-game home team per matchup (alphabetical key)
-// "BAYER MUNICH vs MANCHESTER CITY"  → first home = MANCHESTER CITY (Etihad)
-// "BAYER MUNICH vs PARISANT GERMAN"  → first home = PARISANT GERMAN (Parc des Princes)
-// "MANCHESTER CITY vs PARISANT GERMAN" → first home = MANCHESTER CITY (Etihad)
+// "BARCELONA vs BAYER MUNICH"    → first home = BARCELONA (Camp Nou)
+// "BARCELONA vs PARISANT GERMAN" → first home = BARCELONA (Camp Nou)
+// "BAYER MUNICH vs PARISANT GERMAN" → first home = PARISANT GERMAN (Parc des Princes)
 const FIRST_HOME = {
-    "BAYER MUNICH vs MANCHESTER CITY":    "MANCHESTER CITY",
-    "BAYER MUNICH vs PARISANT GERMAN":    "PARISANT GERMAN",
-    "MANCHESTER CITY vs PARISANT GERMAN": "MANCHESTER CITY"
+    "BARCELONA vs BAYER MUNICH":       "BARCELONA",
+    "BARCELONA vs PARISANT GERMAN":    "BARCELONA",
+    "BAYER MUNICH vs PARISANT GERMAN": "PARISANT GERMAN"
 };
 
 function getMatchupKey(t1, t2) {
