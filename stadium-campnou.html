@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spotify Camp Nou</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap"/>
+<link rel="stylesheet" href="style.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:#04080f;color:#f0f4f8;min-height:100vh;overflow-x:hidden;}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,102,204,0.1) 0%,transparent 55%);
+}
+
+/* HERO */
+.hero{
+  position:relative;height:100svh;min-height:480px;max-height:680px;
+  display:flex;align-items:flex-end;overflow:hidden;
+  background:linear-gradient(135deg,#00052a 0%,#001a66 40%,#a50044 100%);
+}
+.hero-stadium-art{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+/* Artistic Camp Nou SVG illustration */
+.hero-stadium-art svg{
+  width:100%;height:100%;
+  opacity:0.35;
+  transform:scale(1.1);
+  animation:heroZoom 14s ease-out forwards;
+}
+@keyframes heroZoom{to{transform:scale(1);}}
+
+/* Real stadium background using CSS */
+.hero-img-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 60%, rgba(0,102,204,0.3) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, rgba(0,5,42,0.4) 100%);
+}
+/* Stripes pattern simulating pitch */
+.hero-pitch{
+  position:absolute;
+  bottom:0;left:0;right:0;height:45%;
+  background:repeating-linear-gradient(
+    90deg,
+    rgba(0,150,60,0.15) 0px,
+    rgba(0,150,60,0.15) 30px,
+    rgba(0,120,40,0.1) 30px,
+    rgba(0,120,40,0.1) 60px
+  );
+  clip-path:ellipse(55% 40% at 50% 100%);
+}
+/* Stadium seats rings */
+.hero-ring{
+  position:absolute;
+  border-radius:50%;
+  border:2px solid rgba(0,102,204,0.25);
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+}
+.hero-grad{
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,#04080f 0%,rgba(4,8,15,0.78) 32%,rgba(4,8,15,0.2) 62%,transparent 100%);
+  z-index:1;
+}
+.hero-grad2{position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,8,15,0.6) 0%,transparent 55%);z-index:1;}
+.hero-content{
+  position:relative;z-index:3;padding:0 22px 36px;width:100%;
+  animation:heroIn 1s cubic-bezier(.16,1,.3,1) .4s both;
+}
+@keyframes heroIn{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,102,204,0.14);border:1px solid rgba(0,102,204,0.38);
+  border-radius:20px;padding:4px 13px;margin-bottom:10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.66rem;
+  letter-spacing:0.24em;text-transform:uppercase;color:#4d9fdb;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:#4d9fdb;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.hero-label{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(0,102,204,0.7);margin-bottom:3px;}
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.4rem,8vw,5rem);
+  letter-spacing:0.04em;color:#fff;line-height:.92;
+  text-shadow:0 0 50px rgba(0,102,204,0.35);
+}
+.hero-title .spotify{color:#1DB954;}
+.hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:#2d4a65;margin-top:7px;}
+
+/* capacity pill */
+.cap-pill{
+  display:inline-flex;align-items:center;gap:5px;margin-top:10px;
+  background:rgba(165,0,68,0.14);border:1px solid rgba(165,0,68,0.3);
+  border-radius:20px;padding:3px 12px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;
+  letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,100,140,0.8);
+}
+
+/* WRAP */
+.wrap{position:relative;z-index:1;max-width:660px;margin:0 auto;padding:28px 16px 56px;}
+
+/* BIG 3 */
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;animation:up .6s ease .1s both;}
+@keyframes up{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.b3{
+  background:linear-gradient(135deg,#05091a,#08122e);
+  border:1px solid rgba(0,102,204,0.2);border-radius:14px;
+  padding:18px 10px;text-align:center;position:relative;overflow:hidden;
+}
+.b3::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#0066cc,transparent);opacity:.5;}
+.b3-val{font-family:'Bebas Neue',sans-serif;font-size:2.3rem;letter-spacing:.04em;color:#4d9fdb;line-height:1;}
+.b3-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:#2d4a65;margin-top:4px;}
+
+/* STAT CARD */
+.card{background:linear-gradient(135deg,#05091a,#080e24);border:1px solid rgba(0,102,204,0.12);border-radius:16px;overflow:hidden;margin-bottom:18px;animation:up .5s ease .2s both;}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,102,204,.55);padding:13px 18px 9px;border-bottom:1px solid rgba(0,102,204,.08);display:flex;align-items:center;gap:6px;}
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(0,102,204,.06);transition:background .15s;}
+.row:last-child{border-bottom:none;}
+.row:hover{background:rgba(0,102,204,.04);}
+.row-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.83rem;letter-spacing:.05em;text-transform:uppercase;color:#8a9bb0;display:flex;align-items:center;gap:7px;}
+.row-val{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.04em;}
+.c-blue{color:#4d9fdb;}.c-green{color:#00e676;}.c-red{color:#ff5252;}.c-gold{color:#ffd600;}.c-mid{color:#1DB954;}
+
+/* WIN RATE */
+.wr{background:linear-gradient(135deg,#05091a,#080e24);border:1px solid rgba(0,102,204,0.12);border-radius:16px;padding:18px;margin-bottom:18px;animation:up .5s ease .25s both;}
+.wr-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(0,102,204,.55);margin-bottom:15px;}
+.wr-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.wr-row:last-child{margin-bottom:0;}
+.wr-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.73rem;letter-spacing:.07em;text-transform:uppercase;color:#8a9bb0;width:42px;flex-shrink:0;}
+.wr-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;}
+.wr-fill{height:100%;border-radius:4px;width:0%;transition:width 1.3s cubic-bezier(.16,1,.3,1);}
+.wf-g{background:linear-gradient(90deg,#00695c,#00e676);}
+.wf-b{background:linear-gradient(90deg,#00338c,#4d9fdb);}
+.wf-r{background:linear-gradient(90deg,#8b0000,#ff5252);}
+.wr-pct{font-family:'Bebas Neue',sans-serif;font-size:.88rem;color:#8a9bb0;width:36px;text-align:right;flex-shrink:0;}
+
+/* STADIUM INFO */
+.info-card{
+  background:linear-gradient(135deg,#05091a,#080e24);
+  border:1px solid rgba(165,0,68,0.15);border-radius:16px;
+  padding:18px;margin-bottom:18px;
+  animation:up .5s ease .3s both;
+}
+.info-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(165,0,68,.55);margin-bottom:14px;}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(165,0,68,.06);font-family:'Barlow Condensed',sans-serif;}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:#8a9bb0;}
+.info-val{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;color:#fff;}
+
+.back-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:transparent;border:1.5px solid rgba(0,102,204,.22);border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:.83rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,102,204,.55);cursor:pointer;transition:all .2s;margin-top:6px;}
+.back-btn:hover{border-color:rgba(0,102,204,.55);color:#4d9fdb;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <!-- Artistic background - no external image needed -->
+  <div class="hero-stadium-art">
+    <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <!-- Outer stadium ring -->
+      <ellipse cx="400" cy="320" rx="380" ry="200" fill="none" stroke="rgba(0,102,204,0.4)" stroke-width="3"/>
+      <ellipse cx="400" cy="320" rx="340" ry="175" fill="none" stroke="rgba(0,102,204,0.3)" stroke-width="2"/>
+      <ellipse cx="400" cy="320" rx="295" ry="150" fill="none" stroke="rgba(0,102,204,0.25)" stroke-width="2"/>
+      <ellipse cx="400" cy="320" rx="250" ry="125" fill="none" stroke="rgba(0,102,204,0.2)" stroke-width="1.5"/>
+      <!-- Pitch -->
+      <ellipse cx="400" cy="340" rx="200" ry="100" fill="rgba(0,100,40,0.35)"/>
+      <!-- Pitch stripes -->
+      <ellipse cx="400" cy="340" rx="180" ry="90" fill="none" stroke="rgba(0,130,50,0.3)" stroke-width="12"/>
+      <ellipse cx="400" cy="340" rx="140" ry="70" fill="none" stroke="rgba(0,130,50,0.25)" stroke-width="12"/>
+      <ellipse cx="400" cy="340" rx="100" ry="50" fill="none" stroke="rgba(0,130,50,0.2)" stroke-width="10"/>
+      <!-- Center circle -->
+      <circle cx="400" cy="340" r="30" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <circle cx="400" cy="340" r="3" fill="rgba(255,255,255,0.4)"/>
+      <!-- Center line -->
+      <line x1="200" y1="340" x2="600" y2="340" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <!-- Goals -->
+      <rect x="370" y="248" width="60" height="20" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <rect x="370" y="412" width="60" height="20" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <!-- Penalty arcs -->
+      <path d="M 340 285 Q 400 310 460 285" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <path d="M 340 395 Q 400 370 460 395" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <!-- Lights/floodlights effect -->
+      <circle cx="150" cy="120" r="8" fill="rgba(255,255,200,0.6)"/>
+      <circle cx="650" cy="120" r="8" fill="rgba(255,255,200,0.6)"/>
+      <circle cx="100" cy="250" r="6" fill="rgba(255,255,200,0.4)"/>
+      <circle cx="700" cy="250" r="6" fill="rgba(255,255,200,0.4)"/>
+      <!-- Color band - Barca red/blue -->
+      <ellipse cx="400" cy="320" rx="380" ry="200" fill="none" stroke="rgba(165,0,68,0.15)" stroke-width="8"/>
+    </svg>
+  </div>
+  <div class="hero-img-bg"></div>
+  <div class="hero-pitch"></div>
+  <div class="hero-grad"></div>
+  <div class="hero-grad2"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span>Barcelona · Home Ground</div>
+    <div class="hero-label">Season 5 Stadium</div>
+    <div class="hero-title"><span class="spotify">Spotify</span><br/>Camp Nou</div>
+    <div class="hero-sub">Barcelona, Spain &nbsp;·&nbsp; Capacity 99,354</div>
+    <div class="cap-pill">🏆 Largest Stadium in Europe</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="big3">
+    <div class="b3"><div class="b3-val" id="b3gp">0</div><div class="b3-lbl">Home Played</div></div>
+    <div class="b3"><div class="b3-val c-green" id="b3w">0</div><div class="b3-lbl">Home Wins</div></div>
+    <div class="b3"><div class="b3-val c-gold" id="b3pts">0</div><div class="b3-lbl">Home Pts</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Barcelona — Spotify Camp Nou Home Record</div>
+    <div class="row"><div class="row-lbl">🎮 Games Played</div><div class="row-val c-blue" id="sGP">0</div></div>
+    <div class="row"><div class="row-lbl">✅ Wins</div><div class="row-val c-green" id="sW">0</div></div>
+    <div class="row"><div class="row-lbl">❌ Losses</div><div class="row-val c-red" id="sL">0</div></div>
+    <div class="row"><div class="row-lbl">🤝 Draws</div><div class="row-val c-mid" id="sD">0</div></div>
+    <div class="row"><div class="row-lbl">⚽ Goals For</div><div class="row-val c-green" id="sGF">0</div></div>
+    <div class="row"><div class="row-lbl">🥅 Goals Against</div><div class="row-val c-red" id="sGA">0</div></div>
+    <div class="row"><div class="row-lbl">📈 Goal Difference</div><div class="row-val c-blue" id="sDiff">0</div></div>
+    <div class="row"><div class="row-lbl">⭐ Total Points</div><div class="row-val c-gold" id="sPts">0</div></div>
+    <div class="row"><div class="row-lbl">⚡ Goals / Game</div><div class="row-val" id="sGPG">0.00</div></div>
+    <div class="row"><div class="row-lbl">🔥 Win Rate</div><div class="row-val c-blue" id="sWR">0%</div></div>
+  </div>
+
+  <div class="wr">
+    <div class="wr-title">📉 Result Breakdown</div>
+    <div class="wr-row"><div class="wr-lbl">Win</div><div class="wr-track"><div class="wr-fill wf-g" id="fW"></div></div><div class="wr-pct" id="pW">0%</div></div>
+    <div class="wr-row"><div class="wr-lbl">Draw</div><div class="wr-track"><div class="wr-fill wf-b" id="fD"></div></div><div class="wr-pct" id="pD">0%</div></div>
+    <div class="wr-row"><div class="wr-lbl">Loss</div><div class="wr-track"><div class="wr-fill wf-r" id="fL"></div></div><div class="wr-pct" id="pL">0%</div></div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-title">🏟️ Stadium Facts</div>
+    <div class="info-row"><div class="info-key">Full Name</div><div class="info-val">Spotify Camp Nou</div></div>
+    <div class="info-row"><div class="info-key">City</div><div class="info-val">Barcelona, Spain</div></div>
+    <div class="info-row"><div class="info-key">Capacity</div><div class="info-val">99,354</div></div>
+    <div class="info-row"><div class="info-key">Opened</div><div class="info-val">1957</div></div>
+    <div class="info-row"><div class="info-key">Record Attendance</div><div class="info-val">120,000</div></div>
+    <div class="info-row"><div class="info-key">Surface</div><div class="info-val">Grass</div></div>
+  </div>
+
+  <button class="back-btn" onclick="history.back()">⬅ Back to Home</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+var TEAM = "BARCELONA";
+function waitDB(cb, n) {
+  n = n || 0;
+  if (window.db) return cb();
+  if (n > 60) return;
+  setTimeout(function(){ waitDB(cb, n+1); }, 100);
+}
+function set(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function bar(id, pct){ setTimeout(function(){ var el=document.getElementById(id); if(el) el.style.width=pct+"%"; }, 450); }
+
+waitDB(function() {
+  window.db.collection("matches").get().then(function(snap) {
+    var gp=0,w=0,l=0,d=0,gf=0,ga=0;
+    snap.forEach(function(doc) {
+      var m = doc.data();
+      if (m.team1 !== TEAM) return;
+      var s1=Number(m.score1), s2=Number(m.score2);
+      gp++; gf+=s1; ga+=s2;
+      if(s1>s2) w++; else if(s1<s2) l++; else d++;
+    });
+    var pts=w*3+d, diff=gf-ga;
+    var wP=gp>0?+(w/gp*100).toFixed(1):0;
+    var dP=gp>0?+(d/gp*100).toFixed(1):0;
+    var lP=gp>0?+(l/gp*100).toFixed(1):0;
+    set("b3gp",gp); set("b3w",w); set("b3pts",pts);
+    set("sGP",gp); set("sW",w); set("sL",l); set("sD",d);
+    set("sGF",gf); set("sGA",ga);
+    set("sDiff",(diff>=0?"+":"")+diff);
+    set("sPts",pts);
+    set("sGPG", gp>0?(gf/gp).toFixed(2):"0.00");
+    set("sWR", gp>0?(w/gp*100).toFixed(1)+"%":"0%");
+    set("pW",wP+"%"); set("pD",dP+"%"); set("pL",lP+"%");
+    bar("fW",wP); bar("fD",dP); bar("fL",lP);
+  }).catch(function(e){ console.error(e); });
+});
+</script>
+</body>
+</html>
