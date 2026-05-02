@@ -1,392 +1,385 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Edit Table</title>
-<link rel="stylesheet" href="style.css"/>
+<title>Edit League Table</title>
 <style>
-body{background:#04080f;}
-.container{max-width:700px;padding:24px 14px 60px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Segoe UI',sans-serif;
+  background:#04080f;color:#fff;
+  min-height:100vh;padding:24px 16px 60px;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(0,200,83,0.06) 0%,transparent 60%);
+}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;}
 
-.gate{background:#0d1620;border:1px solid #1e3048;border-radius:16px;padding:32px 24px;max-width:340px;margin:60px auto;text-align:center;}
-.gate h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.1em;color:#fff;margin-bottom:6px;}
-.gate p{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:#2d4a65;margin-bottom:20px;}
-.gate input{width:100%;padding:12px;background:#070d14;border:1.5px solid #1e3048;border-radius:10px;color:#fff;font-size:1.4rem;font-family:inherit;text-align:center;letter-spacing:0.3em;outline:none;transition:border-color .2s;}
-.gate input:focus{border-color:#ffd600;}
-.gate-btn{margin-top:12px;width:100%;padding:12px;background:#ffd600;color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;}
-.gate-btn:hover{background:#ffb300;}
-.gate-err{color:#ff5252;font-size:0.82rem;margin-top:10px;display:none;font-family:'Barlow Condensed',sans-serif;}
+.page-title{
+  font-size:1.4rem;font-weight:800;color:#00c853;
+  margin-bottom:4px;display:flex;align-items:center;gap:8px;
+}
+.page-sub{
+  font-size:0.8rem;color:#2d4a65;margin-bottom:24px;line-height:1.5;
+}
 
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,6vw,2.8rem);letter-spacing:0.1em;color:#ffd600;text-align:center;margin-bottom:4px;text-shadow:0 0 30px rgba(255,214,0,0.3);}
-.page-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:#2d4a65;text-align:center;margin-bottom:20px;}
+/* LOADING */
+#loadingState{
+  text-align:center;padding:40px 20px;
+  font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;
+}
+.spinner{
+  width:32px;height:32px;border-radius:50%;
+  border:3px solid #1e3048;border-top-color:#00c853;
+  animation:spin .8s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-.info-box{background:rgba(0,200,83,0.06);border:1px solid rgba(0,200,83,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;letter-spacing:0.04em;color:rgba(0,200,83,0.8);line-height:1.6;}
+/* TEAM CARD */
+.team-card{
+  background:#0d1828;border:1px solid #1e3048;
+  border-radius:16px;padding:18px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+  animation:slideUp .4s ease both;
+}
+.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.tc-1::before{background:linear-gradient(90deg,transparent,#ffd600,transparent);}
+.tc-2::before{background:linear-gradient(90deg,transparent,#c0c0c0,transparent);}
+.tc-3::before{background:linear-gradient(90deg,transparent,#cd7f32,transparent);}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
-/* Live table preview */
-.live-preview{background:#0d1620;border:1px solid #1e3048;border-radius:14px;overflow:hidden;margin-bottom:20px;}
-.lp-header{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#2d4a65;padding:10px 16px;border-bottom:1px solid #1e3048;display:flex;align-items:center;gap:6px;}
-.lp-row{display:grid;grid-template-columns:30px 1fr repeat(8,42px);gap:0;align-items:center;padding:10px 12px;border-bottom:1px solid #0a1520;transition:background .15s;}
-.lp-row:last-child{border-bottom:none;}
-.lp-row:hover{background:#111e2e;}
-.lp-rank{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#2d4a65;}
-.lp-rank.r1{color:#ffd600;}
-.lp-rank.r2{color:#c0c0c0;}
-.lp-rank.r3{color:#cd7f32;}
-.lp-name{font-family:'Barlow Condensed',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;color:#fff;padding-left:4px;}
-.lp-val{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;color:#8a9bb0;text-align:center;}
-.lp-val.pts{color:#ffd600;font-size:1rem;}
-.lp-val.pos{color:#00e676;}
-.lp-val.neg{color:#ff5252;}
-.lp-col-headers{display:grid;grid-template-columns:30px 1fr repeat(8,42px);gap:0;padding:6px 12px;background:#070d14;}
-.lp-col{font-family:'Barlow Condensed',sans-serif;font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;text-align:center;}
-.lp-col.left{text-align:left;padding-left:4px;}
+.tc-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.tc-rank{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;font-weight:800;flex-shrink:0;
+}
+.rk-1{background:rgba(255,214,0,0.12);color:#ffd600;border:1.5px solid rgba(255,214,0,0.3);}
+.rk-2{background:rgba(192,192,192,0.1);color:#c0c0c0;border:1.5px solid rgba(192,192,192,0.25);}
+.rk-3{background:rgba(205,127,50,0.1);color:#cd7f32;border:1.5px solid rgba(205,127,50,0.25);}
+.tc-name{font-size:1rem;font-weight:700;letter-spacing:0.04em;}
+.nm-1{color:#ffd600;}.nm-2{color:#c0c0c0;}.nm-3{color:#cd7f32;}
 
-/* Team edit cards */
-.team-card{background:linear-gradient(135deg,#0d1620,#111e2e);border:1px solid #1e3048;border-radius:14px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .2s;}
-.team-card:hover{border-color:rgba(255,214,0,0.2);}
-.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ffd600,transparent);opacity:0.25;}
-.tc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;}
-.tc-name{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.06em;color:#ffd600;}
-.tc-pts-badge{font-family:'Bebas Neue',sans-serif;font-size:0.9rem;padding:2px 10px;border-radius:10px;background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.25);color:#ffd600;}
+.source-badge{
+  margin-left:auto;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:2px 8px;border-radius:10px;
+}
+.from-firebase{background:rgba(0,200,83,0.1);color:#00c853;border:1px solid rgba(0,200,83,0.2);}
+.from-matches{background:rgba(77,159,219,0.1);color:#4d9fdb;border:1px solid rgba(77,159,219,0.2);}
 
-.fields-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-@media(max-width:480px){.fields-grid{grid-template-columns:repeat(2,1fr);}}
+/* GRID OF INPUTS */
+.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:400px){.fields{grid-template-columns:repeat(2,1fr);}}
+.field{}
+.field-lbl{
+  font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:#2d4a65;margin-bottom:4px;display:block;
+}
+.field-inp{
+  width:100%;padding:8px 6px;
+  background:#070d14;border:1.5px solid #1e3048;
+  border-radius:8px;color:#fff;font-size:1rem;
+  font-weight:700;text-align:center;outline:none;
+  transition:border-color .2s;
+  -moz-appearance:textfield;
+}
+.field-inp::-webkit-outer-spin-button,
+.field-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.field-inp:focus{border-color:#00c853;}
+.field-inp.pts-inp{border-color:rgba(255,214,0,0.3);color:#ffd600;}
+.field-inp.pts-inp:focus{border-color:#ffd600;}
 
-.field-wrap{}
-.field-lbl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;margin-bottom:4px;display:block;}
-.field-input{width:100%;padding:8px;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.04em;outline:none;transition:border-color .2s;text-align:center;}
-.field-input:focus{border-color:#ffd600;background:#0a1218;}
-.field-input.pts-input{border-color:rgba(255,214,0,0.25);color:#ffd600;}
-.field-input.pts-input:focus{border-color:#ffd600;}
+/* SAVE INDIVIDUAL */
+.save-team-btn{
+  width:100%;margin-top:12px;
+  padding:9px;background:rgba(0,200,83,0.08);
+  border:1.5px solid rgba(0,200,83,0.25);border-radius:10px;
+  color:#00c853;font-size:0.8rem;letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;font-weight:700;
+}
+.save-team-btn:hover{background:rgba(0,200,83,0.14);border-color:#00c853;}
+.save-team-btn.saved{background:rgba(0,200,83,0.12);border-color:#00c853;color:#00c853;}
 
-.save-team-btn{width:100%;margin-top:12px;padding:10px;background:rgba(255,214,0,0.08);border:1.5px solid rgba(255,214,0,0.25);border-radius:10px;color:#ffd600;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
-.save-team-btn:hover{background:rgba(255,214,0,0.15);border-color:#ffd600;}
-.save-team-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* SAVE ALL */
+.save-all-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,#00c853,#00e676);
+  color:#000;border:none;border-radius:14px;
+  font-size:1.05rem;font-weight:800;cursor:pointer;
+  margin-top:8px;margin-bottom:16px;
+  letter-spacing:0.04em;transition:all .2s;
+}
+.save-all-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,200,83,0.3);}
+.save-all-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 
-.save-all-btn{width:100%;padding:14px;background:#ffd600;color:#000;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.1em;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 0 20px rgba(255,214,0,0.2);}
-.save-all-btn:hover{background:#ffb300;transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,214,0,0.35);}
-.save-all-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+#globalStatus{
+  padding:13px 16px;border-radius:12px;
+  display:none;font-size:0.88rem;text-align:center;line-height:1.5;
+  margin-bottom:16px;
+}
+.s-ok{background:#0a2e14;border:1px solid #00c853;color:#00c853;}
+.s-err{background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;}
+.s-loading{background:#0a1f35;border:1px solid #1e3a5f;color:#4d9fdb;}
 
-.back-btn{background:transparent!important;border:1.5px solid #1e3048!important;color:#2d4a65!important;font-family:'Barlow Condensed',sans-serif!important;font-size:0.85rem!important;letter-spacing:0.08em;text-transform:uppercase;padding:10px 20px!important;border-radius:10px!important;cursor:pointer;transition:all .2s;}
-.back-btn:hover{border-color:rgba(255,214,0,0.3)!important;color:rgba(255,214,0,0.7)!important;}
+.back-btn{
+  display:block;width:100%;padding:12px;text-align:center;
+  background:transparent;border:1.5px solid #1e3048;border-radius:12px;
+  color:#2d4a65;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;text-decoration:none;
+}
+.back-btn:hover{border-color:rgba(0,200,83,0.3);color:#00c853;}
 
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);z-index:999;padding:10px 24px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:0.06em;transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
-.toast.show{transform:translateX(-50%) translateY(0);}
-.toast.ok{background:#00e676;color:#000;}
-.toast.err{background:#ff5252;color:#fff;}
+.note{
+  font-size:0.72rem;color:#1e3048;text-align:center;
+  margin-bottom:12px;line-height:1.6;
+}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div id="gateWrap">
-  <div class="gate">
-    <h2>🔐 Secret Panel</h2>
-    <p>Enter admin code</p>
-    <input id="gateInput" type="password" placeholder="••••" maxlength="10" autocomplete="off"/>
-    <button class="gate-btn" onclick="checkGate()">Enter</button>
-    <div id="gateErr" class="gate-err">❌ Wrong password</div>
+  <div class="page-title">⚙️ Edit League Table</div>
+  <p class="page-sub">Live data from Firebase. Edit any number → press Save. <span style="color:#00c853;">Green = from overrides</span> · <span style="color:#4d9fdb;">Blue = computed from matches</span></p>
+
+  <!-- Loading -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    Loading live data from Firebase...
   </div>
+
+  <!-- Cards injected by JS -->
+  <div id="teamCards" style="display:none;"></div>
+
+  <div id="globalStatus"></div>
+
+  <button class="save-all-btn" id="saveAllBtn" style="display:none;" onclick="saveAll()">
+    💾 Save All 3 Teams
+  </button>
+
+  <p class="note" id="noteEl" style="display:none;">Changes go to <code>tableOverrides</code> in Firestore and show on your table immediately.</p>
+
+  <a class="back-btn" href="index.html">⬅ Back to Home</a>
 </div>
-
-<div id="editPanel" style="display:none;">
-<div class="container">
-  <div class="page-title">⚙️ Edit Table</div>
-  <div class="page-sub">Secret Admin — Direct Edit</div>
-
-  <div class="info-box">
-    ✅ <strong>چۆن کار دەکات:</strong><br/>
-    گۆڕانکاریەکان ڕاستەوخۆ لە Firestore تۆمار دەبن و تەختەکە بەخۆماتیک نوێدەبێتەوە.<br/>
-    کاتێک ماچی نوێ زیاد دەکرێت، ژمارەکان لە ماچە ڕاستەقینەکانەوە هیساب دەکرێن و زیادی لێ دەکرێتەوە.
-  </div>
-
-  <!-- Live table preview -->
-  <div class="live-preview">
-    <div class="lp-header">📊 Live Table Preview</div>
-    <div class="lp-col-headers">
-      <div class="lp-col">#</div>
-      <div class="lp-col left">Team</div>
-      <div class="lp-col">G</div>
-      <div class="lp-col">W</div>
-      <div class="lp-col">D</div>
-      <div class="lp-col">L</div>
-      <div class="lp-col">GF</div>
-      <div class="lp-col">GA</div>
-      <div class="lp-col">Diff</div>
-      <div class="lp-col">Pts</div>
-    </div>
-    <div id="liveTableRows"></div>
-  </div>
-
-  <div id="teamCards"></div>
-
-  <button class="save-all-btn" id="saveAllBtn" onclick="saveAll()">💾 Save All Changes</button>
-
-  <div style="text-align:center;margin-top:10px;font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;color:#2d4a65;letter-spacing:0.06em;">
-    گۆڕانکارییەکان ڕاستەوخۆ لە Firebase تۆمار دەبن
-  </div>
-
-  <div class="btn-row" style="margin-top:20px;gap:8px;">
-    <button class="back-btn" onclick="location.href='index.html'">⬅ گەڕانەوە</button>
-    <button class="back-btn" onclick="location.href='table.html'" style="border-color:rgba(0,200,83,0.3)!important;color:#00c853!important;">🏆 View Table</button>
-  </div>
-</div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script>
-const SECRET_PASS = "9999";
-const TEAMS = ["PARISANT GERMAN", "LIVERPOOL", "BARCELONA"];
+var TEAMS = ["PARISANT GERMAN", "BARCELONA", "BAYER MUNICH"];
+var DOC_IDS = {
+  "PARISANT GERMAN": "PARISANT_GERMAN",
+  "BARCELONA":       "BARCELONA",
+  "BAYER MUNICH":    "BAYER_MUNICH"
+};
+var RANK_CLASS  = ["tc-1","tc-2","tc-3"];
+var NUM_CLASS   = ["rk-1","rk-2","rk-3"];
+var NAME_CLASS  = ["nm-1","nm-2","nm-3"];
 
-// State: real computed stats + adjustments
-let realStats   = {};  // computed from actual matches
-let adjustments = {};  // loaded from Firebase "tableAdjustments"
-let adjDocIds   = {};  // doc IDs for each team's adjustment
-let db;
+// Current editable state
+var state = {};
 
-function checkGate() {
-    if (document.getElementById("gateInput").value === SECRET_PASS) {
-        document.getElementById("gateWrap").style.display = "none";
-        document.getElementById("editPanel").style.display = "block";
-        waitDB(() => { loadAll(); });
-    } else {
-        document.getElementById("gateErr").style.display = "block";
-        document.getElementById("gateInput").value = "";
-    }
-}
-document.getElementById("gateInput").addEventListener("keydown", e => { if(e.key==="Enter") checkGate(); });
-
-function waitDB(cb) {
-    let t = 0;
-    const iv = setInterval(() => {
-        if (window.db) { clearInterval(iv); db = window.db; cb(); }
-        else if (++t > 60) { clearInterval(iv); showToast("❌ Firebase not ready", "err"); }
-    }, 100);
+function waitDB(cb, n) {
+  n = n||0;
+  if (window.db) return cb();
+  if (n > 80) { showGlobal("❌ Firebase not connected. Is firebase.js in the same folder?","s-err"); return; }
+  setTimeout(function(){ waitDB(cb, n+1); }, 100);
 }
 
-// ── Load everything ──
-function loadAll() {
-    // Load matches → compute real stats
-    db.collection("matches").get().then(snap => {
-        const matches = [];
-        snap.forEach(doc => matches.push(doc.data()));
-
-        // Compute real stats from matches
-        TEAMS.forEach(t => realStats[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
-        matches.forEach(m => {
-            const h = realStats[m.team1], a = realStats[m.team2];
-            if (!h || !a) return;
-            const s1=+m.score1, s2=+m.score2;
-            h.game++; a.game++;
-            h.gf+=s1; h.ga+=s2; a.gf+=s2; a.ga+=s1;
-            if(s1>s2){h.win++;h.point+=3;a.lose++;}
-            else if(s2>s1){a.win++;a.point+=3;h.lose++;}
-            else{h.draw++;a.draw++;h.point++;a.point++;}
-        });
-        TEAMS.forEach(t => { realStats[t].diff = realStats[t].gf - realStats[t].ga; });
-
-        // Load adjustments
-        return db.collection("tableAdjustments").get();
-    }).then(snap => {
-        adjustments = {};
-        adjDocIds   = {};
-        snap.forEach(doc => {
-            const d = doc.data();
-            if (d.team) {
-                adjustments[d.team] = d;
-                adjDocIds[d.team]   = doc.id;
-            }
-        });
-        renderAll();
-
-        // Live listener for real-time preview update
-        db.collection("matches").onSnapshot(() => {
-            db.collection("matches").get().then(snap2 => {
-                const ms = [];
-                snap2.forEach(doc => ms.push(doc.data()));
-                TEAMS.forEach(t => realStats[t] = {game:0,win:0,lose:0,draw:0,gf:0,ga:0,diff:0,point:0});
-                ms.forEach(m => {
-                    const h = realStats[m.team1], a = realStats[m.team2];
-                    if (!h || !a) return;
-                    const s1=+m.score1, s2=+m.score2;
-                    h.game++; a.game++;
-                    h.gf+=s1; h.ga+=s2; a.gf+=s2; a.ga+=s1;
-                    if(s1>s2){h.win++;h.point+=3;a.lose++;}
-                    else if(s2>s1){a.win++;a.point+=3;h.lose++;}
-                    else{h.draw++;a.draw++;h.point++;a.point++;}
-                });
-                TEAMS.forEach(t => { realStats[t].diff = realStats[t].gf - realStats[t].ga; });
-                renderAll();
-            });
-        });
-    }).catch(err => showToast("❌ " + err.message, "err"));
+function showGlobal(msg, cls) {
+  var el = document.getElementById("globalStatus");
+  el.textContent = msg; el.className = cls; el.style.display = "block";
 }
 
-// ── Get final value = real + adjustment ──
-function getFinal(team, key) {
-    const real = realStats[team]?.[key] || 0;
-    const adj  = adjustments[team]?.[key] || 0;
-    return real + adj;
+// Compute stats from actual matches for a team
+function computeFromMatches(teamName, matches) {
+  var gp=0,w=0,l=0,d=0,gf=0,ga=0;
+  matches.forEach(function(m) {
+    var isHome = m.team1 === teamName;
+    var isAway = m.team2 === teamName;
+    if (!isHome && !isAway) return;
+    var s1=Number(m.score1||0), s2=Number(m.score2||0);
+    var myGf = isHome ? s1 : s2;
+    var myGa = isHome ? s2 : s1;
+    gp++; gf+=myGf; ga+=myGa;
+    if(myGf>myGa) w++; else if(myGf<myGa) l++; else d++;
+  });
+  return {game:gp,win:w,lose:l,draw:d,gf:gf,ga:ga,diff:gf-ga,point:w*3+d};
 }
 
-// ── Render live table preview ──
-function renderLiveTable() {
-    const sorted = [...TEAMS].sort((a,b) => {
-        const pa = getFinal(a,"point"), pb = getFinal(b,"point");
-        const da = getFinal(a,"diff"),  db_ = getFinal(b,"diff");
-        const ga = getFinal(a,"gf"),    gb  = getFinal(b,"gf");
-        return pb!==pa ? pb-pa : db_!==da ? db_-da : gb-ga;
-    });
-    const rankCls = ["r1","r2","r3"];
-    const rows = sorted.map((t,i) => {
-        const diff = getFinal(t,"diff");
-        return `<div class="lp-row">
-            <div class="lp-rank ${rankCls[i]||''}">${i+1}</div>
-            <div class="lp-name">${t}</div>
-            <div class="lp-val">${getFinal(t,"game")}</div>
-            <div class="lp-val">${getFinal(t,"win")}</div>
-            <div class="lp-val">${getFinal(t,"draw")}</div>
-            <div class="lp-val">${getFinal(t,"lose")}</div>
-            <div class="lp-val">${getFinal(t,"gf")}</div>
-            <div class="lp-val">${getFinal(t,"ga")}</div>
-            <div class="lp-val ${diff>0?'pos':diff<0?'neg':''}">${diff>0?'+':''}${diff}</div>
-            <div class="lp-val pts">${getFinal(t,"point")}</div>
-        </div>`;
-    }).join("");
-    document.getElementById("liveTableRows").innerHTML = rows;
-}
+function renderCards(matchesData, overridesData) {
+  var container = document.getElementById("teamCards");
+  container.innerHTML = "";
 
-// ── Render edit cards ──
-function renderCards() {
-    const container = document.getElementById("teamCards");
-    container.innerHTML = "";
-    const FIELDS = [
-        {key:"game",  lbl:"Games"},
-        {key:"win",   lbl:"Win"},
-        {key:"draw",  lbl:"Draw"},
-        {key:"lose",  lbl:"Lose"},
-        {key:"gf",    lbl:"GF"},
-        {key:"ga",    lbl:"GA"},
-        {key:"diff",  lbl:"Diff"},
-        {key:"point", lbl:"Points", pts:true}
+  TEAMS.forEach(function(teamName, idx) {
+    var computed  = computeFromMatches(teamName, matchesData);
+    var override  = overridesData[teamName]; // may be null
+    // Use override if it exists, otherwise computed
+    var data = override || computed;
+    var source = override ? "from-firebase" : "from-matches";
+    var sourceLabel = override ? "✦ Saved Override" : "◈ From Matches";
+
+    // Save into state
+    state[teamName] = {
+      game: data.game, win: data.win, lose: data.lose, draw: data.draw,
+      gf: data.gf, ga: data.ga, diff: data.diff, point: data.point
+    };
+
+    var FIELDS = [
+      {key:"game",  lbl:"Games"},
+      {key:"win",   lbl:"Win"},
+      {key:"lose",  lbl:"Lose"},
+      {key:"draw",  lbl:"Draw"},
+      {key:"gf",    lbl:"GF"},
+      {key:"ga",    lbl:"GA"},
+      {key:"diff",  lbl:"Diff"},
+      {key:"point", lbl:"Points", isPts:true}
     ];
 
-    const sorted = [...TEAMS].sort((a,b) => getFinal(b,"point") - getFinal(a,"point"));
-    const rankEmoji = ["🥇","🥈","🥉"];
+    var fieldsHtml = FIELDS.map(function(f) {
+      var val = data[f.key] !== undefined ? data[f.key] : 0;
+      var ptsClass = f.isPts ? " pts-inp" : "";
+      return '<div class="field">'
+        + '<label class="field-lbl">'+f.lbl+'</label>'
+        + '<input class="field-inp'+ptsClass+'" type="number" '
+        + 'id="f_'+teamName.replace(/ /g,'_')+'_'+f.key+'" '
+        + 'value="'+val+'" '
+        + 'onchange="onFieldChange(\''+teamName+'\',\''+f.key+'\',this.value)"'
+        + '/>'
+        + '</div>';
+    }).join("");
 
-    sorted.forEach((team, idx) => {
-        const card = document.createElement("div");
-        card.className = "team-card";
-        card.id = "card_" + team.replace(/ /g,"_");
+    var card = document.createElement("div");
+    card.className = "team-card " + RANK_CLASS[idx];
+    card.style.animationDelay = (idx * 0.08) + "s";
+    card.id = "card_" + teamName.replace(/ /g,'_');
+    card.innerHTML =
+      '<div class="tc-header">'
+        + '<div class="tc-rank '+ NUM_CLASS[idx] +'">'+(idx+1)+'</div>'
+        + '<div class="tc-name '+ NAME_CLASS[idx] +'">'+teamName+'</div>'
+        + '<span class="source-badge '+source+'">'+sourceLabel+'</span>'
+      + '</div>'
+      + '<div class="fields">'+fieldsHtml+'</div>'
+      + '<button class="save-team-btn" id="stb_'+teamName.replace(/ /g,'_')+'" onclick="saveTeam(\''+teamName+'\')">💾 Save '+teamName+'</button>';
 
-        const fieldsHtml = FIELDS.map(f => {
-            const finalVal = getFinal(team, f.key);
-            return `<div class="field-wrap">
-                <label class="field-lbl">${f.lbl}</label>
-                <input class="field-input ${f.pts?'pts-input':''}"
-                    type="number" id="inp_${team.replace(/ /g,'_')}_${f.key}"
-                    value="${finalVal}"
-                    oninput="onInput('${team}','${f.key}',this.value)"/>
-            </div>`;
-        }).join("");
+    container.appendChild(card);
+  });
 
-        card.innerHTML = `
-            <div class="tc-header">
-                <span class="tc-name">${rankEmoji[idx]||''} ${team}</span>
-                <span class="tc-pts-badge" id="ptsbadge_${team.replace(/ /g,'_')}">${getFinal(team,"point")} pts</span>
-            </div>
-            <div class="fields-grid">${fieldsHtml}</div>
-            <button class="save-team-btn" id="savebtn_${team.replace(/ /g,'_')}"
-                onclick="saveTeam('${team}')">💾 Save ${team}</button>`;
-        container.appendChild(card);
+  document.getElementById("loadingState").style.display = "none";
+  container.style.display = "block";
+  document.getElementById("saveAllBtn").style.display = "block";
+  document.getElementById("noteEl").style.display = "block";
+}
+
+function onFieldChange(teamName, key, val) {
+  if (!state[teamName]) state[teamName] = {};
+  state[teamName][key] = Number(val) || 0;
+  // Auto-calc diff when gf/ga change
+  if (key === "gf" || key === "ga") {
+    var gf = state[teamName].gf || 0;
+    var ga = state[teamName].ga || 0;
+    state[teamName].diff = gf - ga;
+    var diffEl = document.getElementById("f_"+teamName.replace(/ /g,'_')+"_diff");
+    if (diffEl) diffEl.value = gf - ga;
+  }
+}
+
+function saveTeam(teamName) {
+  if (!window.db) return;
+  var s = state[teamName] || {};
+  var payload = {
+    team: teamName,
+    game:  Number(s.game)  || 0,
+    win:   Number(s.win)   || 0,
+    lose:  Number(s.lose)  || 0,
+    draw:  Number(s.draw)  || 0,
+    gf:    Number(s.gf)    || 0,
+    ga:    Number(s.ga)    || 0,
+    diff:  Number(s.diff)  || 0,
+    point: Number(s.point) || 0,
+    updatedAt: new Date().toISOString()
+  };
+  var docId = DOC_IDS[teamName];
+  var btnId = "stb_" + teamName.replace(/ /g,'_');
+  var btn = document.getElementById(btnId);
+  if (btn) { btn.textContent = "⏳ Saving..."; btn.disabled = true; }
+
+  window.db.collection("tableOverrides").doc(docId).set(payload)
+    .then(function() {
+      if (btn) { btn.className = "save-team-btn saved"; btn.textContent = "✅ Saved!"; btn.disabled = false; }
+      // Update source badge
+      var badge = document.querySelector("#card_"+teamName.replace(/ /g,'_')+" .source-badge");
+      if (badge) { badge.className = "source-badge from-firebase"; badge.textContent = "✦ Saved Override"; }
+    })
+    .catch(function(err) {
+      if (btn) { btn.textContent = "❌ Error — Retry"; btn.disabled = false; }
+      showGlobal("❌ " + err.message, "s-err");
     });
 }
 
-function renderAll() {
-    renderLiveTable();
-    renderCards();
-}
-
-// ── When user types — update adjustment and re-render preview ──
-function onInput(team, key, val) {
-    const num = Number(val) || 0;
-    const real = realStats[team]?.[key] || 0;
-    // Adjustment = what user typed MINUS the real value
-    if (!adjustments[team]) adjustments[team] = { team };
-    adjustments[team][key] = num - real;
-
-    // Auto-recalc diff
-    if (key === "gf" || key === "ga") {
-        const finalGF = getFinal(team, "gf");
-        const finalGA = getFinal(team, "ga");
-        const newDiff = finalGF - finalGA;
-        adjustments[team]["diff"] = newDiff - (realStats[team]?.diff || 0);
-        const diffEl = document.getElementById(`inp_${team.replace(/ /g,'_')}_diff`);
-        if (diffEl) diffEl.value = newDiff;
-    }
-
-    // Update pts badge live
-    const badge = document.getElementById("ptsbadge_" + team.replace(/ /g,"_"));
-    if (badge) badge.textContent = getFinal(team, "point") + " pts";
-
-    renderLiveTable();
-}
-
-// ── Save one team ──
-function saveTeam(team) {
-    if (!db) { showToast("❌ DB not ready", "err"); return; }
-
-    const adj = adjustments[team] || { team };
-    adj.team = team;
-    adj.updatedAt = new Date().toISOString();
-
-    const btn = document.getElementById("savebtn_" + team.replace(/ /g,"_"));
-    if (btn) { btn.disabled = true; btn.textContent = "⏳ Saving..."; }
-
-    // Use team name as doc ID (consistent)
-    const docId = team.replace(/ /g, "_");
-    adjDocIds[team] = docId;
-
-    db.collection("tableAdjustments").doc(docId).set(adj)
-        .then(() => {
-            showToast("✅ " + team + " saved!", "ok");
-            if (btn) { btn.disabled = false; btn.textContent = "✅ Saved — " + team; btn.style.borderColor="rgba(0,200,83,0.4)"; btn.style.color="#00c853"; }
-        })
-        .catch(err => {
-            showToast("❌ " + err.message, "err");
-            if (btn) { btn.disabled = false; btn.textContent = "💾 Save " + team; }
-        });
-}
-
-// ── Save all ──
 function saveAll() {
-    const btn = document.getElementById("saveAllBtn");
-    btn.disabled = true; btn.textContent = "⏳ Saving...";
-    Promise.all(TEAMS.map(t => {
-        const adj = adjustments[t] || { team: t };
-        adj.team = t;
-        adj.updatedAt = new Date().toISOString();
-        const docId = t.replace(/ /g, "_");
-        return db.collection("tableAdjustments").doc(docId).set(adj);
-    })).then(() => {
-        showToast("✅ All saved!", "ok");
-        btn.disabled = false; btn.textContent = "💾 Save All Changes";
-    }).catch(err => {
-        showToast("❌ " + err.message, "err");
-        btn.disabled = false; btn.textContent = "💾 Save All Changes";
+  var btn = document.getElementById("saveAllBtn");
+  btn.disabled = true; btn.textContent = "⏳ Saving All...";
+  showGlobal("Saving all teams...", "s-loading");
+
+  var promises = TEAMS.map(function(teamName) {
+    var s = state[teamName] || {};
+    var payload = {
+      team: teamName,
+      game:  Number(s.game)  || 0,
+      win:   Number(s.win)   || 0,
+      lose:  Number(s.lose)  || 0,
+      draw:  Number(s.draw)  || 0,
+      gf:    Number(s.gf)    || 0,
+      ga:    Number(s.ga)    || 0,
+      diff:  Number(s.diff)  || 0,
+      point: Number(s.point) || 0,
+      updatedAt: new Date().toISOString()
+    };
+    return window.db.collection("tableOverrides").doc(DOC_IDS[teamName]).set(payload);
+  });
+
+  Promise.all(promises)
+    .then(function() {
+      showGlobal("✅ All 3 teams saved! Your league table now shows the correct stats.", "s-ok");
+      btn.textContent = "✅ All Saved!";
+      btn.disabled = false;
+    })
+    .catch(function(err) {
+      showGlobal("❌ Error: " + err.message, "s-err");
+      btn.textContent = "💾 Save All 3 Teams";
+      btn.disabled = false;
     });
 }
 
-function showToast(msg, type) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = "toast show " + (type||"ok");
-    setTimeout(() => t.className = "toast " + (type||"ok"), 2800);
-}
+// ── BOOT: load both matches + overrides in parallel ──────────────
+waitDB(function() {
+  Promise.all([
+    window.db.collection("matches").get(),
+    window.db.collection("tableOverrides").get()
+  ]).then(function(results) {
+    var matchSnap    = results[0];
+    var overrideSnap = results[1];
+
+    var matches = [];
+    matchSnap.forEach(function(doc) { matches.push(doc.data()); });
+
+    var overrides = {}; // { "TEAM NAME": data }
+    overrideSnap.forEach(function(doc) {
+      var d = doc.data();
+      if (d.team) overrides[d.team] = d;
+    });
+
+    renderCards(matches, overrides);
+  }).catch(function(err) {
+    document.getElementById("loadingState").innerHTML =
+      '<div style="color:#e74c3c;">❌ Failed to load: ' + err.message + '</div>';
+  });
+});
 </script>
 </body>
 </html>
