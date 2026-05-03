@@ -73,23 +73,54 @@ window._lastMatches    = [];
 window._tableOverrides = {};
 
 function computeTeamsFromMatches(matches) {
-    const teams = teamsList.map(name => ({ name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0 }));
-    matches.forEach(m => applyMatchToTeams(m, teams));
-    teams.forEach(t => {
-        t.diff  = t.gf - t.ga;
-        t.point = t.win * 3 + t.draw;
-        const ov = window._tableOverrides[t.name];
-        if (ov) {
-            if (ov.game  !== undefined) t.game  = Number(ov.game);
-            if (ov.win   !== undefined) t.win   = Number(ov.win);
-            if (ov.lose  !== undefined) t.lose  = Number(ov.lose);
-            if (ov.draw  !== undefined) t.draw  = Number(ov.draw);
-            if (ov.gf    !== undefined) t.gf    = Number(ov.gf);
-            if (ov.ga    !== undefined) t.ga    = Number(ov.ga);
-            if (ov.diff  !== undefined) t.diff  = Number(ov.diff);
-            if (ov.point !== undefined) t.point = Number(ov.point);
+    // RULE: if a team has a saved override, use it 100% — never mix with match data.
+    // Only compute from matches for teams that have NO override saved.
+    const teams = teamsList.map(function(name) {
+        const ov = window._tableOverrides[name];
+        if (ov && ov.point !== undefined) {
+            // Override exists — return it directly, skip all match computation
+            return {
+                name,
+                game:  Number(ov.game)  || 0,
+                win:   Number(ov.win)   || 0,
+                lose:  Number(ov.lose)  || 0,
+                draw:  Number(ov.draw)  || 0,
+                gf:    Number(ov.gf)    || 0,
+                ga:    Number(ov.ga)    || 0,
+                diff:  Number(ov.diff)  || 0,
+                point: Number(ov.point) || 0,
+                _locked: true
+            };
+        }
+        return { name, game:0, win:0, lose:0, draw:0, ga:0, gf:0, diff:0, point:0, _locked: false };
+    });
+
+    // Apply matches ONLY to unlocked (non-overridden) teams
+    matches.forEach(function(m) {
+        const a = teams.find(t => t.name === m.team1 && !t._locked);
+        const b = teams.find(t => t.name === m.team2 && !t._locked);
+        if (a) {
+            a.game++; a.gf += m.score1; a.ga += m.score2;
+            if (m.score1 > m.score2) a.win++;
+            else if (m.score1 < m.score2) a.lose++;
+            else a.draw++;
+        }
+        if (b) {
+            b.game++; b.gf += m.score2; b.ga += m.score1;
+            if (m.score2 > m.score1) b.win++;
+            else if (m.score2 < m.score1) b.lose++;
+            else b.draw++;
         }
     });
+
+    // Finalise unlocked teams
+    teams.forEach(function(t) {
+        if (!t._locked) {
+            t.diff  = t.gf - t.ga;
+            t.point = t.win * 3 + t.draw;
+        }
+    });
+
     teams.sort((x, y) => y.point !== x.point ? y.point - x.point : y.diff !== x.diff ? y.diff - x.diff : (y.gf||0) - (x.gf||0));
     return teams;
 }
@@ -502,6 +533,48 @@ function checkGameEligibility() {
     }).catch(err => { console.error(err); alert("❌ Error"); });
 }
 
+// ─── Update overrides after a new match is saved ─────────────
+// This keeps the override in sync so the table updates live.
+function updateOverridesAfterMatch(team1, team2, score1, score2) {
+    if (!window.db) return;
+    const s1 = Number(score1), s2 = Number(score2);
+    const DOC_IDS = {
+        "PARISANT GERMAN": "PARISANT_GERMAN",
+        "BARCELONA":       "BARCELONA",
+        "BAYER MUNICH":    "BAYER_MUNICH"
+    };
+
+    // For each team involved, get their current override (or start from 0),
+    // add this match result, then save back.
+    [team1, team2].forEach(function(teamName) {
+        const docId = DOC_IDS[teamName];
+        if (!docId) return;
+        const ref = window.db.collection("tableOverrides").doc(docId);
+        ref.get().then(function(snap) {
+            let d = snap.exists ? snap.data() : { team: teamName, game:0, win:0, lose:0, draw:0, gf:0, ga:0, diff:0, point:0 };
+            const isHome = teamName === team1;
+            const myGf = isHome ? s1 : s2;
+            const myGa = isHome ? s2 : s1;
+            d.game  = (Number(d.game)  || 0) + 1;
+            d.gf    = (Number(d.gf)    || 0) + myGf;
+            d.ga    = (Number(d.ga)    || 0) + myGa;
+            if (myGf > myGa) {
+                d.win   = (Number(d.win)   || 0) + 1;
+                d.point = (Number(d.point) || 0) + 3;
+            } else if (myGf < myGa) {
+                d.lose  = (Number(d.lose)  || 0) + 1;
+            } else {
+                d.draw  = (Number(d.draw)  || 0) + 1;
+                d.point = (Number(d.point) || 0) + 1;
+            }
+            d.diff = (Number(d.gf) || 0) - (Number(d.ga) || 0);
+            d.team = teamName;
+            d.updatedAt = new Date().toISOString();
+            return ref.set(d);
+        }).catch(function(err) { console.error("Override update error:", err); });
+    });
+}
+
 // ─── Match Week Setup ─────────────────────────────────────────
 let _matchTeam1 = "", _matchTeam2 = "";
 
@@ -536,6 +609,8 @@ function setupMatchWeek() {
                 _matchTeam1 = team1; _matchTeam2 = team2;
                 alert(`✅ Match #${gameNumber} saved`);
                 generateMatchReport(team1, team2, score1, score2, gameNumber);
+                // Update overrides for both teams so table reflects new match immediately
+                updateOverridesAfterMatch(team1, team2, score1, score2);
                 ["team1","team2","score1","score2","matchDate","adminPass"].forEach(id => {
                     const el = document.getElementById(id); if (el) el.value = "";
                 });
