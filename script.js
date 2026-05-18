@@ -1,49 +1,10 @@
-// script.js — Season 5 | Stadium Rotation | Easy Injury = 3 games
+// script.js — Season 6 | National Teams | PORTUGAL · FRANCE · GERMANY
 const ADMIN_PASSWORD = "123321";
 const SUPER_ADMIN_PASSWORD = "9999";
 
-const teamsList = ["BARCELONA", "BAYER MUNICH", "PARISANT GERMAN"];
+const teamsList = ["PORTUGAL", "FRANCE", "GERMANY"];
 
-// ─── Stadium config ────────────────────────────────────────────
-// Key format: "TEAM_A vs TEAM_B" (alphabetical order)
-const STADIUMS = {
-    "BARCELONA":       { name: "Spotify Camp Nou",  emoji: "🏟️" },
-    "PARISANT GERMAN": { name: "Parc des Princes",  emoji: "🏟️" },
-    "BAYER MUNICH":    { name: "Allianz Arena",      emoji: "🏟️" }
-};
-
-// First-game home team per matchup (alphabetical key)
-// "BARCELONA vs BAYER MUNICH"    → first home = BARCELONA (Camp Nou)
-// "BARCELONA vs PARISANT GERMAN" → first home = BARCELONA (Camp Nou)
-// "BAYER MUNICH vs PARISANT GERMAN" → first home = PARISANT GERMAN (Parc des Princes)
-const FIRST_HOME = {
-    "BARCELONA vs BAYER MUNICH":       "BARCELONA",
-    "BARCELONA vs PARISANT GERMAN":    "BARCELONA",
-    "BAYER MUNICH vs PARISANT GERMAN": "PARISANT GERMAN"
-};
-
-function getMatchupKey(t1, t2) {
-    return [t1, t2].sort().join(" vs ");
-}
-
-// Count how many times this specific matchup has been played (from matches array)
-function getMatchupCount(t1, t2, matches) {
-    const key = getMatchupKey(t1, t2);
-    return matches.filter(m => getMatchupKey(m.team1, m.team2) === key).length;
-}
-
-// Returns { homeTeam, stadium } for the NEXT game between t1 and t2
-function getNextStadium(t1, t2, matches) {
-    const key   = getMatchupKey(t1, t2);
-    const count = getMatchupCount(t1, t2, matches); // games already played
-    const firstHome = FIRST_HOME[key];
-    if (!firstHome) return null;
-    // Even count (0,2,4…) → first home's stadium; Odd (1,3,5…) → other team's stadium
-    const teams   = key.split(" vs ");
-    const homeIdx = count % 2 === 0 ? teams.indexOf(firstHome) : 1 - teams.indexOf(firstHome);
-    const homeTeam = teams[homeIdx];
-    return { homeTeam, stadium: STADIUMS[homeTeam] };
-}
+// Season 6 — National Teams: PORTUGAL, FRANCE, GERMANY — No stadium rotation
 
 // ─── Data converters ──────────────────────────────────────────
 function docToMatch(doc) {
@@ -172,7 +133,6 @@ function renderHistoryList(matches) {
     if (!tbody) return;
     tbody.innerHTML = "";
     matches.slice().reverse().forEach(m => {
-        const stadInfo = getNextStadium(m.team1, m.team2, matches.filter(x => x.gameNumber < m.gameNumber));
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td data-label="GW"><span class="value">GW${m.gameNumber||'-'}</span></td>
@@ -456,7 +416,7 @@ function saveInjury(matchTeam1, matchTeam2) {
     }).catch(() => alert("❌ Error saving injury"));
 }
 
-// ─── Check Game Eligibility (with stadium) ────────────────────
+// ─── Check Game Eligibility ────────────────────────────────────
 function checkGameEligibility() {
     const team1 = document.getElementById("checkTeam1").value;
     const team2 = document.getElementById("checkTeam2").value;
@@ -465,12 +425,9 @@ function checkGameEligibility() {
 
     Promise.all([
         window.db.collection("playerSuspensions").get(),
-        window.db.collection("playerInjuries").get(),
-        window.db.collection("matches").get()
-    ]).then(([suspSnap, injSnap, matchSnap]) => {
+        window.db.collection("playerInjuries").get()
+    ]).then(([suspSnap, injSnap]) => {
         const suspended = [], warnings = [], injured = [];
-        const allMatches = [];
-        matchSnap.forEach(doc => allMatches.push(docToMatch(doc)));
 
         suspSnap.forEach(doc => {
             const s = docToSuspension(doc);
@@ -485,22 +442,9 @@ function checkGameEligibility() {
             if (inj.injuryGamesLeft > 0) injured.push(inj);
         });
 
-        // ── Stadium for next game ──
-        const stadInfo = getNextStadium(team1, team2, allMatches);
-        const stadHtml = stadInfo
-            ? `<div style="background:linear-gradient(135deg,#0a1f1a,#0d2820);border:1.5px solid rgba(0,200,83,0.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
-                <span style="font-size:1.6rem;">🏟️</span>
-                <div>
-                    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:rgba(0,200,83,0.6);margin-bottom:2px;">Next Stadium — Home: ${stadInfo.homeTeam}</div>
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:0.06em;color:#00e676;">${stadInfo.stadium.name}</div>
-                    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:2px;">${team1} vs ${team2}</div>
-                </div>
-               </div>`
-            : "";
-
         const resultDiv  = document.getElementById("checkResult");
         const bannedList = document.getElementById("bannedList");
-        let html = stadHtml;
+        let html = "";
 
         if (!suspended.length && !warnings.length && !injured.length)
             html += `<div style="background:#0a1f10;border-left:4px solid #2ecc71;padding:14px;border-radius:8px;"><span style="color:#2ecc71;font-weight:bold;">✅ All players eligible!</span></div>`;
@@ -539,9 +483,9 @@ function updateOverridesAfterMatch(team1, team2, score1, score2) {
     if (!window.db) return;
     const s1 = Number(score1), s2 = Number(score2);
     const DOC_IDS = {
-        "PARISANT GERMAN": "PARISANT_GERMAN",
-        "BARCELONA":       "BARCELONA",
-        "BAYER MUNICH":    "BAYER_MUNICH"
+        "PORTUGAL": "PORTUGAL",
+        "FRANCE":   "FRANCE",
+        "GERMANY":  "GERMANY"
     };
 
     // For each team involved, get their current override (or start from 0),
