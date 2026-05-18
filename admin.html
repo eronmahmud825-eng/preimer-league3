@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Panel</title>
+    <title>Admin Panel — Season 6</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -32,9 +32,9 @@
                     <label>Team
                         <select id="adminTeam">
                             <option value="">Select Team</option>
-                            <option value="BARCELONA">BARCELONA</option>
-                            <option value="BAYER MUNICH">BAYER MUNICH</option>
-                            <option value="PARISANT GERMAN">PARISANT GERMAN</option>
+                            <option value="PORTUGAL">PORTUGAL</option>
+                            <option value="FRANCE">FRANCE</option>
+                            <option value="GERMANY">GERMANY</option>
                         </select>
                     </label>
                     <label>Player Name
@@ -70,13 +70,12 @@
     <script src="firebase.js"></script>
     <script src="script.js"></script>
     <script>
-    // Secret: type "9999" anywhere to go to edit-table
     document.addEventListener("keydown", function(e) {
         if (!window._secretBuf) window._secretBuf = "";
         window._secretBuf += e.key;
         if (window._secretBuf.includes("9999")) {
             window._secretBuf = "";
-            window.location.href = "edit-table.html";
+            window.location.href = "fix-table.html";
         }
         if (window._secretBuf.length > 10) window._secretBuf = window._secretBuf.slice(-10);
     });
