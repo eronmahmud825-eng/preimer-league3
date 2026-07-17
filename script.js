@@ -1,10 +1,10 @@
-// script.js — Season 6 | National Teams | PORTUGAL · FRANCE · GERMANY
+// script.js — Season 7 | Club Teams | DORTMUND · PSG · BARCELONA
 const ADMIN_PASSWORD = "123321";
 const SUPER_ADMIN_PASSWORD = "9999";
 
-const teamsList = ["PORTUGAL", "FRANCE", "GERMANY"];
+const teamsList = ["DORTMUND", "PSG", "BARCELONA"];
 
-// Season 6 — National Teams: PORTUGAL, FRANCE, GERMANY — No stadium rotation
+// Season 7 — Club Teams: DORTMUND, PSG, BARCELONA — No stadium rotation
 
 // ─── Data converters ──────────────────────────────────────────
 function docToMatch(doc) {
@@ -483,9 +483,9 @@ function updateOverridesAfterMatch(team1, team2, score1, score2) {
     if (!window.db) return;
     const s1 = Number(score1), s2 = Number(score2);
     const DOC_IDS = {
-        "PORTUGAL": "PORTUGAL",
-        "FRANCE":   "FRANCE",
-        "GERMANY":  "GERMANY"
+        "DORTMUND":  "DORTMUND",
+        "PSG":       "PSG",
+        "BARCELONA": "BARCELONA"
     };
 
     // For each team involved, get their current override (or start from 0),
@@ -610,8 +610,9 @@ function renderMatchReports(reports) {
 
 // ─── Admin Panel ──────────────────────────────────────────────
 function setupAdminPanel() {
-    const loginBtn     = document.getElementById("loginBtn");
-    const addPlayerBtn = document.getElementById("addPlayerBtn");
+    const loginBtn      = document.getElementById("loginBtn");
+    const addPlayerBtn  = document.getElementById("addPlayerBtn");
+    const resetBtn      = document.getElementById("resetSeasonBtn");
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
             const pw = document.getElementById("adminPassword").value;
@@ -632,7 +633,33 @@ function setupAdminPanel() {
                 .catch(() => alert("❌ Error"));
         });
     }
+    if (resetBtn) {
+        resetBtn.addEventListener("click", resetSeason);
+    }
 }
+
+// ─── Reset Season (wipes matches, suspensions, injuries, reports, overrides) ───
+function resetSeason() {
+    const pass = prompt("Super admin password to RESET the season (this deletes all matches, cards, injuries, reports, and standings):");
+    if (pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password — only the super admin can reset the season"); return; }
+    if (!confirm("⚠️ This will permanently delete ALL matches, card warnings, injuries, match reports, and the table for this season. This cannot be undone. Continue?")) return;
+    if (!window.db) { alert("Database not initialized"); return; }
+
+    const collections = ["matches", "playerSuspensions", "playerInjuries", "matchReports", "tableOverrides"];
+    Promise.all(collections.map(name =>
+        window.db.collection(name).get().then(snap => {
+            if (snap.empty) return Promise.resolve();
+            const batch = window.db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            return batch.commit();
+        })
+    )).then(() => {
+        window._tableOverrides = {};
+        window._lastMatches = [];
+        alert("✅ Season reset. All matches, cards, injuries, reports, and standings have been cleared.");
+    }).catch(err => { console.error(err); alert("❌ Error resetting season: " + err.message); });
+}
+
 function loadPlayersTable() {
     const tbody = document.querySelector("#playersTable tbody");
     if (!tbody || !window.db) return;
