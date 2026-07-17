@@ -3,13 +3,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Panel — Season 6</title>
+    <title>Admin Panel — Season 7</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="container">
         <h1 class="title">🔐 Admin Panel</h1>
-
         <!-- Login -->
         <div class="form-card" id="passwordForm">
             <h3>Login</h3>
@@ -23,7 +22,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Admin Content -->
         <div id="adminContent" style="display:none;">
             <div class="form-card">
@@ -32,9 +30,9 @@
                     <label>Team
                         <select id="adminTeam">
                             <option value="">Select Team</option>
-                            <option value="PORTUGAL">PORTUGAL</option>
-                            <option value="FRANCE">FRANCE</option>
-                            <option value="GERMANY">GERMANY</option>
+                            <option value="DORTMUND">DORTMUND</option>
+                            <option value="PSG">PSG</option>
+                            <option value="BARCELONA">BARCELONA</option>
                         </select>
                     </label>
                     <label>Player Name
@@ -45,7 +43,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="table-card">
                 <div class="table-container">
                     <table id="playersTable" aria-label="Players list">
@@ -58,13 +55,21 @@
                     </table>
                 </div>
             </div>
-
+            <div class="form-card" style="border-color:rgba(231,76,60,0.35);">
+                <h3 style="color:#e74c3c;">🧨 Reset Season</h3>
+                <p class="muted" style="margin:0 0 12px;font-size:0.85em;">
+                    Wipes all matches, card warnings, injuries, match reports and the league table.
+                    Requires the super admin password. This cannot be undone.
+                </p>
+                <div class="form-actions">
+                    <button id="resetSeasonBtn" style="background:#e74c3c;border-color:#e74c3c;">🧨 Reset Season</button>
+                </div>
+            </div>
             <div class="btn-row">
                 <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
             </div>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="firebase.js"></script>
