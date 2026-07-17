@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Generate — Season 7</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .photo-box {
+            border: 2px dashed #1e3048; border-radius: 14px; padding: 20px;
+            text-align: center; margin-bottom: 16px; background: #0a1620;
+        }
+        .photo-box input[type="file"] { display: none; }
+        .photo-label {
+            display: inline-block; background: linear-gradient(135deg,#00c853,#00e676);
+            color: #000; font-weight: 700; padding: 12px 22px; border-radius: 10px;
+            cursor: pointer; font-family: inherit; letter-spacing: 0.03em;
+        }
+        #photoPreview { max-width: 100%; max-height: 260px; border-radius: 10px; margin-top: 14px; display: none; }
+        #ocrStatus { font-size: 0.85rem; color: #8faac8; margin-top: 10px; min-height: 1.2em; }
+        #detectedSummary {
+            margin-top: 14px; padding: 12px; border-radius: 10px; font-size: 0.9rem;
+            background: rgba(0,200,83,0.06); border: 1px solid rgba(0,200,83,0.2); line-height:1.6;
+        }
+        #analyzeBtn { margin-top: 14px; }
+        details.ocr-raw { margin-top: 12px; text-align: left; font-size: 0.78rem; color: #4d6a85; }
+        details.ocr-raw pre { white-space: pre-wrap; word-break: break-word; background:#050c14; padding:10px; border-radius:8px; margin-top:6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">📸 AI Generate Result</h1>
+        <p class="muted" style="text-align:center;margin-top:-8px;margin-bottom:18px;font-size:0.85em;">
+            Take or upload a photo of the final score — it'll try to read the teams and score for you.
+        </p>
+
+        <div class="photo-box">
+            <label class="photo-label" for="photoInput">📷 Take / Upload Photo</label>
+            <input type="file" id="photoInput" accept="image/*" capture="environment" />
+            <img id="photoPreview" alt="Selected photo preview" />
+            <div>
+                <button id="analyzeBtn" style="display:none;">🔍 Analyze Photo</button>
+            </div>
+            <div id="ocrStatus"></div>
+            <div id="detectedSummary" style="display:none;"></div>
+            <details class="ocr-raw" id="ocrRawWrap" style="display:none;">
+                <summary>Raw text the AI read (for debugging)</summary>
+                <pre id="ocrRaw"></pre>
+            </details>
+        </div>
+
+        <!-- Match Form — same IDs as matchweek.html, so script.js's setupMatchWeek() just works -->
+        <div id="matchForm" class="form-card">
+            <h3>Confirm &amp; Save Result</h3>
+            <div class="form-container">
+                <label>Team 1
+                    <select id="team1">
+                        <option value="">Select Team</option>
+                        <option>DORTMUND</option>
+                        <option>PSG</option>
+                        <option>BARCELONA</option>
+                    </select>
+                </label>
+                <label>Score 1 <input id="score1" type="number" min="0" placeholder="0" /></label>
+                <label>Team 2
+                    <select id="team2">
+                        <option value="">Select Team</option>
+                        <option>DORTMUND</option>
+                        <option>PSG</option>
+                        <option>BARCELONA</option>
+                    </select>
+                </label>
+                <label>Score 2 <input id="score2" type="number" min="0" placeholder="0" /></label>
+                <label>Date <input id="matchDate" type="date" /></label>
+                <label>Admin Password <input id="adminPass" type="password" placeholder="Password" /></label>
+                <div class="form-actions">
+                    <button id="saveMatchBtn">💾 Save Match</button>
+                    <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card & Injury Form (shown after match saved) — same IDs as matchweek.html -->
+        <div id="cardForm" style="display:none;">
+            <div class="form-card">
+                <h3 id="currentGWLabel">Current Match</h3>
+            </div>
+
+            <!-- Cards -->
+            <div class="form-card">
+                <h3>🟡🔴 Card Warning</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="cardTeam">
+                            <option value="">Select Team</option>
+                        </select>
+                    </label>
+                    <label>Player
+                        <select id="playerSelect">
+                            <option value="">Select Player</option>
+                        </select>
+                    </label>
+                    <label>Card Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="cardType" value="yellow" /> 🟡 Yellow Card</label>
+                        <label><input type="radio" name="cardType" value="red" /> 🔴 Red Card (3 match ban)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addCardBtn">➕ Add Card</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Injuries -->
+            <div class="form-card">
+                <h3>🏥 Record Injury</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="injuryTeam">
+                            <option value="">Select Team</option>
+                        </select>
+                    </label>
+                    <label>Player
+                        <select id="injuryPlayerSelect">
+                            <option value="">Select Player</option>
+                        </select>
+                    </label>
+                    <label>Injury Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="injuryType" value="easy" /> 🟡 Easy Injury (3 matches)</label>
+                        <label><input type="radio" name="injuryType" value="hard" /> 🔴 Hard Injury (5 matches)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addInjuryBtn">➕ Add Injury</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button id="okBtn" style="background:linear-gradient(135deg,#00c853,#00e676);color:#000;font-weight:700;">✅ Done — Save All</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script>
+    (function() {
+        const fileInput   = document.getElementById("photoInput");
+        const preview     = document.getElementById("photoPreview");
+        const analyzeBtn  = document.getElementById("analyzeBtn");
+        const statusEl    = document.getElementById("ocrStatus");
+        const summaryEl   = document.getElementById("detectedSummary");
+        const rawWrap     = document.getElementById("ocrRawWrap");
+        const rawEl       = document.getElementById("ocrRaw");
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+            analyzeBtn.style.display = "inline-block";
+            summaryEl.style.display = "none";
+            rawWrap.style.display = "none";
+            statusEl.textContent = "";
+        });
+
+        analyzeBtn.addEventListener("click", async () => {
+            const file = fileInput.files[0];
+            if (!file) { alert("❌ Choose or take a photo first"); return; }
+            if (typeof Tesseract === "undefined") {
+                alert("❌ OCR library failed to load. Check your internet connection and try again.");
+                return;
+            }
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = "🔎 Reading photo...";
+            statusEl.textContent = "Running text recognition — this can take a few seconds...";
+
+            try {
+                const { data } = await Tesseract.recognize(file, "eng");
+                const text = data.text || "";
+                rawEl.textContent = text.trim() || "(no text found)";
+                rawWrap.style.display = "block";
+                parseAndFill(text);
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "";
+                alert("❌ Could not read the photo: " + err.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = "🔍 Analyze Photo";
+                statusEl.textContent = "";
+            }
+        });
+
+        function parseAndFill(text) {
+            const upper = text.toUpperCase();
+
+            // teamsList comes from script.js (loaded before this script, shares top-level scope)
+            const found = teamsList
+                .map(name => ({ name, idx: upper.indexOf(name) }))
+                .filter(t => t.idx !== -1)
+                .sort((a, b) => a.idx - b.idx);
+
+            // score pattern like "4-2", "4 - 2", "4:2"
+            const scoreMatch = text.match(/(\d{1,2})\s*[-:–—]\s*(\d{1,2})/);
+
+            const team1El = document.getElementById("team1");
+            const team2El = document.getElementById("team2");
+            const score1El = document.getElementById("score1");
+            const score2El = document.getElementById("score2");
+            const dateEl = document.getElementById("matchDate");
+
+            if (found[0]) team1El.value = found[0].name;
+            if (found[1]) team2El.value = found[1].name;
+            if (scoreMatch) { score1El.value = scoreMatch[1]; score2El.value = scoreMatch[2]; }
+            if (!dateEl.value) dateEl.valueAsDate = new Date();
+
+            summaryEl.style.display = "block";
+            if (found.length >= 2 && scoreMatch) {
+                summaryEl.innerHTML =
+                    `✅ Detected: <strong>${found[0].name} ${scoreMatch[1]} - ${scoreMatch[2]} ${found[1].name}</strong>` +
+                    `<br/><span style="color:#f39c12;">⚠️ Double-check the fields below before saving — photo reading isn't perfect.</span>`;
+            } else if (found.length || scoreMatch) {
+                summaryEl.innerHTML =
+                    `⚠️ Only partly detected it. Filled in what it found — please complete the rest manually below.`;
+            } else {
+                summaryEl.innerHTML =
+                    `⚠️ Couldn't confidently read the photo. Please fill in the fields manually below.`;
+            }
+            document.getElementById("matchForm").scrollIntoView({ behavior: "smooth" });
+        }
+    })();
+    </script>
+</body>
+</html>
