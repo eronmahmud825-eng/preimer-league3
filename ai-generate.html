@@ -35,11 +35,14 @@
         </p>
 
         <div class="photo-box">
-            <label class="photo-label" for="photoInput">📷 Take / Upload Photo</label>
-            <input type="file" id="photoInput" accept="image/*" capture="environment" />
+            <label class="photo-label" for="photoInputCamera">📷 Take Photo</label>
+            <input type="file" id="photoInputCamera" accept="image/*" capture="environment" />
+            <label class="photo-label" for="photoInputGallery" style="background:linear-gradient(135deg,#2d3f55,#1e2a3a);color:#fff;margin-left:8px;">🖼️ Choose from Gallery</label>
+            <input type="file" id="photoInputGallery" accept="image/*" />
             <img id="photoPreview" alt="Selected photo preview" />
             <div>
                 <button id="analyzeBtn" style="display:none;">🔍 Analyze Photo</button>
+                <button id="skipBtn" type="button" style="display:none;background:#2d3f55;">⌨️ Skip — I'll type it in</button>
             </div>
             <div id="ocrStatus"></div>
             <div id="detectedSummary" style="display:none;"></div>
