@@ -11,7 +11,7 @@
         .warn-box p { color:#e57373;font-size:0.92rem;line-height:1.6; }
         .status-line { padding:6px 0;font-size:0.88rem;border-bottom:1px solid #1e3048; }
         .status-line.ok { color:#00c853; }
-        .status-line.err { color:#f44336; }
+        .status-line.err { color:#f44336;font-weight:700; }
         .status-line.info { color:#8faac8; }
         #log { margin-top:12px;max-height:320px;overflow-y:auto; }
         .progress-bar { height:6px;background:#1e3048;border-radius:3px;margin-top:12px;overflow:hidden; }
@@ -19,6 +19,7 @@
         #clearBtn { background:#c62828 !important;color:#fff !important;font-size:1.05rem;padding:14px;width:100%;margin-top:4px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:0.06em;text-transform:uppercase; }
         #clearBtn:hover:not(:disabled) { background:#b71c1c !important; }
         #clearBtn:disabled { opacity:0.45;cursor:not-allowed; }
+        #dbStatus { font-size:0.8rem;margin-top:8px;color:#4d6a85; }
     </style>
 </head>
 <body>
@@ -28,7 +29,7 @@
         <div class="warn-box">
             <h2>⚠️ DANGER ZONE</h2>
             <p>This will permanently delete <strong>ALL</strong> data from Firebase:<br/>
-            matches · players · suspensions · injuries · reports<br/>
+            matches · players · suspensions · injuries · reports · table<br/>
             <strong>This cannot be undone!</strong></p>
         </div>
 
@@ -42,6 +43,7 @@
                 </label>
                 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
                 <button id="clearBtn" disabled>🗑️ Clear Everything</button>
+                <div id="dbStatus">🔌 Connecting to Firebase…</div>
             </div>
         </div>
 
@@ -60,143 +62,120 @@
     <script src="firebase.js"></script>
 
     <script>
-        // MUST match the password in script.js
+        // MUST match the passwords in script.js
         const ADMIN_PASSWORD = "123321";
         const SUPER_ADMIN_PASSWORD = "9999";
 
+        const els = {
+            pass: document.getElementById("adminPass"),
+            confirm: document.getElementById("confirmText"),
+            btn: document.getElementById("clearBtn"),
+            progress: document.getElementById("progressFill"),
+            logCard: document.getElementById("logCard"),
+            log: document.getElementById("log"),
+            dbStatus: document.getElementById("dbStatus")
+        };
+
         function checkReady() {
-            const pass = document.getElementById("adminPass").value;
-            const confirm = document.getElementById("confirmText").value.trim();
-            // Allow both admin and super admin passwords
-            const validPass = (pass === ADMIN_PASSWORD || pass === SUPER_ADMIN_PASSWORD);
-            document.getElementById("clearBtn").disabled = !(validPass && confirm === "DELETE ALL");
+            const validPass = (els.pass.value === ADMIN_PASSWORD || els.pass.value === SUPER_ADMIN_PASSWORD);
+            const validConfirm = els.confirm.value.trim() === "DELETE ALL";
+            els.btn.disabled = !(validPass && validConfirm && window.db);
         }
-        
-        document.getElementById("adminPass").addEventListener("input", checkReady);
-        document.getElementById("confirmText").addEventListener("input", checkReady);
+        els.pass.addEventListener("input", checkReady);
+        els.confirm.addEventListener("input", checkReady);
 
         function addLog(msg, type) {
-            type = type || "info";
-            document.getElementById("logCard").style.display = "block";
+            els.logCard.style.display = "block";
             const div = document.createElement("div");
-            div.className = "status-line " + type;
+            div.className = "status-line " + (type || "info");
             div.textContent = msg;
-            const log = document.getElementById("log");
-            log.appendChild(div);
-            log.scrollTop = log.scrollHeight;
+            els.log.appendChild(div);
+            els.log.scrollTop = els.log.scrollHeight;
         }
 
-        function setProgress(pct) {
-            document.getElementById("progressFill").style.width = pct + "%";
-        }
+        function setProgress(pct) { els.progress.style.width = pct + "%"; }
 
-        function getDB() {
+        // Wait for window.db to appear (set by firebase.js)
+        function waitForDB() {
             return new Promise(function(resolve, reject) {
+                if (window.db) { resolve(window.db); return; }
                 let attempts = 0;
-                const check = setInterval(function() {
+                const iv = setInterval(function() {
                     attempts++;
-                    if (window.db) { 
-                        clearInterval(check); 
-                        resolve(window.db); 
-                    }
-                    else if (attempts > 50) { 
-                        clearInterval(check); 
-                        reject(new Error("Firebase did not initialize. Check your firebase.js file.")); 
+                    if (window.db) { clearInterval(iv); resolve(window.db); }
+                    else if (attempts > 50) {
+                        clearInterval(iv);
+                        reject(new Error("Firebase never initialized (window.db is undefined). Check that firebase.js loaded correctly and your Firebase config is valid."));
                     }
                 }, 100);
             });
         }
 
-        function deleteCollection(db, colName) {
-            return db.collection(colName).get().then(function(snap) {
-                if (snap.empty) {
-                    addLog("  → '" + colName + "' is already empty ✓", "ok");
-                    return 0;
-                }
-                
-                const docs = snap.docs;
-                let deleted = 0;
-                
-                // Delete in batches of 400
-                function deleteBatch() {
-                    if (deleted >= docs.length) {
-                        addLog("  → '" + colName + "': deleted " + docs.length + " record(s) ✓", "ok");
-                        return Promise.resolve(docs.length);
-                    }
-                    
-                    const batch = db.batch();
-                    const chunk = docs.slice(deleted, deleted + 400);
-                    chunk.forEach(function(doc) {
-                        batch.delete(doc.ref);
-                    });
-                    
-                    return batch.commit().then(function() {
-                        deleted += chunk.length;
-                        return deleteBatch();
-                    });
-                }
-                
-                return deleteBatch();
-            }).catch(function(err) {
-                addLog("  → '" + colName + "' error: " + err.message, "err");
-                return 0;
-            });
+        waitForDB().then(function() {
+            els.dbStatus.textContent = "✅ Firebase connected";
+            els.dbStatus.style.color = "#00c853";
+            checkReady();
+        }).catch(function(err) {
+            els.dbStatus.textContent = "❌ " + err.message;
+            els.dbStatus.style.color = "#f44336";
+        });
+
+        async function deleteCollection(db, colName) {
+            const snap = await db.collection(colName).get();
+            if (snap.empty) {
+                addLog("  → '" + colName + "' is already empty ✓", "ok");
+                return;
+            }
+            const docs = snap.docs;
+            for (let i = 0; i < docs.length; i += 400) {
+                const chunk = docs.slice(i, i + 400);
+                const batch = db.batch();
+                chunk.forEach(doc => batch.delete(doc.ref));
+                await batch.commit(); // will throw on permission-denied etc — caught by caller
+            }
+            addLog("  → '" + colName + "': deleted " + docs.length + " record(s) ✓", "ok");
         }
 
-        document.getElementById("clearBtn").addEventListener("click", function() {
-            const btn = document.getElementById("clearBtn");
-            btn.disabled = true;
-            btn.textContent = "⏳ Clearing...";
+        els.btn.addEventListener("click", async function() {
+            els.btn.disabled = true;
+            els.btn.textContent = "⏳ Clearing...";
             setProgress(5);
+            els.log.innerHTML = "";
 
-            getDB().then(function(db) {
+            const collections = [
+                "matches", "players", "playerSuspensions",
+                "playerInjuries", "matchReports", "tableOverrides"
+            ];
+
+            try {
+                const db = await waitForDB();
                 addLog("🔌 Firebase connected", "ok");
                 setProgress(10);
 
-                var collections = [
-                    "matches",
-                    "players",
-                    "playerSuspensions",
-                    "playerInjuries",
-                    "matchReports",
-                    "tableOverrides",
-                    "cards",
-                    "cardWarnings"
-                ];
-
-                var index = 0;
-                
-                function processNext() {
-                    if (index >= collections.length) {
-                        setProgress(100);
-                        addLog("", "info");
-                        addLog("🎉 ALL DATA CLEARED SUCCESSFULLY!", "ok");
-                        addLog("Your database is now completely empty.", "ok");
-                        addLog("Go to Admin to add new players.", "ok");
-                        btn.textContent = "✅ Done!";
-                        btn.style.background = "#00c853";
-                        btn.style.color = "#000";
-                        return;
-                    }
-                    
-                    var colName = collections[index];
+                for (let i = 0; i < collections.length; i++) {
+                    const colName = collections[i];
                     addLog("Deleting '" + colName + "'...", "info");
-                    
-                    return deleteCollection(db, colName).then(function() {
-                        setProgress(10 + Math.round((index + 1) / collections.length * 88));
-                        index++;
-                        return processNext();
-                    });
+                    await deleteCollection(db, colName);
+                    setProgress(10 + Math.round(((i + 1) / collections.length) * 88));
                 }
-                
-                return processNext();
-                
-            }).catch(function(err) {
-                addLog("❌ " + err.message, "err");
+
+                setProgress(100);
+                addLog("", "info");
+                addLog("🎉 ALL DATA CLEARED SUCCESSFULLY!", "ok");
+                addLog("Your database is now completely empty.", "ok");
+                addLog("Go to Admin to add new players.", "ok");
+                els.btn.textContent = "✅ Done!";
+                els.btn.style.background = "#00c853";
+                els.btn.style.color = "#000";
+            } catch (err) {
                 console.error(err);
-                btn.disabled = false;
-                btn.textContent = "🗑️ Retry";
-            });
+                addLog("❌ FAILED: " + err.message, "err");
+                if (String(err.message).toLowerCase().includes("permission")) {
+                    addLog("→ This is almost always a Firestore Security Rules issue — go to the Firebase console → Firestore → Rules, and make sure delete access is allowed for this app.", "err");
+                }
+                els.btn.disabled = false;
+                els.btn.textContent = "🗑️ Retry";
+            }
         });
     </script>
 </body>
