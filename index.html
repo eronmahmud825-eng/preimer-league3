@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Football System — Season 6</title>
+<title>Football System — Season 7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap"/>
 <link rel="stylesheet" href="style.css"/>
@@ -75,7 +75,7 @@
 #splash.exit{animation:sExit .8s cubic-bezier(.4,0,1,1) forwards;}
 @keyframes sExit{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(1.03);}}
 
-/* ══ NATIONAL TEAM FLAGS ══ */
+/* ══ CLUB TEAMS ══ */
 .nations-strip{
   max-width:700px;margin:0 auto 20px;padding:0 16px;
 }
@@ -96,12 +96,15 @@
 }
 .nation-card:hover{transform:translateY(-3px);}
 .nation-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.nc-pt::before{background:linear-gradient(90deg,transparent,#006600,transparent);}
-.nc-fr::before{background:linear-gradient(90deg,transparent,#002395,transparent);}
-.nc-de::before{background:linear-gradient(90deg,transparent,#000,transparent);}
-.nc-pt:hover{border-color:rgba(0,102,0,0.4);}
-.nc-fr:hover{border-color:rgba(0,35,149,0.4);}
-.nc-de:hover{border-color:rgba(200,200,200,0.25);}
+/* Borussia Dortmund — yellow/black */
+.nc-1::before{background:linear-gradient(90deg,transparent,#fde100,transparent);}
+.nc-1:hover{border-color:rgba(253,225,0,0.4);}
+/* Paris Saint-Germain — navy/red */
+.nc-2::before{background:linear-gradient(90deg,transparent,#004170,transparent);}
+.nc-2:hover{border-color:rgba(218,41,28,0.4);}
+/* FC Barcelona — garnet/blue */
+.nc-3::before{background:linear-gradient(90deg,transparent,#a50044,transparent);}
+.nc-3:hover{border-color:rgba(0,77,152,0.4);}
 .nation-flag{font-size:2.2rem;display:block;margin-bottom:6px;}
 .nation-name{
   font-family:'Bebas Neue',sans-serif;font-size:1rem;
@@ -137,7 +140,7 @@
     </div>
     <div class="sp-eyebrow">Welcome to</div>
     <div class="sp-title">FOOTBALL<br/><span class="acc">SYSTEM</span></div>
-    <div class="sp-season">Season 6 &nbsp;·&nbsp; National Teams</div>
+    <div class="sp-season">Season 7 &nbsp;·&nbsp; Club Teams</div>
     <div class="sp-line"></div>
     <div class="sp-prog-wrap">
       <div class="sp-prog-row"><span>Entering System</span><span id="spPct">0%</span></div>
@@ -149,30 +152,30 @@
 
 <!-- ══ MAIN PAGE ══ -->
 <div class="container" style="text-align:center;">
-  <div class="season-badge"><span class="new-dot"></span> Season 6 — National Teams</div>
+  <div class="season-badge"><span class="new-dot"></span> Season 7 — Club Teams</div>
   <h1>⚽ Football League</h1>
 
-  <!-- ══ NATIONAL TEAMS STRIP ══ -->
+  <!-- ══ CLUB TEAMS STRIP ══ -->
   <div class="nations-strip">
     <div class="nations-label">🌍 Teams</div>
     <div class="nations-grid">
 
-      <div class="nation-card nc-pt">
-        <span class="nation-flag">🇵🇹</span>
-        <div class="nation-name">PORTUGAL</div>
-        <div class="nation-sub">National Team</div>
+      <div class="nation-card nc-1">
+        <span class="nation-flag">🟡⚫</span>
+        <div class="nation-name">DORTMUND</div>
+        <div class="nation-sub">Club Team</div>
       </div>
 
-      <div class="nation-card nc-fr">
-        <span class="nation-flag">🇫🇷</span>
-        <div class="nation-name">FRANCE</div>
-        <div class="nation-sub">National Team</div>
+      <div class="nation-card nc-2">
+        <span class="nation-flag">🔵🔴</span>
+        <div class="nation-name">PSG</div>
+        <div class="nation-sub">Club Team</div>
       </div>
 
-      <div class="nation-card nc-de">
-        <span class="nation-flag">🇩🇪</span>
-        <div class="nation-name">GERMANY</div>
-        <div class="nation-sub">National Team</div>
+      <div class="nation-card nc-3">
+        <span class="nation-flag">🔴🔵</span>
+        <div class="nation-name">BARCELONA</div>
+        <div class="nation-sub">Club Team</div>
       </div>
 
     </div>
@@ -228,7 +231,7 @@
   var pctEl=document.getElementById("spPct");
   var DURATION=3000;
 
-  if(sessionStorage.getItem("splashDone6")){
+  if(sessionStorage.getItem("splashDone7")){
     splash.style.display="none"; cancelAnimationFrame(animId); return;
   }
   var t0=performance.now();
@@ -241,7 +244,7 @@
   }
   requestAnimationFrame(tick);
   function exit(){
-    sessionStorage.setItem("splashDone6","1");
+    sessionStorage.setItem("splashDone7","1");
     splash.classList.add("exit");
     setTimeout(function(){ splash.style.display="none"; cancelAnimationFrame(animId); },800);
   }
