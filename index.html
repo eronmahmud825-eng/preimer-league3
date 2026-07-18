@@ -125,6 +125,103 @@
 }
 .new-dot{width:7px;height:7px;border-radius:50%;background:#00c853;animation:blink 1.2s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ══ LOGIN OVERLAY ══ */
+#loginOverlay{
+  position:fixed;inset:0;z-index:8000;
+  background:#020507;
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+}
+.login-card{
+  background:#0d1828;border:1px solid #1e3048;border-radius:18px;
+  padding:32px 28px;max-width:340px;width:100%;text-align:center;
+  animation:spIn .5s cubic-bezier(.16,1,.3,1) both;
+}
+.login-icon{font-size:2.4rem;margin-bottom:10px;}
+.login-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.05em;color:#fff;margin-bottom:4px;}
+.login-sub{font-size:0.8rem;color:#2d4a65;margin-bottom:20px;line-height:1.5;}
+.login-input{
+  width:100%;padding:14px;background:#070d14;border:1.5px solid #1e3048;
+  border-radius:10px;color:#fff;font-size:1.3rem;text-align:center;
+  letter-spacing:0.3em;outline:none;margin-bottom:12px;font-family:inherit;
+}
+.login-input:focus{border-color:#00c853;}
+.login-btn{
+  width:100%;padding:13px;background:linear-gradient(135deg,#00c853,#00e676);
+  color:#000;border:none;border-radius:10px;font-weight:800;font-size:0.95rem;
+  cursor:pointer;letter-spacing:0.04em;
+}
+#loginError{color:#e74c3c;font-size:0.82rem;margin-top:10px;display:none;}
+
+/* ══ WELCOME BAR / PROFILE ══ */
+#welcomeBar{
+  display:none;position:fixed;top:14px;right:14px;z-index:500;
+  align-items:center;gap:8px;cursor:pointer;
+  background:#0d1828;border:1px solid #1e3048;border-radius:24px;
+  padding:8px 16px 8px 10px;transition:border-color .2s;
+}
+#welcomeBar:hover{border-color:rgba(0,200,83,0.35);}
+.profile-avatar{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,#00c853,#00e676);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#000;font-size:0.8rem;flex-shrink:0;
+}
+#welcomeName{font-size:0.82rem;color:#fff;font-weight:600;letter-spacing:0.02em;}
+
+#profileDropdown{
+  display:none;position:fixed;top:64px;right:14px;z-index:501;
+  background:#0d1828;border:1px solid #1e3048;border-radius:14px;
+  min-width:220px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.5);
+}
+#profileDropdown.open{display:block;animation:fu .18s ease both;}
+.pd-item{
+  display:flex;align-items:center;gap:10px;padding:13px 16px;
+  font-size:0.85rem;color:#c8d8e8;cursor:pointer;transition:background .15s;
+  border-bottom:1px solid #142235;
+}
+.pd-item:last-child{border-bottom:none;}
+.pd-item:hover{background:#142235;}
+.pd-item.danger{color:#ff6b6b;}
+
+/* ══ MODALS ══ */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px;
+}
+.modal-backdrop.open{display:flex;}
+.modal-box{
+  background:#0d1828;border:1px solid #1e3048;border-radius:18px;
+  max-width:480px;width:100%;max-height:85vh;overflow-y:auto;
+  padding:24px;position:relative;
+}
+.modal-close{
+  position:absolute;top:14px;right:16px;background:none;border:none;
+  color:#4d6a85;font-size:1.3rem;cursor:pointer;line-height:1;
+}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:0.04em;color:#fff;margin-bottom:16px;}
+
+/* dashboard stat grid */
+.dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.dash-stat{background:#070d14;border:1px solid #1e3048;border-radius:12px;padding:12px;text-align:center;}
+.dash-stat .num{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:#00c853;}
+.dash-stat .lbl{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;margin-top:2px;}
+.dash-stat.gold .num{color:#ffd600;}
+.dash-teams{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.dash-team-chip{
+  background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.25);
+  color:#00c853;font-size:0.75rem;padding:4px 10px;border-radius:14px;
+}
+.dash-loading{text-align:center;color:#2d4a65;padding:30px 0;font-size:0.85rem;}
+.dash-empty{text-align:center;color:#4d6a85;padding:24px 10px;font-size:0.85rem;line-height:1.6;}
+
+.coach-pick-btn{
+  width:100%;padding:14px;margin-bottom:10px;background:#070d14;
+  border:1.5px solid #1e3048;border-radius:12px;color:#fff;font-size:0.95rem;
+  font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;
+}
+.coach-pick-btn:hover{border-color:rgba(0,200,83,0.4);}
 </style>
 </head>
 <body>
@@ -150,8 +247,49 @@
   </div>
 </div>
 
-<!-- ══ MAIN PAGE ══ -->
-<div class="container" style="text-align:center;">
+<!-- ══ LOGIN OVERLAY ══ -->
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-icon">🔑</div>
+    <div class="login-title">COACH LOGIN</div>
+    <div class="login-sub">Enter your coach code to continue</div>
+    <input id="loginCodeInput" class="login-input" type="password" inputmode="numeric" placeholder="• • • • •" maxlength="6" autocomplete="off" />
+    <button class="login-btn" id="loginSubmitBtn">🔓 Login</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- ══ WELCOME BAR ══ -->
+<div id="welcomeBar">
+  <div class="profile-avatar" id="profileAvatar">?</div>
+  <span id="welcomeName">Coach</span>
+</div>
+<div id="profileDropdown">
+  <div class="pd-item" id="myDashboardBtn">📊 My Dashboard</div>
+  <div class="pd-item" id="viewAnotherCoachBtn" style="display:none;">👥 Show Dashboard — Another Coach</div>
+  <div class="pd-item danger" id="logoutBtn">🚪 Logout</div>
+</div>
+
+<!-- ══ DASHBOARD MODAL ══ -->
+<div class="modal-backdrop" id="dashboardModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('dashboardModal')">✕</button>
+    <div class="modal-title" id="dashboardTitle">📊 Dashboard</div>
+    <div id="dashboardBody"><div class="dash-loading">Loading...</div></div>
+  </div>
+</div>
+
+<!-- ══ COACH PICKER MODAL ══ -->
+<div class="modal-backdrop" id="coachPickerModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('coachPickerModal')">✕</button>
+    <div class="modal-title">👥 Which coach?</div>
+    <div id="coachPickerBody"></div>
+  </div>
+</div>
+
+<!-- ══ MAIN PAGE (hidden until logged in) ══ -->
+<div class="container" id="mainContent" style="text-align:center;display:none;">
   <div class="season-badge"><span class="new-dot"></span> Season 7 — Club Teams</div>
   <h1>⚽ Football League</h1>
 
@@ -192,9 +330,21 @@
     <button class="check-btn" onclick="location.href='check-games.html'">🔍 Check Games</button>
     <button onclick="location.href='injuries.html'" style="border-color:rgba(255,111,0,0.3);">🏥 Injuries</button>
     <button class="admin-btn" onclick="location.href='admin.html'">🔐 Admin</button>
+    <button onclick="location.href='betting.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">🎰 Betting</button>
+    <button onclick="location.href='champions.html'" style="border-color:rgba(255,214,0,0.4);color:#ffd600;">🏆 Champions</button>
+    <button onclick="location.href='news.html'" style="border-color:rgba(0,200,83,0.3);color:#00c853;">📰 ئەخبارەکان</button>
+    <button onclick="location.href='records.html'" style="border-color:rgba(255,183,77,0.4);color:#ffb74d;">🏅 History Records</button>
+
+    <!-- Eron-only admin tools -->
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='score-admin-coach.html'">📊 Score Admin Coach</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='fix-table.html'">📝 Change Table Point</button>
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
 <script>
 (function(){
   var canvas = document.getElementById("pCanvas");
@@ -229,7 +379,9 @@
   var DURATION=3000;
 
   if(sessionStorage.getItem("splashDone7")){
-    splash.style.display="none"; cancelAnimationFrame(animId); return;
+    splash.style.display="none"; cancelAnimationFrame(animId);
+    initAuthUI();
+    return;
   }
   var t0=performance.now();
   function tick(now){
@@ -243,9 +395,147 @@
   function exit(){
     sessionStorage.setItem("splashDone7","1");
     splash.classList.add("exit");
-    setTimeout(function(){ splash.style.display="none"; cancelAnimationFrame(animId); },800);
+    setTimeout(function(){
+      splash.style.display="none"; cancelAnimationFrame(animId);
+      initAuthUI();
+    },800);
   }
 })();
+
+// ══════════════════ AUTH / LOGIN / DASHBOARD ══════════════════
+function initAuthUI() {
+  var coach = getLoggedInCoach();
+  if (coach) {
+    showLoggedInUI(coach);
+  } else {
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("loginCodeInput").focus();
+  }
+}
+
+function showLoggedInUI(coach) {
+  document.getElementById("loginOverlay").style.display = "none";
+  document.getElementById("mainContent").style.display = "block";
+  document.getElementById("welcomeBar").style.display = "flex";
+  document.getElementById("welcomeName").textContent = "Welcome, " + coach.name;
+  document.getElementById("profileAvatar").textContent = coach.name.charAt(0).toUpperCase();
+  if (coach.isAdmin) {
+    document.querySelectorAll(".admin-only-btn").forEach(function(el){ el.style.display = "inline-block"; });
+    document.getElementById("viewAnotherCoachBtn").style.display = "flex";
+  }
+}
+
+document.getElementById("loginSubmitBtn").addEventListener("click", doLogin);
+document.getElementById("loginCodeInput").addEventListener("keydown", function(e){ if (e.key === "Enter") doLogin(); });
+
+function doLogin() {
+  var code = document.getElementById("loginCodeInput").value.trim();
+  var coach = COACHES[code];
+  var errEl = document.getElementById("loginError");
+  if (!coach) {
+    errEl.textContent = "❌ Invalid coach code";
+    errEl.style.display = "block";
+    document.getElementById("loginCodeInput").value = "";
+    return;
+  }
+  errEl.style.display = "none";
+  setLoggedInCoach(coach);
+  showLoggedInUI(coach);
+}
+
+// Profile dropdown toggle
+document.getElementById("welcomeBar").addEventListener("click", function(e){
+  document.getElementById("profileDropdown").classList.toggle("open");
+  e.stopPropagation();
+});
+document.addEventListener("click", function(e){
+  var dd = document.getElementById("profileDropdown");
+  if (dd.classList.contains("open") && !dd.contains(e.target) && e.target.id !== "welcomeBar") {
+    dd.classList.remove("open");
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", function(){
+  logoutCoach();
+  location.reload();
+});
+
+document.getElementById("myDashboardBtn").addEventListener("click", function(){
+  document.getElementById("profileDropdown").classList.remove("open");
+  var coach = getLoggedInCoach();
+  if (coach) openDashboard(coach.id, coach.name);
+});
+
+document.getElementById("viewAnotherCoachBtn").addEventListener("click", function(){
+  document.getElementById("profileDropdown").classList.remove("open");
+  var me = getLoggedInCoach();
+  var body = document.getElementById("coachPickerBody");
+  body.innerHTML = "";
+  Object.values(COACHES).forEach(function(c){
+    if (me && c.id === me.id) return; // skip self, that's "My Dashboard"
+    var btn = document.createElement("button");
+    btn.className = "coach-pick-btn";
+    btn.innerHTML = "👤 " + c.name;
+    btn.onclick = function(){ closeModal("coachPickerModal"); openDashboard(c.id, c.name); };
+    body.appendChild(btn);
+  });
+  document.getElementById("coachPickerModal").classList.add("open");
+});
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function waitForDBIndex(cb, n) {
+  n = n || 0;
+  if (window.db) { cb(); return; }
+  if (n > 80) { console.error("Firebase not available"); return; }
+  setTimeout(function(){ waitForDBIndex(cb, n+1); }, 100);
+}
+
+function openDashboard(coachId, coachName) {
+  document.getElementById("dashboardTitle").textContent = "📊 " + coachName + "'s Dashboard";
+  document.getElementById("dashboardBody").innerHTML = '<div class="dash-loading">Loading...</div>';
+  document.getElementById("dashboardModal").classList.add("open");
+  waitForDBIndex(function(){
+    window.db.collection("coachStats").doc(coachId).get().then(function(doc){
+      renderDashboard(doc.exists ? doc.data() : null);
+    }).catch(function(err){
+      document.getElementById("dashboardBody").innerHTML = '<div style="color:#e74c3c;text-align:center;padding:20px;">❌ ' + err.message + '</div>';
+    });
+  });
+}
+
+function renderDashboard(d) {
+  var body = document.getElementById("dashboardBody");
+  if (!d) {
+    body.innerHTML = '<div class="dash-empty">📭 No stats saved yet for this coach.<br/>Ask Eron to add them via <strong>Score Admin Coach</strong>.</div>';
+    return;
+  }
+  var teams = Array.isArray(d.teamsWon) ? d.teamsWon : [];
+  var teamsHtml = teams.length
+    ? teams.map(function(t){ return '<span class="dash-team-chip">🏆 ' + t + '</span>'; }).join("")
+    : '<span style="color:#4d6a85;font-size:0.8rem;">No teams recorded</span>';
+
+  body.innerHTML =
+    '<div class="dash-grid">' +
+      stat(d.seasonsWon, "Seasons Won", true) +
+      stat(d.totalPoint, "Total Points", true) +
+      stat(d.totalWin, "Total Wins") +
+      stat(d.totalLose, "Total Losses") +
+      stat(d.totalDraw, "Total Draws") +
+      stat(d.totalGF, "Total GF") +
+      stat(d.totalGA, "Total GA") +
+      stat(d.totalGD, "Total GD") +
+      stat(d.highestSeasonPoint, "Highest Pts / Season") +
+      stat(d.lowestSeasonPoint, "Lowest Pts / Season") +
+    '</div>' +
+    '<div style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;margin-bottom:6px;">🏆 Teams / National Teams Won</div>' +
+    '<div class="dash-teams">' + teamsHtml + '</div>';
+}
+function stat(val, label, gold) {
+  return '<div class="dash-stat' + (gold ? ' gold' : '') + '"><div class="num">' + (val !== undefined && val !== null ? val : 0) + '</div><div class="lbl">' + label + '</div></div>';
+}
 </script>
 </body>
 </html>
