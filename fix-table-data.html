@@ -1,150 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Edit League Table</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Segoe UI',sans-serif;
-  background:#04080f;color:#fff;
-  min-height:100vh;padding:24px 16px 60px;
-}
-body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(0,200,83,0.06) 0%,transparent 60%);
-}
-.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;}
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Change Table Point</title>
+    <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Segoe UI',sans-serif;
+      background:#04080f;color:#fff;
+      min-height:100vh;padding:24px 16px 60px;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(0,200,83,0.06) 0%,transparent 60%);
+    }
+    .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;}
 
-.page-title{
-  font-size:1.4rem;font-weight:800;color:#00c853;
-  margin-bottom:4px;display:flex;align-items:center;gap:8px;
-}
-.page-sub{
-  font-size:0.8rem;color:#2d4a65;margin-bottom:24px;line-height:1.5;
-}
+    .page-title{
+      font-size:1.4rem;font-weight:800;color:#00c853;
+      margin-bottom:4px;display:flex;align-items:center;gap:8px;
+    }
+    .page-sub{
+      font-size:0.8rem;color:#2d4a65;margin-bottom:24px;line-height:1.5;
+    }
 
-/* LOADING */
-#loadingState{
-  text-align:center;padding:40px 20px;
-  font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;
-}
-.spinner{
-  width:32px;height:32px;border-radius:50%;
-  border:3px solid #1e3048;border-top-color:#00c853;
-  animation:spin .8s linear infinite;
-  margin:0 auto 14px;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+    /* LOADING */
+    #loadingState{
+      text-align:center;padding:40px 20px;
+      font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;color:#2d4a65;
+    }
+    .spinner{
+      width:32px;height:32px;border-radius:50%;
+      border:3px solid #1e3048;border-top-color:#00c853;
+      animation:spin .8s linear infinite;
+      margin:0 auto 14px;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
 
-/* TEAM CARD */
-.team-card{
-  background:#0d1828;border:1px solid #1e3048;
-  border-radius:16px;padding:18px;margin-bottom:16px;
-  position:relative;overflow:hidden;
-  animation:slideUp .4s ease both;
-}
-.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.tc-1::before{background:linear-gradient(90deg,transparent,#ffd600,transparent);}
-.tc-2::before{background:linear-gradient(90deg,transparent,#c0c0c0,transparent);}
-.tc-3::before{background:linear-gradient(90deg,transparent,#cd7f32,transparent);}
-@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    /* TEAM CARD */
+    .team-card{
+      background:#0d1828;border:1px solid #1e3048;
+      border-radius:16px;padding:18px;margin-bottom:16px;
+      position:relative;overflow:hidden;
+      animation:slideUp .4s ease both;
+    }
+    .team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+    .tc-1::before{background:linear-gradient(90deg,transparent,#fde100,transparent);}
+    .tc-2::before{background:linear-gradient(90deg,transparent,#004170,transparent);}
+    .tc-3::before{background:linear-gradient(90deg,transparent,#a50044,transparent);}
+    @keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
-.tc-header{
-  display:flex;align-items:center;gap:10px;margin-bottom:16px;
-}
-.tc-rank{
-  width:30px;height:30px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.85rem;font-weight:800;flex-shrink:0;
-}
-.rk-1{background:rgba(255,214,0,0.12);color:#ffd600;border:1.5px solid rgba(255,214,0,0.3);}
-.rk-2{background:rgba(192,192,192,0.1);color:#c0c0c0;border:1.5px solid rgba(192,192,192,0.25);}
-.rk-3{background:rgba(205,127,50,0.1);color:#cd7f32;border:1.5px solid rgba(205,127,50,0.25);}
-.tc-name{font-size:1rem;font-weight:700;letter-spacing:0.04em;}
-.nm-1{color:#ffd600;}.nm-2{color:#c0c0c0;}.nm-3{color:#cd7f32;}
+    .tc-header{
+      display:flex;align-items:center;gap:10px;margin-bottom:16px;
+    }
+    .tc-rank{
+      width:30px;height:30px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.85rem;font-weight:800;flex-shrink:0;
+    }
+    .rk-1{background:rgba(253,225,0,0.12);color:#fde100;border:1.5px solid rgba(253,225,0,0.3);}
+    .rk-2{background:rgba(77,159,219,0.1);color:#4d9fdb;border:1.5px solid rgba(77,159,219,0.25);}
+    .rk-3{background:rgba(165,0,68,0.12);color:#ff5c96;border:1.5px solid rgba(165,0,68,0.3);}
+    .tc-name{font-size:1rem;font-weight:700;letter-spacing:0.04em;}
+    .nm-1{color:#fde100;}.nm-2{color:#4d9fdb;}.nm-3{color:#ff5c96;}
 
-.source-badge{
-  margin-left:auto;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
-  padding:2px 8px;border-radius:10px;
-}
-.from-firebase{background:rgba(0,200,83,0.1);color:#00c853;border:1px solid rgba(0,200,83,0.2);}
-.from-matches{background:rgba(77,159,219,0.1);color:#4d9fdb;border:1px solid rgba(77,159,219,0.2);}
+    .source-badge{
+      margin-left:auto;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
+      padding:2px 8px;border-radius:10px;
+    }
+    .from-firebase{background:rgba(0,200,83,0.1);color:#00c853;border:1px solid rgba(0,200,83,0.2);}
+    .from-matches{background:rgba(77,159,219,0.1);color:#4d9fdb;border:1px solid rgba(77,159,219,0.2);}
 
-/* GRID OF INPUTS */
-.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-@media(max-width:400px){.fields{grid-template-columns:repeat(2,1fr);}}
-.field{}
-.field-lbl{
-  font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;
-  color:#2d4a65;margin-bottom:4px;display:block;
-}
-.field-inp{
-  width:100%;padding:8px 6px;
-  background:#070d14;border:1.5px solid #1e3048;
-  border-radius:8px;color:#fff;font-size:1rem;
-  font-weight:700;text-align:center;outline:none;
-  transition:border-color .2s;
-  -moz-appearance:textfield;
-}
-.field-inp::-webkit-outer-spin-button,
-.field-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-.field-inp:focus{border-color:#00c853;}
-.field-inp.pts-inp{border-color:rgba(255,214,0,0.3);color:#ffd600;}
-.field-inp.pts-inp:focus{border-color:#ffd600;}
+    /* GRID OF INPUTS */
+    .fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+    @media(max-width:400px){.fields{grid-template-columns:repeat(2,1fr);}}
+    .field{}
+    .field-lbl{
+      font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;
+      color:#2d4a65;margin-bottom:4px;display:block;
+    }
+    .field-inp{
+      width:100%;padding:8px 6px;
+      background:#070d14;border:1.5px solid #1e3048;
+      border-radius:8px;color:#fff;font-size:1rem;
+      font-weight:700;text-align:center;outline:none;
+      transition:border-color .2s;
+      -moz-appearance:textfield;
+    }
+    .field-inp::-webkit-outer-spin-button,
+    .field-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+    .field-inp:focus{border-color:#00c853;}
+    .field-inp.pts-inp{border-color:rgba(255,214,0,0.3);color:#ffd600;}
+    .field-inp.pts-inp:focus{border-color:#ffd600;}
 
-/* SAVE INDIVIDUAL */
-.save-team-btn{
-  width:100%;margin-top:12px;
-  padding:9px;background:rgba(0,200,83,0.08);
-  border:1.5px solid rgba(0,200,83,0.25);border-radius:10px;
-  color:#00c853;font-size:0.8rem;letter-spacing:0.06em;text-transform:uppercase;
-  cursor:pointer;transition:all .2s;font-weight:700;
-}
-.save-team-btn:hover{background:rgba(0,200,83,0.14);border-color:#00c853;}
-.save-team-btn.saved{background:rgba(0,200,83,0.12);border-color:#00c853;color:#00c853;}
+    /* SAVE INDIVIDUAL */
+    .save-team-btn{
+      width:100%;margin-top:12px;
+      padding:9px;background:rgba(0,200,83,0.08);
+      border:1.5px solid rgba(0,200,83,0.25);border-radius:10px;
+      color:#00c853;font-size:0.8rem;letter-spacing:0.06em;text-transform:uppercase;
+      cursor:pointer;transition:all .2s;font-weight:700;
+    }
+    .save-team-btn:hover{background:rgba(0,200,83,0.14);border-color:#00c853;}
+    .save-team-btn.saved{background:rgba(0,200,83,0.12);border-color:#00c853;color:#00c853;}
 
-/* SAVE ALL */
-.save-all-btn{
-  width:100%;padding:16px;
-  background:linear-gradient(135deg,#00c853,#00e676);
-  color:#000;border:none;border-radius:14px;
-  font-size:1.05rem;font-weight:800;cursor:pointer;
-  margin-top:8px;margin-bottom:16px;
-  letter-spacing:0.04em;transition:all .2s;
-}
-.save-all-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,200,83,0.3);}
-.save-all-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+    /* SAVE ALL */
+    .save-all-btn{
+      width:100%;padding:16px;
+      background:linear-gradient(135deg,#00c853,#00e676);
+      color:#000;border:none;border-radius:14px;
+      font-size:1.05rem;font-weight:800;cursor:pointer;
+      margin-top:8px;margin-bottom:16px;
+      letter-spacing:0.04em;transition:all .2s;
+    }
+    .save-all-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,200,83,0.3);}
+    .save-all-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 
-#globalStatus{
-  padding:13px 16px;border-radius:12px;
-  display:none;font-size:0.88rem;text-align:center;line-height:1.5;
-  margin-bottom:16px;
-}
-.s-ok{background:#0a2e14;border:1px solid #00c853;color:#00c853;}
-.s-err{background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;}
-.s-loading{background:#0a1f35;border:1px solid #1e3a5f;color:#4d9fdb;}
+    #globalStatus{
+      padding:13px 16px;border-radius:12px;
+      display:none;font-size:0.88rem;text-align:center;line-height:1.5;
+      margin-bottom:16px;
+    }
+    .s-ok{background:#0a2e14;border:1px solid #00c853;color:#00c853;}
+    .s-err{background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;}
+    .s-loading{background:#0a1f35;border:1px solid #1e3a5f;color:#4d9fdb;}
 
-.back-btn{
-  display:block;width:100%;padding:12px;text-align:center;
-  background:transparent;border:1.5px solid #1e3048;border-radius:12px;
-  color:#2d4a65;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;
-  cursor:pointer;transition:all .2s;text-decoration:none;
-}
-.back-btn:hover{border-color:rgba(0,200,83,0.3);color:#00c853;}
+    .back-btn{
+      display:block;width:100%;padding:12px;text-align:center;
+      background:transparent;border:1.5px solid #1e3048;border-radius:12px;
+      color:#2d4a65;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;
+      cursor:pointer;transition:all .2s;text-decoration:none;
+    }
+    .back-btn:hover{border-color:rgba(0,200,83,0.3);color:#00c853;}
 
-.note{
-  font-size:0.72rem;color:#1e3048;text-align:center;
-  margin-bottom:12px;line-height:1.6;
-}
-</style>
+    .note{
+      font-size:0.72rem;color:#1e3048;text-align:center;
+      margin-bottom:12px;line-height:1.6;
+    }
+    </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="page-title">⚙️ Edit League Table</div>
-  <p class="page-sub">Live data from Firebase. Edit any number → press Save. <span style="color:#00c853;">Green = from overrides</span> · <span style="color:#4d9fdb;">Blue = computed from matches</span></p>
+  <div class="page-title">📝 Change Table Point</div>
+  <p class="page-sub">Live data from Firebase. Edit any number → press Save. <span style="color:#00c853;">Green = from overrides</span> · <span style="color:#4d9fdb;">Blue = computed from matches</span><br/>New matches saved from Match Week will keep building on top of whatever you set here — they won't reset it.</p>
 
   <!-- Loading -->
   <div id="loadingState">
@@ -169,12 +169,19 @@ body::before{
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
+<script src="auth.js"></script>
 <script>
-var TEAMS = ["PARISANT GERMAN", "BARCELONA", "BAYER MUNICH"];
+// Eron-only page
+requireCoachLogin(true);
+
+// Must match teamsList in script.js exactly — and doc IDs must be the team
+// name itself, same scheme script.js's updateOverridesAfterMatch() uses,
+// otherwise this page and the real table write to different documents.
+var TEAMS = ["DORTMUND", "PSG", "BARCELONA"];
 var DOC_IDS = {
-  "PARISANT GERMAN": "PARISANT_GERMAN",
-  "BARCELONA":       "BARCELONA",
-  "BAYER MUNICH":    "BAYER_MUNICH"
+  "DORTMUND":  "DORTMUND",
+  "PSG":       "PSG",
+  "BARCELONA": "BARCELONA"
 };
 var RANK_CLASS  = ["tc-1","tc-2","tc-3"];
 var NUM_CLASS   = ["rk-1","rk-2","rk-3"];
@@ -354,18 +361,6 @@ function saveAll() {
       btn.textContent = "💾 Save All 3 Teams";
       btn.disabled = false;
     });
-}
-
-function clearOverride(teamName) {
-  if (!window.db) return;
-  if (!confirm("Remove saved override for " + teamName + "? The table will go back to computing from match results.")) return;
-  var docId = DOC_IDS[teamName];
-  window.db.collection("tableOverrides").doc(docId).delete()
-    .then(function() {
-      showGlobal("✅ Override cleared for " + teamName + ". Reloading...", "s-ok");
-      setTimeout(function(){ location.reload(); }, 1200);
-    })
-    .catch(function(err) { showGlobal("❌ " + err.message, "s-err"); });
 }
 
 // ── BOOT: load both matches + overrides in parallel ──────────────
