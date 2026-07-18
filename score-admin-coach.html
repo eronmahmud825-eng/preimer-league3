@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Score Admin Coach</title>
+    <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Segoe UI',sans-serif;
+      background:#04080f;color:#fff;
+      min-height:100vh;padding:24px 16px 60px;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(255,214,0,0.06) 0%,transparent 60%);
+    }
+    .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;}
+
+    .page-title{
+      font-size:1.4rem;font-weight:800;color:#ffd600;
+      margin-bottom:4px;display:flex;align-items:center;gap:8px;
+    }
+    .page-sub{ font-size:0.8rem;color:#2d4a65;margin-bottom:22px;line-height:1.5; }
+
+    .coach-tabs{ display:flex;gap:8px;margin-bottom:20px; }
+    .coach-tab{
+      flex:1;padding:12px;text-align:center;border-radius:12px;cursor:pointer;
+      background:#0d1828;border:1.5px solid #1e3048;font-weight:700;font-size:0.85rem;
+      transition:all .2s;color:#4d6a85;
+    }
+    .coach-tab.active{ border-color:#ffd600;color:#ffd600;background:rgba(255,214,0,0.06); }
+
+    .form-section{
+      background:#0d1828;border:1px solid #1e3048;border-radius:16px;
+      padding:20px;margin-bottom:16px;
+    }
+    .form-section h3{ font-size:0.9rem;color:#c8d8e8;margin-bottom:14px; }
+
+    .fields-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:12px; }
+    .field-lbl{
+      font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+      color:#2d4a65;margin-bottom:5px;display:block;
+    }
+    .field-inp{
+      width:100%;padding:11px;background:#070d14;border:1.5px solid #1e3048;
+      border-radius:9px;color:#fff;font-size:0.95rem;font-weight:600;outline:none;
+      transition:border-color .2s;
+    }
+    .field-inp:focus{ border-color:#ffd600; }
+
+    .teams-checks{ display:flex;flex-wrap:wrap;gap:8px;margin-top:6px; }
+    .team-check{
+      display:flex;align-items:center;gap:6px;background:#070d14;
+      border:1.5px solid #1e3048;border-radius:10px;padding:8px 12px;
+      cursor:pointer;font-size:0.82rem;transition:all .15s;
+    }
+    .team-check.checked{ border-color:#00c853;color:#00c853;background:rgba(0,200,83,0.06); }
+    .team-check input{ display:none; }
+
+    .other-teams-inp{ margin-top:10px; }
+
+    .save-btn{
+      width:100%;padding:15px;background:linear-gradient(135deg,#ffd600,#ffb300);
+      color:#000;border:none;border-radius:14px;font-size:1rem;font-weight:800;
+      cursor:pointer;margin-top:6px;margin-bottom:16px;letter-spacing:0.03em;
+    }
+    .save-btn:disabled{ opacity:0.6;cursor:not-allowed; }
+
+    #globalStatus{
+      padding:13px 16px;border-radius:12px;display:none;
+      font-size:0.88rem;text-align:center;line-height:1.5;margin-bottom:16px;
+    }
+    .s-ok{background:#0a2e14;border:1px solid #00c853;color:#00c853;}
+    .s-err{background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;}
+    .s-loading{background:#0a1f35;border:1px solid #1e3a5f;color:#4d9fdb;}
+
+    .back-btn{
+      display:block;width:100%;padding:12px;text-align:center;
+      background:transparent;border:1.5px solid #1e3048;border-radius:12px;
+      color:#2d4a65;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;
+      cursor:pointer;transition:all .2s;text-decoration:none;
+    }
+    .back-btn:hover{ border-color:rgba(255,214,0,0.3);color:#ffd600; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-title">📊 Score Admin Coach</div>
+  <p class="page-sub">Enter each coach's career stats. Saving writes straight to Firestore and updates their dashboard.</p>
+
+  <div class="coach-tabs" id="coachTabs"></div>
+  <div id="editingLabel" style="display:none;text-align:center;margin-bottom:18px;font-size:0.85rem;color:#ffd600;font-weight:700;">✏️ Editing: <span id="editingName"></span></div>
+  <div id="authError" style="display:none;background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;padding:14px 16px;border-radius:12px;margin-bottom:18px;font-size:0.85rem;line-height:1.6;"></div>
+
+  <div class="form-section">
+    <h3>🏆 Season & Points</h3>
+    <div class="fields-grid">
+      <div><label class="field-lbl">Seasons Won</label><input class="field-inp" type="number" id="f_seasonsWon" value="0"></div>
+      <div><label class="field-lbl">Total Points</label><input class="field-inp" type="number" id="f_totalPoint" value="0"></div>
+      <div><label class="field-lbl">Highest Points / Season</label><input class="field-inp" type="number" id="f_highestSeasonPoint" value="0"></div>
+      <div><label class="field-lbl">Lowest Points / Season</label><input class="field-inp" type="number" id="f_lowestSeasonPoint" value="0"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>⚽ Games — All Seasons</h3>
+    <div class="fields-grid">
+      <div><label class="field-lbl">Win</label><input class="field-inp" type="number" id="f_totalWin" value="0"></div>
+      <div><label class="field-lbl">Lose</label><input class="field-inp" type="number" id="f_totalLose" value="0"></div>
+      <div><label class="field-lbl">Draw</label><input class="field-inp" type="number" id="f_totalDraw" value="0"></div>
+      <div><label class="field-lbl">GD (auto)</label><input class="field-inp" type="number" id="f_totalGD" value="0" readonly style="opacity:0.7;"></div>
+      <div><label class="field-lbl">GF</label><input class="field-inp" type="number" id="f_totalGF" value="0"></div>
+      <div><label class="field-lbl">GA</label><input class="field-inp" type="number" id="f_totalGA" value="0"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h3>🏅 Teams / National Teams Won</h3>
+    <p style="font-size:0.75rem;color:#2d4a65;margin-bottom:10px;">Optional — tick every team this coach has won a title with (a coach can have more than one).</p>
+    <div class="teams-checks" id="teamsChecks"></div>
+    <div class="other-teams-inp">
+      <label class="field-lbl">Other / older teams (comma separated)</label>
+      <input class="field-inp" type="text" id="f_otherTeams" placeholder="e.g. PORTUGAL, GERMANY">
+    </div>
+  </div>
+
+  <div id="globalStatus"></div>
+
+  <button class="save-btn" id="saveBtn">💾 Save Coach Stats</button>
+
+  <a class="back-btn" href="index.html">⬅ Back to Home</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script>
+// Eron-only page
+requireCoachLogin(true);
+
+// Known teams across seasons — tick boxes for these, free text for anything older/new
+var KNOWN_TEAMS = ["DORTMUND", "PSG", "BARCELONA", "PORTUGAL", "FRANCE", "GERMANY"];
+var activeCoachId = null;
+
+function waitDB(cb, n) {
+  n = n || 0;
+  if (window.db) return cb();
+  if (n > 80) { showGlobal("❌ Firebase not connected.", "s-err"); return; }
+  setTimeout(function(){ waitDB(cb, n+1); }, 100);
+}
+function showGlobal(msg, cls) {
+  var el = document.getElementById("globalStatus");
+  el.textContent = msg; el.className = cls; el.style.display = "block";
+}
+
+// Build coach tabs
+function buildTabs() {
+  var wrap = document.getElementById("coachTabs");
+  wrap.innerHTML = "";
+  Object.values(COACHES).forEach(function(c) {
+    var tab = document.createElement("div");
+    tab.className = "coach-tab";
+    tab.textContent = c.name;
+    tab.onclick = function(){ selectCoach(c.id, c.name); };
+    tab.id = "tab_" + c.id;
+    wrap.appendChild(tab);
+  });
+}
+
+// Build team checkboxes
+function buildTeamChecks() {
+  var wrap = document.getElementById("teamsChecks");
+  wrap.innerHTML = "";
+  KNOWN_TEAMS.forEach(function(t) {
+    var label = document.createElement("label");
+    label.className = "team-check";
+    label.id = "chk_" + t;
+    label.innerHTML = '<input type="checkbox" value="' + t + '"> ' + t;
+    label.onclick = function(){
+      setTimeout(function(){ label.classList.toggle("checked", label.querySelector("input").checked); }, 0);
+    };
+    wrap.appendChild(label);
+  });
+}
+
+function selectCoach(id, name) {
+  activeCoachId = id;
+  document.querySelectorAll(".coach-tab").forEach(function(t){ t.classList.remove("active"); });
+  document.getElementById("tab_" + id).classList.add("active");
+  showGlobal("Loading " + name + "'s current stats...", "s-loading");
+
+  waitDB(function() {
+    window.db.collection("coachStats").doc(id).get().then(function(doc) {
+      fillForm(doc.exists ? doc.data() : null);
+      document.getElementById("globalStatus").style.display = "none";
+    }).catch(function(err) {
+      showGlobal("❌ " + err.message, "s-err");
+    });
+  });
+}
+
+function fillForm(d) {
+  d = d || {};
+  setVal("f_seasonsWon", d.seasonsWon);
+  setVal("f_totalPoint", d.totalPoint);
+  setVal("f_highestSeasonPoint", d.highestSeasonPoint);
+  setVal("f_lowestSeasonPoint", d.lowestSeasonPoint);
+  setVal("f_totalWin", d.totalWin);
+  setVal("f_totalLose", d.totalLose);
+  setVal("f_totalDraw", d.totalDraw);
+  setVal("f_totalGF", d.totalGF);
+  setVal("f_totalGA", d.totalGA);
+  recalcGD();
+
+  var teamsWon = Array.isArray(d.teamsWon) ? d.teamsWon : [];
+  var known = [], other = [];
+  teamsWon.forEach(function(t) {
+    if (KNOWN_TEAMS.indexOf(t) !== -1) known.push(t); else other.push(t);
+  });
+  document.querySelectorAll(".team-check").forEach(function(el) {
+    var cb = el.querySelector("input");
+    var isChecked = known.indexOf(cb.value) !== -1;
+    cb.checked = isChecked;
+    el.classList.toggle("checked", isChecked);
+  });
+  document.getElementById("f_otherTeams").value = other.join(", ");
+}
+function setVal(id, v) { document.getElementById(id).value = v !== undefined && v !== null ? v : 0; }
+
+function recalcGD() {
+  var gf = Number(document.getElementById("f_totalGF").value) || 0;
+  var ga = Number(document.getElementById("f_totalGA").value) || 0;
+  document.getElementById("f_totalGD").value = gf - ga;
+}
+document.getElementById("f_totalGF").addEventListener("input", recalcGD);
+document.getElementById("f_totalGA").addEventListener("input", recalcGD);
+
+document.getElementById("saveBtn").addEventListener("click", function() {
+  if (!activeCoachId) { showGlobal("❌ Pick a coach first (tap their name above).", "s-err"); return; }
+  var btn = document.getElementById("saveBtn");
+  btn.disabled = true; btn.textContent = "⏳ Saving...";
+  showGlobal("Saving...", "s-loading");
+
+  var checkedTeams = Array.from(document.querySelectorAll(".team-check input:checked")).map(function(cb){ return cb.value; });
+  var otherTeams = document.getElementById("f_otherTeams").value
+    .split(",").map(function(s){ return s.trim().toUpperCase(); }).filter(Boolean);
+  var teamsWon = checkedTeams.concat(otherTeams);
+
+  var coachName = COACHES_BY_ID[activeCoachId] ? COACHES_BY_ID[activeCoachId].name : activeCoachId;
+  var payload = {
+    name: coachName,
+    seasonsWon: Number(document.getElementById("f_seasonsWon").value) || 0,
+    totalPoint: Number(document.getElementById("f_totalPoint").value) || 0,
+    highestSeasonPoint: Number(document.getElementById("f_highestSeasonPoint").value) || 0,
+    lowestSeasonPoint: Number(document.getElementById("f_lowestSeasonPoint").value) || 0,
+    totalWin: Number(document.getElementById("f_totalWin").value) || 0,
+    totalLose: Number(document.getElementById("f_totalLose").value) || 0,
+    totalDraw: Number(document.getElementById("f_totalDraw").value) || 0,
+    totalGF: Number(document.getElementById("f_totalGF").value) || 0,
+    totalGA: Number(document.getElementById("f_totalGA").value) || 0,
+    totalGD: Number(document.getElementById("f_totalGF").value || 0) - Number(document.getElementById("f_totalGA").value || 0),
+    teamsWon: teamsWon,
+    updatedAt: new Date().toISOString()
+  };
+
+  window.db.collection("coachStats").doc(activeCoachId).set(payload)
+    .then(function() {
+      showGlobal("✅ Saved! " + coachName + "'s dashboard is now up to date.", "s-ok");
+      btn.disabled = false; btn.textContent = "💾 Save Coach Stats";
+    })
+    .catch(function(err) {
+      showGlobal("❌ " + err.message, "s-err");
+      btn.disabled = false; btn.textContent = "💾 Save Coach Stats";
+    });
+});
+
+// Boot
+buildTabs();
+buildTeamChecks();
+// Default to first coach (Eron) selected
+var first = Object.values(COACHES)[0];
+selectCoach(first.id, first.name);
+</script>
+</body>
+</html>
