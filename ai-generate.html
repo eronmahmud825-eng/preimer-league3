@@ -152,46 +152,89 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script>
     (function() {
-        const fileInput   = document.getElementById("photoInput");
+        const camInput    = document.getElementById("photoInputCamera");
+        const galInput    = document.getElementById("photoInputGallery");
         const preview     = document.getElementById("photoPreview");
         const analyzeBtn  = document.getElementById("analyzeBtn");
+        const skipBtn     = document.getElementById("skipBtn");
         const statusEl    = document.getElementById("ocrStatus");
         const summaryEl   = document.getElementById("detectedSummary");
         const rawWrap     = document.getElementById("ocrRawWrap");
         const rawEl       = document.getElementById("ocrRaw");
 
-        fileInput.addEventListener("change", () => {
-            const file = fileInput.files[0];
+        let currentFile = null;
+
+        function onFileChosen(file) {
             if (!file) return;
+            currentFile = file;
             preview.src = URL.createObjectURL(file);
             preview.style.display = "block";
             analyzeBtn.style.display = "inline-block";
+            skipBtn.style.display = "inline-block";
             summaryEl.style.display = "none";
             rawWrap.style.display = "none";
             statusEl.textContent = "";
+        }
+
+        camInput.addEventListener("change", () => onFileChosen(camInput.files[0]));
+        galInput.addEventListener("change", () => onFileChosen(galInput.files[0]));
+
+        skipBtn.addEventListener("click", () => {
+            document.getElementById("matchDate").valueAsDate = document.getElementById("matchDate").valueAsDate || new Date();
+            document.getElementById("matchForm").scrollIntoView({ behavior: "smooth" });
         });
 
+        // Shrink the photo before OCR — phone photos are often huge (3000px+)
+        // and Tesseract chokes on that. Same text, way fewer pixels, way faster.
+        function resizeImage(file, maxDim) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+                    else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(blob => {
+                        URL.revokeObjectURL(img.src);
+                        blob ? resolve(blob) : reject(new Error("Could not process image"));
+                    }, "image/jpeg", 0.9);
+                };
+                img.onerror = () => reject(new Error("Could not load image"));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
         analyzeBtn.addEventListener("click", async () => {
-            const file = fileInput.files[0];
-            if (!file) { alert("❌ Choose or take a photo first"); return; }
+            if (!currentFile) { alert("❌ Choose or take a photo first"); return; }
             if (typeof Tesseract === "undefined") {
                 alert("❌ OCR library failed to load. Check your internet connection and try again.");
                 return;
             }
             analyzeBtn.disabled = true;
             analyzeBtn.textContent = "🔎 Reading photo...";
-            statusEl.textContent = "Running text recognition — this can take a few seconds...";
+            statusEl.textContent = "Preparing photo...";
 
             try {
-                const { data } = await Tesseract.recognize(file, "eng");
+                const resized = await resizeImage(currentFile, 1000);
+                const { data } = await Tesseract.recognize(resized, "eng", {
+                    logger: m => {
+                        if (m.status === "recognizing text") {
+                            statusEl.textContent = "Reading photo... " + Math.round((m.progress || 0) * 100) + "%";
+                        } else if (m.status) {
+                            statusEl.textContent = m.status + "...";
+                        }
+                    }
+                });
                 const text = data.text || "";
                 rawEl.textContent = text.trim() || "(no text found)";
                 rawWrap.style.display = "block";
                 parseAndFill(text);
             } catch (err) {
                 console.error(err);
-                statusEl.textContent = "";
-                alert("❌ Could not read the photo: " + err.message);
+                alert("❌ Could not read the photo: " + err.message + "\n\nYou can still fill in the fields manually below.");
+                document.getElementById("matchForm").scrollIntoView({ behavior: "smooth" });
             } finally {
                 analyzeBtn.disabled = false;
                 analyzeBtn.textContent = "🔍 Analyze Photo";
@@ -199,17 +242,53 @@
             }
         });
 
-        function parseAndFill(text) {
+        // Levenshtein distance — lets us match team names even if OCR
+        // misread a letter or two (e.g. "DORTMUNP" still matches "DORTMUND").
+        function levenshtein(a, b) {
+            const dp = [];
+            for (let i = 0; i <= a.length; i++) dp.push([i]);
+            for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    dp[i][j] = a[i-1] === b[j-1]
+                        ? dp[i-1][j-1]
+                        : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+                }
+            }
+            return dp[a.length][b.length];
+        }
+
+        function findTeams(text) {
             const upper = text.toUpperCase();
+            const tokens = upper.match(/[A-Z]{2,}/g) || [];
+            const matches = [];
+            teamsList.forEach(name => {
+                const exactIdx = upper.indexOf(name);
+                if (exactIdx !== -1) { matches.push({ name, idx: exactIdx }); return; }
+                let best = null;
+                tokens.forEach(tok => {
+                    const tolerance = name.length <= 4 ? 1 : 2;
+                    const dist = levenshtein(tok, name);
+                    if (dist <= tolerance && (!best || dist < best.dist)) best = { dist, tok };
+                });
+                if (best) matches.push({ name, idx: upper.indexOf(best.tok) });
+            });
+            return matches.sort((a, b) => a.idx - b.idx);
+        }
 
-            // teamsList comes from script.js (loaded before this script, shares top-level scope)
-            const found = teamsList
-                .map(name => ({ name, idx: upper.indexOf(name) }))
-                .filter(t => t.idx !== -1)
-                .sort((a, b) => a.idx - b.idx);
+        function findScore(text) {
+            // preferred: clear separator like 4-2 / 4:2 / 4 – 2
+            let m = text.match(/(\d{1,2})\s*[-:–—]\s*(\d{1,2})/);
+            if (m) return { s1: m[1], s2: m[2], confident: true };
+            // fallback: any two standalone 1-2 digit numbers, in order
+            const nums = text.match(/\b\d{1,2}\b/g);
+            if (nums && nums.length >= 2) return { s1: nums[0], s2: nums[1], confident: false };
+            return null;
+        }
 
-            // score pattern like "4-2", "4 - 2", "4:2"
-            const scoreMatch = text.match(/(\d{1,2})\s*[-:–—]\s*(\d{1,2})/);
+        function parseAndFill(text) {
+            const found = findTeams(text);
+            const score = findScore(text);
 
             const team1El = document.getElementById("team1");
             const team2El = document.getElementById("team2");
@@ -219,20 +298,18 @@
 
             if (found[0]) team1El.value = found[0].name;
             if (found[1]) team2El.value = found[1].name;
-            if (scoreMatch) { score1El.value = scoreMatch[1]; score2El.value = scoreMatch[2]; }
+            if (score) { score1El.value = score.s1; score2El.value = score.s2; }
             if (!dateEl.value) dateEl.valueAsDate = new Date();
 
             summaryEl.style.display = "block";
-            if (found.length >= 2 && scoreMatch) {
+            if (found.length >= 2 && score && score.confident) {
                 summaryEl.innerHTML =
-                    `✅ Detected: <strong>${found[0].name} ${scoreMatch[1]} - ${scoreMatch[2]} ${found[1].name}</strong>` +
+                    `✅ Detected: <strong>${found[0].name} ${score.s1} - ${score.s2} ${found[1].name}</strong>` +
                     `<br/><span style="color:#f39c12;">⚠️ Double-check the fields below before saving — photo reading isn't perfect.</span>`;
-            } else if (found.length || scoreMatch) {
-                summaryEl.innerHTML =
-                    `⚠️ Only partly detected it. Filled in what it found — please complete the rest manually below.`;
+            } else if (found.length || score) {
+                summaryEl.innerHTML = `⚠️ Only partly detected it. Filled in what it found — please complete the rest manually below.`;
             } else {
-                summaryEl.innerHTML =
-                    `⚠️ Couldn't confidently read the photo. Please fill in the fields manually below.`;
+                summaryEl.innerHTML = `⚠️ Couldn't confidently read the photo. Please fill in the fields manually below.`;
             }
             document.getElementById("matchForm").scrollIntoView({ behavior: "smooth" });
         }
