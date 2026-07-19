@@ -322,22 +322,22 @@
   <!-- ══ NAV BUTTONS ══ -->
   <div class="buttons">
     <button onclick="location.href='table.html'">🏆 Table</button>
-    <button onclick="location.href='matchweek.html'">⚽ Match Week</button>
-    <button onclick="location.href='ai-generate.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">📸 AI Generate</button>
+    <button class="admin-only-btn" style="display:none;" onclick="location.href='matchweek.html'">⚽ Match Week</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(0,200,83,0.4);color:#00c853;" onclick="location.href='ai-generate.html'">📸 AI Generate</button>
     <button onclick="location.href='history.html'">📜 History</button>
     <button onclick="location.href='encounters.html'">🤝 Encounters</button>
     <button class="warning-btn" onclick="location.href='card-warning.html'">🟡 Card Warning</button>
     <button class="check-btn" onclick="location.href='check-games.html'">🔍 Check Games</button>
-    <button onclick="location.href='injuries.html'" style="border-color:rgba(255,111,0,0.3);">🏥 Injuries</button>
-    <button class="admin-btn" onclick="location.href='admin.html'">🔐 Admin</button>
-    <button onclick="location.href='betting.html'" style="border-color:rgba(0,200,83,0.4);color:#00c853;">🎰 Betting</button>
-    <button onclick="location.href='champions.html'" style="border-color:rgba(255,214,0,0.4);color:#ffd600;">🏆 Champions</button>
-    <button onclick="location.href='news.html'" style="border-color:rgba(0,200,83,0.3);color:#00c853;">📰 ئەخبارەکان</button>
-    <button onclick="location.href='records.html'" style="border-color:rgba(255,183,77,0.4);color:#ffb74d;">🏅 History Records</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,111,0,0.3);" onclick="location.href='injuries.html'">🏥 Injuries</button>
+    <button class="admin-only-btn admin-btn" style="display:none;" onclick="location.href='admin.html'">🔐 Admin</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(0,200,83,0.4);color:#00c853;" onclick="location.href='betting.html'">🎰 Betting</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.4);color:#ffd600;" onclick="location.href='champions.html'">🏆 Champions</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(0,200,83,0.3);color:#00c853;" onclick="location.href='news.html'">📰 ئەخبارەکان</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,183,77,0.4);color:#ffb74d;" onclick="location.href='records.html'">🏅 History Records</button>
 
     <!-- Eron-only admin tools -->
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='score-admin-coach.html'">📊 Score Admin Coach</button>
-    <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='fix-table-data.html'">📝 Change Table Point</button>
+    <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='fix-table.html'">📝 Change Table Point</button>
   </div>
 </div>
 
@@ -419,9 +419,9 @@ function showLoggedInUI(coach) {
   document.getElementById("welcomeBar").style.display = "flex";
   document.getElementById("welcomeName").textContent = "Welcome, " + coach.name;
   document.getElementById("profileAvatar").textContent = coach.name.charAt(0).toUpperCase();
+  document.getElementById("viewAnotherCoachBtn").style.display = "flex";
   if (coach.isAdmin) {
     document.querySelectorAll(".admin-only-btn").forEach(function(el){ el.style.display = "inline-block"; });
-    document.getElementById("viewAnotherCoachBtn").style.display = "flex";
   }
 }
 
