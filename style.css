@@ -1,0 +1,640 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap");
+
+/* ═══════════════════════════════════════════════════════════════
+   FC27 — style.css
+   Concept: a stadium at night. Floodlights wash down from the top
+   corners, faint mown-grass stripes run behind everything, and the
+   standings read like a broadcast league board.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Tokens ──────────────────────────────────────────────────── */
+:root {
+  --night:     #03070d;
+  --panel:     #0b1524;
+  --panel-hi:  #0f1d31;
+  --field:     #060c15;
+
+  --line:      #1a2b42;
+  --line-hi:   #26405e;
+
+  --text:      #e9f1f9;
+  --text-dim:  #9bb0c7;
+  --text-mute: #5a7590;
+
+  --pitch:     #00c853;
+  --pitch-hi:  #3bf08a;
+  --pitch-ink: #02180b;
+  --gold:      #ffd54a;
+  --amber:     #ffca28;
+  --red:       #ff5a5f;
+  --sky:       #4fc3f7;
+
+  --r-ctl:  12px;   /* inputs, buttons */
+  --r-tile: 16px;   /* navigation tiles */
+  --r-card: 20px;   /* panels, tables */
+
+  --f-display: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
+  --f-cond:    "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body:    "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ─── Base ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--night);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--night);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Floodlights from the top corners + faint grass stripes */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 45% at 12% -8%, rgba(0, 200, 83, 0.16), transparent 62%),
+    radial-gradient(50% 40% at 92% -10%, rgba(255, 213, 74, 0.09), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.014) 0 72px, transparent 72px 144px);
+  animation: floodlightsOn 1.6s ease-out both;
+}
+
+/* Centre-circle arc rising from the bottom edge */
+body::after {
+  content: "";
+  position: fixed;
+  left: 50%;
+  bottom: -46vmin;
+  width: 92vmin;
+  height: 92vmin;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes floodlightsOn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+::selection { background: rgba(0, 200, 83, 0.35); color: #fff; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--line-hi) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-hi);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+a { color: var(--pitch-hi); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible { outline: 2px solid var(--pitch); outline-offset: 2px; }
+
+/* ─── Layout ──────────────────────────────────────────────────── */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 52px) clamp(14px, 3.5vw, 28px) 90px;
+}
+
+/* Home page: leave room for the fixed welcome/profile pill */
+#mainContent { padding-top: clamp(76px, 10vw, 88px); }
+
+/* ─── Type ────────────────────────────────────────────────────── */
+h1, .title {
+  margin: 0 0 28px;
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 8vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 48px rgba(0, 200, 83, 0.28);
+}
+
+h3 {
+  margin: 0 0 18px;
+  font-family: var(--f-cond);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+h4 {
+  margin: 0 0 10px;
+  font-family: var(--f-cond);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+}
+
+p { margin: 0 0 10px; }
+
+.muted {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-mute);
+}
+
+/* ─── Panels ──────────────────────────────────────────────────── */
+.form-card,
+.card {
+  max-width: 560px;
+  margin: 0 auto 20px;
+  padding: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.008)),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: 0 40px 70px -44px #000, inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.card { padding: 20px; }
+
+/* Rules box (Check Games) — the one place gold speaks */
+.rules-box {
+  max-width: 560px;
+  margin: 0 auto 20px;
+  padding: 16px 20px;
+  background: rgba(255, 213, 74, 0.04);
+  border: 1px solid rgba(255, 213, 74, 0.16);
+  border-left: 3px solid var(--gold);
+  border-radius: 14px;
+}
+.rules-box h4 { color: var(--gold); }
+.rules-box p  { margin: 6px 0; font-size: 0.95rem; color: var(--text-dim); }
+.rules-box strong { color: var(--text); font-weight: 600; }
+
+/* ─── Forms ───────────────────────────────────────────────────── */
+.form-container { display: grid; gap: 18px; }
+
+.container label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.container input:where(:not([type="radio"], [type="checkbox"], [type="file"], [type="range"])),
+.container select,
+.container textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  font: 500 1rem var(--f-body);
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.container input::placeholder,
+.container textarea::placeholder { color: #3b5570; }
+
+.container input:where(:not([type="radio"], [type="checkbox"], [type="file"], [type="range"])):hover,
+.container select:hover { border-color: var(--line-hi); }
+
+.container input:where(:not([type="radio"], [type="checkbox"], [type="file"], [type="range"])):focus,
+.container select:focus,
+.container textarea:focus {
+  border-color: var(--pitch);
+  box-shadow: 0 0 0 4px rgba(0, 200, 83, 0.14);
+}
+
+.container select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%239bb0c7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+.container select option { background: var(--panel); color: var(--text); }
+
+.container input[type="number"] { -moz-appearance: textfield; }
+.container input[type="number"]::-webkit-outer-spin-button,
+.container input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.container input[type="radio"],
+.container input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--pitch);
+  flex-shrink: 0;
+}
+
+/* Card type / injury type choices read as two selectable options */
+.radio-group { display: grid; gap: 10px; }
+
+.container .radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.container .radio-group label:hover { border-color: var(--line-hi); }
+.container .radio-group label:has(input:checked) {
+  border-color: var(--pitch);
+  background: rgba(0, 200, 83, 0.09);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+.form-actions > button { flex: 1 1 150px; }
+
+/* ─── Buttons ─────────────────────────────────────────────────── */
+.container button {
+  min-height: 46px;
+  padding: 12px 22px;
+  font-family: var(--f-cond);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: var(--panel-hi);
+  border: 1px solid var(--line-hi);
+  border-radius: var(--r-ctl);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.container button:hover  { border-color: var(--pitch); background: #12233a; }
+.container button:active { transform: translateY(1px); }
+.container button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Primary action: first button of a form row, or the photo analyzer */
+.container .form-actions > button:not(.back-btn):first-child,
+.container #analyzeBtn {
+  color: var(--pitch-ink);
+  background: linear-gradient(180deg, var(--pitch-hi), var(--pitch));
+  border-color: transparent;
+  box-shadow: 0 12px 28px -12px rgba(0, 200, 83, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.container .form-actions > button:not(.back-btn):first-child:hover,
+.container #analyzeBtn:hover {
+  background: linear-gradient(180deg, var(--pitch-hi), var(--pitch));
+  border-color: transparent;
+  filter: brightness(1.07);
+  box-shadow: 0 16px 34px -12px rgba(0, 200, 83, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Secondary: back / cancel */
+.container .back-btn {
+  color: var(--text-dim);
+  background: transparent;
+  border-color: var(--line-hi);
+}
+.container .back-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-mute);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Row actions inside tables */
+.container .delete-btn,
+.container .edit-btn {
+  min-height: 0;
+  padding: 7px 13px;
+  font-size: 0.85rem;
+  border-radius: 9px;
+}
+.container .delete-btn {
+  color: #ff8a8d;
+  background: rgba(255, 90, 95, 0.08);
+  border-color: rgba(255, 90, 95, 0.3);
+}
+.container .delete-btn:hover {
+  background: rgba(255, 90, 95, 0.17);
+  border-color: var(--red);
+}
+.container .edit-btn {
+  color: var(--sky);
+  background: rgba(79, 195, 247, 0.07);
+  border-color: rgba(79, 195, 247, 0.28);
+}
+.container .edit-btn:hover {
+  background: rgba(79, 195, 247, 0.16);
+  border-color: var(--sky);
+}
+
+/* ─── Home navigation tiles ───────────────────────────────────── */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  max-width: 780px;
+  margin: 32px auto 0;
+}
+
+.container .buttons button {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 16px 18px 16px 22px;
+  text-align: left;
+  font-size: 1.12rem;
+  color: var(--text);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
+  border: 1px solid var(--line);
+  border-radius: var(--r-tile);
+}
+
+/* A short touchline on the left edge, in the tile's own colour */
+.container .buttons button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: currentColor;
+  opacity: 0.3;
+  transition: opacity 0.18s ease, top 0.18s ease, bottom 0.18s ease;
+}
+
+.container .buttons button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px -16px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 18px 34px -16px color-mix(in srgb, currentColor 45%, transparent);
+}
+.container .buttons button:hover::before { opacity: 1; top: 10px; bottom: 10px; }
+
+.container .buttons .warning-btn { color: var(--amber); }
+.container .buttons .check-btn   { color: var(--sky); }
+.container .buttons .admin-btn   { color: #b9a3f0; }
+
+/* ─── Tables ──────────────────────────────────────────────────── */
+.table-card {
+  margin: 0 auto 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.008)),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: 0 40px 70px -40px #000, inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.table-card table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-card thead th {
+  padding: 14px 12px;
+  text-align: left;
+  white-space: nowrap;
+  font: 600 0.85rem/1 var(--f-cond);
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom: 1px solid var(--line);
+}
+
+.table-card tbody td {
+  padding: 14px 12px;
+  font-size: 0.97rem;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+.table-card tbody tr:last-child td { border-bottom: 0; }
+.table-card tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.016); }
+.table-card tbody tr:hover { background: rgba(0, 200, 83, 0.055); }
+
+/* ─── League standings — the broadcast board ──────────────────── */
+#leagueTable { font-family: var(--f-cond); }
+
+#leagueTable thead th { text-align: center; }
+#leagueTable thead th:nth-child(2)  { text-align: left; }
+#leagueTable thead th:nth-child(10) { color: var(--gold); }
+
+#leagueTable tbody td {
+  text-align: center;
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+#leagueTable tbody td:nth-child(2) {
+  min-width: 150px;
+  text-align: left;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+
+/* Rank badge */
+#leagueTable td[data-label="Rank"] .value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+/* Points pill */
+#leagueTable td[data-label="Point"] .value {
+  display: inline-block;
+  min-width: 46px;
+  padding: 3px 12px;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--gold);
+  background: rgba(255, 213, 74, 0.1);
+  border: 1px solid rgba(255, 213, 74, 0.3);
+  border-radius: 999px;
+}
+
+/* Leader row */
+#leagueTable tbody tr:first-child {
+  background: linear-gradient(90deg, rgba(0, 200, 83, 0.11), transparent 55%);
+}
+#leagueTable tbody tr:first-child td:first-child { box-shadow: inset 3px 0 0 var(--pitch); }
+#leagueTable tbody tr:first-child td[data-label="Rank"] .value {
+  color: var(--pitch-ink);
+  background: var(--pitch);
+  box-shadow: 0 0 0 4px rgba(0, 200, 83, 0.16);
+}
+
+/* ─── Match result cards inside check results, etc. ───────────── */
+#checkResult h4 { margin-top: 18px; }
+#checkResult h4:first-child { margin-top: 0; }
+
+/* ─── Phones ──────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+
+  /* Labelled tables become stacked cards */
+  .table-card table:has(td[data-label]),
+  .table-card table:has(td[data-label]) tbody,
+  .table-card table:has(td[data-label]) tr { display: block; }
+
+  .table-card table:has(td[data-label]) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .table-card table:has(td[data-label]) tbody tr {
+    margin: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.022);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .table-card table:has(td[data-label]) td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 14px;
+    text-align: right;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .table-card table:has(td[data-label]) tr td:last-child { border-bottom: 0; }
+
+  .table-card td[data-label]::before {
+    content: attr(data-label);
+    text-align: left;
+    font: 600 0.85rem var(--f-cond);
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+  }
+  .table-card td[data-label="Actions"] { justify-content: flex-end; gap: 8px; }
+  .table-card td[data-label="Actions"]::before { display: none; }
+
+  /* League table: a compact scoreboard card per team
+     row 1  rank · team · points
+     row 2  G  W  L  D  GA GF Diff
+     row 3  form                                                  */
+  #leagueTable,
+  #leagueTable tbody { display: block; }
+
+  #leagueTable tbody tr {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 14px 4px;
+    padding: 16px 14px;
+    margin: 12px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+  #leagueTable tbody tr:first-child {
+    border-color: rgba(0, 200, 83, 0.5);
+    background: linear-gradient(155deg, rgba(0, 200, 83, 0.13), rgba(255, 255, 255, 0.02) 60%);
+  }
+  #leagueTable tbody tr:first-child td:first-child { box-shadow: none; }
+
+  #leagueTable td {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    border: 0;
+    text-align: center;
+  }
+  #leagueTable td::before {
+    order: -1;
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+
+  #leagueTable td[data-label="Rank"]  { grid-row: 1; grid-column: 1; align-items: flex-start; justify-content: center; }
+  #leagueTable td[data-label="Team"]  { grid-row: 1; grid-column: 2 / span 4; align-items: flex-start; justify-content: center; }
+  #leagueTable td[data-label="Point"] { grid-row: 1; grid-column: 6 / span 2; align-items: flex-end; justify-content: center; }
+  #leagueTable td[data-label="Rank"]::before,
+  #leagueTable td[data-label="Team"]::before,
+  #leagueTable td[data-label="Point"]::before { display: none; }
+
+  #leagueTable td[data-label="Form"] {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  #leagueTable td[data-label="Form"]::before { order: 0; }
+
+  #leagueTable tbody td:nth-child(2) { min-width: 0; font-size: 1.35rem; }
+}
+
+@media (max-width: 560px) {
+  .form-card, .card { padding: 22px 18px; }
+  .btn-row > button { flex: 1 1 140px; }
+}
+
+/* ─── Motion preferences ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
