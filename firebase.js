@@ -6,14 +6,28 @@
 // 2. Project settings (gear icon) → General → "Your apps" → Web app (</>)
 // 3. Copy the values from "firebaseConfig" and paste them below.
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey:            "PASTE_YOUR_API_KEY",
-    authDomain:        "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
-    projectId:         "PASTE_YOUR_PROJECT_ID",
-    storageBucket:     "PASTE_YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "PASTE_YOUR_SENDER_ID",
-    appId:             "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyD586AysFPgwJAkEFAU-BXlMZEN0ecnbh8",
+  authDomain: "football-system-a8887.firebaseapp.com",
+  databaseURL: "https://football-system-a8887-default-rtdb.firebaseio.com",
+  projectId: "football-system-a8887",
+  storageBucket: "football-system-a8887.firebasestorage.app",
+  messagingSenderId: "907218702953",
+  appId: "1:907218702953:web:5a4a4d57735831a6be08f8",
+  measurementId: "G-1HF16W0MSR"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 (function () {
     var notConfigured = Object.values(firebaseConfig).some(function (v) {
