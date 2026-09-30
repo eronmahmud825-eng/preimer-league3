@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Match Week — Season 7</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">⚽ Match Week</h1>
+
+        <!-- Match Form -->
+        <div id="matchForm" class="form-card">
+            <h3>Add Match Result</h3>
+            <div class="form-container">
+                <label>Team 1
+                    <select id="team1" data-team-select></select>
+                </label>
+                <label>Score 1 <input id="score1" type="number" min="0" placeholder="0" /></label>
+                <label>Team 2
+                    <select id="team2" data-team-select></select>
+                </label>
+                <label>Score 2 <input id="score2" type="number" min="0" placeholder="0" /></label>
+                <label>Date <input id="matchDate" type="date" /></label>
+                <label>Admin Password <input id="adminPass" type="password" placeholder="Password" /></label>
+                <div class="form-actions">
+                    <button id="saveMatchBtn">💾 Save Match</button>
+                    <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card & Injury Form (shown after match saved) -->
+        <div id="cardForm" style="display:none;">
+            <div class="form-card">
+                <h3 id="currentGWLabel">Current Match</h3>
+            </div>
+
+            <!-- Cards -->
+            <div class="form-card">
+                <h3>🟡🔴 Card Warning</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="cardTeam">
+                            <option value="">Select Team</option>
+                        </select>
+                    </label>
+                    <label>Player
+                        <select id="playerSelect">
+                            <option value="">Select Player</option>
+                        </select>
+                    </label>
+                    <label>Card Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="cardType" value="yellow" /> 🟡 Yellow Card</label>
+                        <label><input type="radio" name="cardType" value="red" /> 🔴 Red Card (3 match ban)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addCardBtn">➕ Add Card</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Injuries -->
+            <div class="form-card">
+                <h3>🏥 Record Injury</h3>
+                <div class="form-container">
+                    <label>Team
+                        <select id="injuryTeam">
+                            <option value="">Select Team</option>
+                        </select>
+                    </label>
+                    <label>Player
+                        <select id="injuryPlayerSelect">
+                            <option value="">Select Player</option>
+                        </select>
+                    </label>
+                    <label>Injury Type</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="injuryType" value="easy" /> 🟡 Easy Injury (3 matches)</label>
+                        <label><input type="radio" name="injuryType" value="hard" /> 🔴 Hard Injury (5 matches)</label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="addInjuryBtn">➕ Add Injury</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button id="okBtn" style="background:linear-gradient(135deg,#00c853,#00e676);color:#000;font-weight:700;">✅ Done — Save All</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

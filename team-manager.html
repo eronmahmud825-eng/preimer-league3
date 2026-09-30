@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Team Manager</title>
+    <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Segoe UI',sans-serif;
+      background:#04080f;color:#fff;
+      min-height:100vh;padding:24px 16px 60px;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(0,200,83,0.06) 0%,transparent 60%);
+    }
+    .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;}
+    .page-title{font-size:1.4rem;font-weight:800;color:#00c853;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+    .page-sub{font-size:0.8rem;color:#2d4a65;margin-bottom:22px;line-height:1.5;}
+
+    .team-row{
+      background:#0d1828;border:1px solid #1e3048;border-radius:14px;
+      padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;
+    }
+    .team-row input{
+      flex:1;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;
+      color:#fff;padding:9px 10px;font-size:0.95rem;font-weight:600;outline:none;
+    }
+    .team-row input:focus{border-color:#00c853;}
+    .icon-btn{
+      background:#142235;border:1px solid #1e3048;border-radius:8px;
+      width:36px;height:36px;flex-shrink:0;cursor:pointer;font-size:0.95rem;
+      display:flex;align-items:center;justify-content:center;color:#fff;
+    }
+    .icon-btn.save{border-color:#00c853;color:#00c853;}
+    .icon-btn.danger{border-color:#e74c3c;color:#e74c3c;}
+
+    .add-row{
+      background:#0d1828;border:1.5px dashed #1e3048;border-radius:14px;
+      padding:14px 16px;margin-bottom:22px;display:flex;gap:10px;
+    }
+    .add-row input{
+      flex:1;background:#070d14;border:1.5px solid #1e3048;border-radius:8px;
+      color:#fff;padding:9px 10px;font-size:0.95rem;outline:none;
+    }
+    .add-row input:focus{border-color:#00c853;}
+    .add-row button{
+      background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;
+      border-radius:8px;padding:0 16px;font-weight:800;cursor:pointer;
+    }
+
+    .section-title{font-size:0.9rem;color:#c8d8e8;margin:26px 0 12px;font-weight:700;}
+
+    .danger-box{
+      background:#1e0a0a;border:2px solid #e74c3c;border-radius:14px;
+      padding:18px;margin-bottom:20px;
+    }
+    .danger-box h3{color:#e74c3c;font-size:1rem;margin-bottom:8px;}
+    .danger-box p{color:#e5a5a5;font-size:0.8rem;line-height:1.6;margin-bottom:12px;}
+    .danger-btn{
+      width:100%;padding:13px;background:#c62828;color:#fff;border:none;
+      border-radius:10px;font-weight:800;cursor:pointer;letter-spacing:0.03em;text-transform:uppercase;font-size:0.9rem;
+    }
+    .danger-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+    #globalStatus{
+      padding:13px 16px;border-radius:12px;display:none;
+      font-size:0.88rem;text-align:center;line-height:1.5;margin-bottom:16px;white-space:pre-line;
+    }
+    .s-ok{background:#0a2e14;border:1px solid #00c853;color:#00c853;}
+    .s-err{background:#2e0a0a;border:1px solid #e74c3c;color:#e74c3c;}
+    .s-loading{background:#0a1f35;border:1px solid #1e3a5f;color:#4d9fdb;}
+
+    .back-btn{
+      display:block;width:100%;padding:12px;text-align:center;
+      background:transparent;border:1.5px solid #1e3048;border-radius:12px;
+      color:#2d4a65;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;
+      cursor:pointer;transition:all .2s;text-decoration:none;
+    }
+    .back-btn:hover{border-color:rgba(0,200,83,0.3);color:#00c853;}
+    .loading-msg{text-align:center;color:#2d4a65;padding:20px 0;font-size:0.85rem;}
+    </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-title">👥 Team Manager</div>
+  <p class="page-sub">Rename, add, or remove teams — changes apply everywhere (table, matchweek, dropdowns) automatically. Renaming here also updates every match, card, injury, and stat already saved under the old name.</p>
+
+  <div class="section-title">⚽ Current Teams</div>
+  <div id="teamsList"><div class="loading-msg">Loading teams...</div></div>
+
+  <div class="add-row">
+    <input type="text" id="newTeamName" placeholder="New team name, e.g. LIVERPOOL" />
+    <button id="addTeamBtn">➕ Add</button>
+  </div>
+
+  <div id="globalStatus"></div>
+
+  <div class="danger-box">
+    <h3>⚠️ Delete ALL Data</h3>
+    <p>Wipes every match, card, injury, match report, table override, and event log. <strong>Team names are kept</strong> unless you also check the box below. This cannot be undone.</p>
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#e5a5a5;margin-bottom:12px;">
+      <input type="checkbox" id="alsoWipeTeams" /> Also delete the team list itself
+    </label>
+    <button class="danger-btn" id="wipeAllBtn">🧨 Delete Everything</button>
+  </div>
+
+  <a class="back-btn" href="index.html">⬅ Back to Home</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script>
+// Eron-only page
+requireCoachLogin(true);
+
+function waitDB(cb, n) {
+  n = n || 0;
+  if (window.db) return cb();
+  if (n > 80) { showGlobal("❌ Firebase not connected.", "s-err"); return; }
+  setTimeout(function(){ waitDB(cb, n+1); }, 100);
+}
+function showGlobal(msg, cls) {
+  var el = document.getElementById("globalStatus");
+  el.textContent = msg; el.className = cls; el.style.display = "block";
+}
+
+function renderTeams(names) {
+  var wrap = document.getElementById("teamsList");
+  if (!names.length) { wrap.innerHTML = '<div class="loading-msg">No teams yet — add one below.</div>'; return; }
+  wrap.innerHTML = "";
+  names.forEach(function(name) {
+    var row = document.createElement("div");
+    row.className = "team-row";
+    row.innerHTML =
+      '<input type="text" value="' + name + '" data-original="' + name + '" />' +
+      '<button class="icon-btn save" title="Save name">💾</button>' +
+      '<button class="icon-btn danger" title="Delete team">🗑</button>';
+    var input = row.querySelector("input");
+    row.querySelector(".save").addEventListener("click", function() {
+      var newName = input.value.trim().toUpperCase();
+      var oldName = input.getAttribute("data-original");
+      if (!newName) { showGlobal("❌ Team name can't be empty", "s-err"); return; }
+      if (newName === oldName) return;
+      renameTeam(oldName, newName);
+    });
+    row.querySelector(".danger").addEventListener("click", function() {
+      deleteTeam(name);
+    });
+    wrap.appendChild(row);
+  });
+}
+
+function loadTeams() {
+  waitDB(function() {
+    window.db.collection("teams").get().then(function(snap) {
+      var names = [];
+      snap.forEach(function(doc) { var d = doc.data(); if (d.name) names.push(d.name); });
+      names.sort();
+      renderTeams(names);
+    }).catch(function(err) {
+      document.getElementById("teamsList").innerHTML =
+        '<div style="color:#e74c3c;padding:10px 0;">❌ ' + err.message + '</div>';
+    });
+  });
+}
+
+document.getElementById("addTeamBtn").addEventListener("click", function() {
+  var input = document.getElementById("newTeamName");
+  var name = input.value.trim().toUpperCase();
+  if (!name) { showGlobal("❌ Enter a team name first", "s-err"); return; }
+  waitDB(function() {
+    window.db.collection("teams").doc(name).set({ name: name, createdAt: new Date().toISOString() })
+      .then(function() {
+        input.value = "";
+        showGlobal("✅ " + name + " added.", "s-ok");
+        loadTeams();
+      })
+      .catch(function(err) { showGlobal("❌ " + err.message, "s-err"); });
+  });
+});
+
+// Removes a team from the active roster. Historical data that already
+// references it (past matches, stats) is left alone — this only stops it
+// from appearing in dropdowns going forward.
+function deleteTeam(name) {
+  if (!confirm('Remove "' + name + '" from the active team list?\n\nPast matches and stats that already mention ' + name + ' are kept as history — this only removes it from dropdowns going forward.')) return;
+  waitDB(function() {
+    window.db.collection("teams").doc(name).delete()
+      .then(function() { showGlobal("✅ " + name + " removed from the active roster.", "s-ok"); loadTeams(); })
+      .catch(function(err) { showGlobal("❌ " + err.message, "s-err"); });
+  });
+}
+
+// Renames a team everywhere it's referenced: the roster itself, every match,
+// table override, suspension, injury, player, match report, match event log,
+// and any coach's "teams won" list. This can touch a lot of documents on a
+// long-running season, so it batches writes and reports progress.
+function renameTeam(oldName, newName) {
+  if (!confirm('Rename "' + oldName + '" to "' + newName + '"?\n\nThis updates every match, card, injury, stat, and table entry that currently says ' + oldName + '. This cannot be undone.')) { loadTeams(); return; }
+  showGlobal("Renaming " + oldName + " → " + newName + "...\nThis can take a moment.", "s-loading");
+
+  var db = window.db;
+  var steps = [];
+
+  // 1. teams roster: move the doc
+  steps.push(function() {
+    return db.collection("teams").doc(oldName).delete().then(function() {
+      return db.collection("teams").doc(newName).set({ name: newName, updatedAt: new Date().toISOString() });
+    });
+  });
+
+  // 2. matches: team1 / team2
+  steps.push(function() { return renameField("matches", "team1", oldName, newName); });
+  steps.push(function() { return renameField("matches", "team2", oldName, newName); });
+
+  // 3. tableOverrides: move doc + update team field
+  steps.push(function() {
+    return db.collection("tableOverrides").doc(oldName).get().then(function(doc) {
+      if (!doc.exists) return;
+      var d = doc.data(); d.team = newName;
+      return db.collection("tableOverrides").doc(newName).set(d)
+        .then(function() { return db.collection("tableOverrides").doc(oldName).delete(); });
+    });
+  });
+
+  // 4. playerSuspensions, playerInjuries, players, matchEvents: team field
+  ["playerSuspensions", "playerInjuries", "players", "matchEvents"].forEach(function(col) {
+    steps.push(function() { return renameField(col, "team", oldName, newName); });
+  });
+
+  // 5. matchReports: team1 / team2
+  steps.push(function() { return renameField("matchReports", "team1", oldName, newName); });
+  steps.push(function() { return renameField("matchReports", "team2", oldName, newName); });
+
+  // 6. coachStats: teamsWon array entries
+  steps.push(function() {
+    return db.collection("coachStats").get().then(function(snap) {
+      var ops = [];
+      snap.forEach(function(doc) {
+        var d = doc.data();
+        var teamsWon = Array.isArray(d.teamsWon) ? d.teamsWon : [];
+        if (teamsWon.indexOf(oldName) !== -1) {
+          var updated = teamsWon.map(function(t) { return t === oldName ? newName : t; });
+          ops.push(doc.ref.update({ teamsWon: updated }));
+        }
+      });
+      return Promise.all(ops);
+    });
+  });
+
+  // Run sequentially so we can report where it stops if something fails
+  var chain = Promise.resolve();
+  steps.forEach(function(step) { chain = chain.then(step); });
+
+  chain.then(function() {
+    showGlobal("✅ Renamed everywhere: " + oldName + " → " + newName, "s-ok");
+    loadTeams();
+  }).catch(function(err) {
+    showGlobal("❌ Rename partially failed: " + err.message + "\nCheck Firestore — some documents may already be updated.", "s-err");
+    loadTeams();
+  });
+}
+
+// Helper: find every doc in `col` where `field` == oldVal, update it to newVal.
+function renameField(col, field, oldVal, newVal) {
+  return window.db.collection(col).where(field, "==", oldVal).get().then(function(snap) {
+    if (snap.empty) return;
+    var batch = window.db.batch();
+    var updateObj = {}; updateObj[field] = newVal;
+    snap.forEach(function(doc) { batch.update(doc.ref, updateObj); });
+    return batch.commit();
+  });
+}
+
+document.getElementById("wipeAllBtn").addEventListener("click", function() {
+  var pass = prompt("Super admin password to wipe ALL data:");
+  if (pass !== SUPER_ADMIN_PASSWORD_CHECK()) { alert("❌ Wrong password"); return; }
+  var alsoTeams = document.getElementById("alsoWipeTeams").checked;
+  var msg = "⚠️ This deletes every match, card, injury, report, table entry, and event log."
+    + (alsoTeams ? "\n\nYou also checked 'delete the team list' — every team name will be removed too." : "\n\nTeam names will be kept.")
+    + "\n\nThis cannot be undone. Continue?";
+  if (!confirm(msg)) return;
+
+  var btn = document.getElementById("wipeAllBtn");
+  btn.disabled = true; btn.textContent = "⏳ Wiping...";
+  showGlobal("Wiping all data...", "s-loading");
+
+  var collections = ["matches", "players", "playerSuspensions", "playerInjuries", "matchReports", "tableOverrides", "matchEvents", "coachStats"];
+  if (alsoTeams) collections.push("teams");
+
+  waitDB(function() {
+    Promise.all(collections.map(function(name) {
+      return window.db.collection(name).get().then(function(snap) {
+        if (snap.empty) return;
+        var batch = window.db.batch();
+        snap.forEach(function(doc) { batch.delete(doc.ref); });
+        return batch.commit();
+      });
+    })).then(function() {
+      showGlobal("✅ All data wiped" + (alsoTeams ? " — including team names." : ", team names kept."), "s-ok");
+      btn.disabled = false; btn.textContent = "🧨 Delete Everything";
+      loadTeams();
+    }).catch(function(err) {
+      showGlobal("❌ " + err.message, "s-err");
+      btn.disabled = false; btn.textContent = "🧨 Delete Everything";
+    });
+  });
+});
+
+// SUPER_ADMIN_PASSWORD isn't exposed by auth.js (it lives in script.js,
+// which this page doesn't load) — read it straight from a small local copy
+// so the wipe button doesn't depend on script.js being present.
+function SUPER_ADMIN_PASSWORD_CHECK() { return "9999"; }
+
+loadTeams();
+</script>
+</body>
+</html>

@@ -3,41 +3,28 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>League Table</title>
+    <title>History</title>
     <link rel="stylesheet" href="style.css"/>
-    <style>
-        /* Form dots responsive */
-        @media(max-width:600px) {
-            td[data-label="Form"] { justify-content:flex-end; }
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">🏆 League Table</h1>
+        <h1 class="title">📜 Match History</h1>
         <div class="table-card">
             <div class="table-container">
-                <table id="leagueTable" aria-label="League table">
+                <table id="historyTable">
                     <thead>
                         <tr>
-                            <th>Rank</th>
-                            <th>Team</th>
-                            <th>Game</th>
-                            <th>Win</th>
-                            <th>Lose</th>
-                            <th>Draw</th>
-                            <th>GA</th>
-                            <th>GF</th>
-                            <th>Diff</th>
-                            <th>Point</th>
-                            <th>Form</th>
+                            <th>GW</th>
+                            <th>Date</th>
+                            <th>Match</th>
+                            <th>Score</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody><tr><td colspan="5" style="text-align:center;color:#4d6a85;padding:20px;">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
-        <p class="muted">Form shows last 5 matches — 🟢 W &nbsp; 🟡 D &nbsp; 🔴 L</p>
         <div class="btn-row">
             <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
         </div>
