@@ -54,6 +54,16 @@ function logMatchEvent(evt) {
 
 // Season 7 — Club Teams: DORTMUND, PSG, BARCELONA — No stadium rotation
 
+// ─── Who is logged in? ────────────────────────────────────────
+// Reads the coach saved by the login screen (auth.js stores it in
+// localStorage). Only Eron is an admin, so only Eron can edit/delete cards.
+function canEditCards() {
+    try {
+        const coach = JSON.parse(localStorage.getItem("loggedInCoach") || "null");
+        return !!(coach && coach.isAdmin);
+    } catch (e) { return false; }
+}
+
 // ─── Data converters ──────────────────────────────────────────
 function docToMatch(doc) {
     const d = doc.data();
@@ -197,6 +207,11 @@ function renderHistoryList(matches) {
 function renderCardTable(suspensions) {
     const tbody = document.querySelector("#cardTable tbody");
     if (!tbody) return;
+    const isEron = canEditCards();
+    // Arin & Lawin view only — hide the "Actions" column header for them
+    document.querySelectorAll("#cardTable thead th").forEach(th => {
+        if (/action/i.test(th.textContent)) th.style.display = isEron ? "" : "none";
+    });
     tbody.innerHTML = "";
     if (!suspensions.length) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:16px;">No card warnings yet</td></tr>`;
@@ -215,10 +230,10 @@ function renderCardTable(suspensions) {
             <td data-label="Player"><span class="value">${susp.player}${badge}</span></td>
             <td data-label="🟡 Yellows"><span class="value" style="${susp.activeYellows>=3?'color:#f1c40f;font-weight:bold;':''}">${susp.activeYellows}</span></td>
             <td data-label="Ban Left"><span class="value">${banLeft}</span></td>
-            <td data-label="Actions" style="white-space:nowrap;">
+            ${isEron ? `<td data-label="Actions" style="white-space:nowrap;">
                 <button class="edit-btn" data-id="${susp.id}">✏️ Edit</button>
                 <button class="delete-btn" data-id="${susp.id}" data-player="${susp.player}">🗑 Delete</button>
-            </td>`;
+            </td>` : ""}`;
         tbody.appendChild(tr);
     });
     tbody.querySelectorAll(".edit-btn").forEach(btn => btn.addEventListener("click", () => {
@@ -314,6 +329,7 @@ function deleteInjury(id, player) {
 }
 
 function openEditSuspensionModal(susp) {
+    if (!canEditCards()) { alert("🔒 Only Eron can edit or delete cards."); return; }
     let modal = document.getElementById("editSuspModal");
     if (!modal) {
         modal = document.createElement("div");
@@ -353,6 +369,7 @@ function openEditSuspensionModal(susp) {
     };
 }
 function deleteSuspension(id, player) {
+    if (!canEditCards()) { alert("🔒 Only Eron can edit or delete cards."); return; }
     const pass = prompt("Admin password:");
     if (pass !== ADMIN_PASSWORD && pass !== SUPER_ADMIN_PASSWORD) { alert("❌ Wrong password"); return; }
     window.db.collection("playerSuspensions").doc(id).delete().then(() => alert("✅ Deleted")).catch(() => alert("❌ Error"));
