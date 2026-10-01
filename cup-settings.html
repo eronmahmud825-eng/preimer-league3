@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cup Settings — Season 1</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="cup.css"/>
+</head>
+<body>
+<div class="container cup-page cup-settings">
+    <h1 class="title">⚙️ Cup Settings</h1>
+
+    <div class="status" id="msg"></div>
+
+    <!-- 1 · ON / OFF -->
+    <div class="form-card">
+        <h3>Cup page</h3>
+        <label class="switch">
+            <span class="sw-text">
+                <strong id="swTitle">Cup is OFF</strong>
+                <span id="swDesc">Coaches see "Coming Soon".</span>
+            </span>
+            <input type="checkbox" id="cupToggle"/>
+            <span class="track"></span>
+        </label>
+
+        <div class="sub-title">COMING SOON TEXT</div>
+        <div class="inline-row">
+            <input type="number" id="startGW" min="1" placeholder="Starting gameweek, e.g. 10"/>
+            <button id="saveGWBtn">Save</button>
+        </div>
+        <p class="section-note" style="margin:8px 0 0;">Shown as "STARTING GAMEWEEK …" while the cup is OFF.</p>
+    </div>
+
+    <!-- 2 · Lucky spin teams -->
+    <div class="form-card">
+        <h3>🎡 Lucky Spin teams</h3>
+        <p class="section-note">Add the teams that go on the wheel. Every team the wheel picks is removed from it, and every 2 picked teams become a play-off.</p>
+
+        <div class="inline-row">
+            <input type="text" id="newTeam" placeholder="Team name (or several, separated by commas)" autocomplete="off"/>
+            <button id="addTeamBtn">➕ Add</button>
+        </div>
+
+        <div class="sub-title">ON THE WHEEL</div>
+        <div class="chips" id="poolChips"></div>
+
+        <div id="suggestWrap" hidden>
+            <div class="sub-title">QUICK ADD FROM LEAGUE TEAMS</div>
+            <div class="chips" id="suggestChips"></div>
+        </div>
+
+        <div class="sub-title">ALREADY DRAWN</div>
+        <div class="chips" id="drawnChips"></div>
+
+        <div class="form-actions" style="margin-top:20px;">
+            <button onclick="location.href='cup-spin.html'">🎡 Open Lucky Spin</button>
+        </div>
+    </div>
+
+    <!-- 3 · Play-off results -->
+    <div class="form-card">
+        <h3>Play-off result</h3>
+        <p class="section-note">Appears on the cup diagram as a small score.</p>
+        <div id="playoffInputs"><div class="empty-note">No play-off yet — draw teams with the Lucky Spin first.</div></div>
+    </div>
+
+    <!-- 4 · Final -->
+    <div class="form-card">
+        <h3>Final · home &amp; away</h3>
+        <p class="section-note">Write the two finalists, then add each leg. When both legs are in, the two scores are added together and the cup winner is saved.</p>
+
+        <div class="form-container">
+            <label>Finalist 1 (home in leg 1)
+                <input type="text" id="f_t1" list="teamNames" placeholder="Team 1 name" autocomplete="off"/>
+            </label>
+            <label>Finalist 2 (home in leg 2)
+                <input type="text" id="f_t2" list="teamNames" placeholder="Team 2 name" autocomplete="off"/>
+            </label>
+            <datalist id="teamNames"></datalist>
+        </div>
+
+        <div class="sub-title">LEG 1 · HOME</div>
+        <div class="score-pair">
+            <span class="nm" id="n_l1a">TEAM 1</span>
+            <input class="score-in" type="number" min="0" id="l1_t1" placeholder="0"/>
+            <span class="dash">–</span>
+            <input class="score-in" type="number" min="0" id="l1_t2" placeholder="0"/>
+            <span class="nm r" id="n_l1b">TEAM 2</span>
+        </div>
+
+        <div class="sub-title">LEG 2 · AWAY</div>
+        <div class="score-pair">
+            <span class="nm" id="n_l2a">TEAM 2</span>
+            <input class="score-in" type="number" min="0" id="l2_t2" placeholder="0"/>
+            <span class="dash">–</span>
+            <input class="score-in" type="number" min="0" id="l2_t1" placeholder="0"/>
+            <span class="nm r" id="n_l2b">TEAM 1</span>
+        </div>
+
+        <div id="tieWrap" hidden style="margin-top:16px;">
+            <label>Level on aggregate — who won the decider (penalties)?
+                <select id="f_tie"></select>
+            </label>
+        </div>
+
+        <div class="preview" id="preview">Waiting for both legs…</div>
+    </div>
+
+    <div class="form-actions" style="max-width:680px;margin:0 auto 24px;">
+        <button id="saveAllBtn">💾 Save play-off &amp; final</button>
+        <button class="back-btn" onclick="location.href='cup.html'">🏆 View Cup</button>
+    </div>
+
+    <!-- 5 · Danger zone -->
+    <div class="form-card danger-zone">
+        <h3>Reset</h3>
+        <div class="danger-row">
+            <button class="btn-danger" id="resetDrawBtn">↺ Reset the draw</button>
+            <button class="btn-danger" id="clearFinalBtn">✕ Clear final &amp; winner</button>
+        </div>
+        <p class="section-note" style="margin:12px 0 0;">Reset the draw puts every drawn team back on the wheel and clears the play-off scores.</p>
+    </div>
+
+    <div class="btn-row">
+        <button class="back-btn" onclick="location.href='index.html'">⬅ Back to Home</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script src="cup-core.js"></script>
+<script>
+// Eron-only page
+var me = requireCoachLogin(true);
+var $ = function (id) { return document.getElementById(id); };
+
+var st = null;              // latest cup document
+var leagueTeams = [];       // names from the league's "teams" collection
+var lastDrawnKey = null;    // so play-off inputs only rebuild when the draw changes
+var firstFill = true;       // fill the final form from the database only once
+
+function showMsg(text, ok) {
+    var el = $("msg");
+    el.textContent = text;
+    el.className = "status " + (ok ? "ok" : "err");
+    clearTimeout(showMsg._t);
+    showMsg._t = setTimeout(function () { el.className = "status"; }, 6000);
+}
+function fail(err) { showMsg("❌ " + (err && err.message ? err.message : err), false); }
+
+function readNum(id) {
+    var v = $(id).value.trim();
+    if (v === "") return null;
+    var n = parseInt(v, 10);
+    return (isFinite(n) && n >= 0) ? n : null;
+}
+
+// ── Live data ────────────────────────────────────────────────────
+if (me) {
+    cupWaitDB(function () {
+        window.db.collection("teams").get().then(function (snap) {
+            leagueTeams = [];
+            snap.forEach(function (doc) { var d = doc.data(); if (d.name) leagueTeams.push(d.name); });
+            leagueTeams.sort();
+            if (st) renderPool();
+        }).catch(function () {});
+
+        cupRef().onSnapshot(function (snap) {
+            st = cupMerge(snap);
+            renderStatus();
+            renderPool();
+            renderPlayoffInputs();
+            if (firstFill) { fillFinalForm(); firstFill = false; }
+            updateNameList();
+            updatePreview();
+        }, fail);
+    });
+}
+
+// ── 1 · ON / OFF + gameweek ──────────────────────────────────────
+function renderStatus() {
+    $("cupToggle").checked = st.enabled;
+    $("swTitle").textContent = st.enabled ? "Cup is ON" : "Cup is OFF";
+    $("swDesc").textContent  = st.enabled ? "Coaches see the cup diagram." : 'Coaches see "Coming Soon".';
+    if (document.activeElement !== $("startGW")) $("startGW").value = st.startGameweek;
+}
+$("cupToggle").addEventListener("change", function () {
+    var on = this.checked;
+    cupSave({ enabled: on })
+        .then(function () { showMsg(on ? "✅ Cup is ON — Coming Soon is gone." : "✅ Cup is OFF — Coming Soon is showing.", true); })
+        .catch(fail);
+});
+$("saveGWBtn").addEventListener("click", function () {
+    var n = parseInt($("startGW").value, 10);
+    if (!isFinite(n) || n < 1) { showMsg("❌ Enter a gameweek number, like 10.", false); return; }
+    cupSave({ startGameweek: n }).then(function () { showMsg("✅ Coming Soon now says: STARTING GAMEWEEK " + n, true); }).catch(fail);
+});
+
+// ── 2 · Lucky Spin team list ─────────────────────────────────────
+function chipHtml(name, extra) { return '<span class="chip ' + (extra || "") + '">' + cupEsc(name); }
+
+function renderPool() {
+    var pool = st.pool, drawn = st.drawn;
+
+    $("poolChips").innerHTML = pool.length
+        ? pool.map(function (n) { return chipHtml(n) + '<button data-remove="' + cupEsc(n) + '" title="Remove">×</button></span>'; }).join("")
+        : '<span class="empty-note">No teams on the wheel.</span>';
+
+    $("drawnChips").innerHTML = drawn.length
+        ? drawn.map(function (n, i) { return '<span class="chip drawn"><span class="n">' + (i + 1) + '</span> ' + cupEsc(n) + '</span>'; }).join("")
+        : '<span class="empty-note">Nobody drawn yet.</span>';
+
+    var taken = pool.concat(drawn);
+    var sugg = leagueTeams.filter(function (n) { return taken.indexOf(n) === -1; });
+    $("suggestWrap").hidden = !sugg.length;
+    $("suggestChips").innerHTML = sugg.map(function (n) {
+        return '<span class="chip suggest" data-add="' + cupEsc(n) + '">+ ' + cupEsc(n) + '</span>';
+    }).join("");
+}
+
+function addTeams(names) {
+    names = names.map(cupName).filter(function (n, i, a) { return n && a.indexOf(n) === i; });
+    if (!names.length) { showMsg("❌ Write a team name first.", false); return; }
+    var added = [];
+    cupTx(function (d) {
+        added = names.filter(function (n) { return d.pool.indexOf(n) === -1 && d.drawn.indexOf(n) === -1; });
+        if (!added.length) throw new Error("Those teams are already in the cup.");
+        return { pool: d.pool.concat(added) };
+    }).then(function () {
+        $("newTeam").value = "";
+        showMsg("✅ Added to the wheel: " + added.join(", "), true);
+    }).catch(fail);
+}
+
+$("addTeamBtn").addEventListener("click", function () { addTeams($("newTeam").value.split(",")); });
+$("newTeam").addEventListener("keydown", function (e) { if (e.key === "Enter") addTeams($("newTeam").value.split(",")); });
+
+$("poolChips").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-remove]");
+    if (!b) return;
+    var name = b.getAttribute("data-remove");
+    cupTx(function (d) { return { pool: d.pool.filter(function (t) { return t !== name; }) }; })
+        .then(function () { showMsg("Removed " + name + " from the wheel.", true); }).catch(fail);
+});
+$("suggestChips").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-add]");
+    if (b) addTeams([b.getAttribute("data-add")]);
+});
+
+// ── 3 · Play-off results ─────────────────────────────────────────
+function renderPlayoffInputs() {
+    var key = JSON.stringify(st.drawn);
+    if (key === lastDrawnKey) return;
+    lastDrawnKey = key;
+
+    var pairs = cupPairs(st.drawn);
+    if (!pairs.length) {
+        $("playoffInputs").innerHTML = '<div class="empty-note">No play-off yet — draw teams with the Lucky Spin first.</div>';
+        return;
+    }
+    $("playoffInputs").innerHTML = pairs.map(function (p, i) {
+        var r = st.playoffResults[i];
+        if (!p.b) {
+            return '<div class="sub-title">PLAY-OFF ' + (i + 1) + '</div><div class="empty-note">' + cupEsc(p.a) + ' is waiting for an opponent.</div>';
+        }
+        return (pairs.length > 1 ? '<div class="sub-title">PLAY-OFF ' + (i + 1) + '</div>' : "") +
+            '<div class="score-pair">' +
+            '<span class="nm">' + cupEsc(p.a) + '</span>' +
+            '<input class="score-in" type="number" min="0" id="po_' + i + '_a" placeholder="0" value="' + (r && cupIsNum(r.a) ? r.a : "") + '"/>' +
+            '<span class="dash">–</span>' +
+            '<input class="score-in" type="number" min="0" id="po_' + i + '_b" placeholder="0" value="' + (r && cupIsNum(r.b) ? r.b : "") + '"/>' +
+            '<span class="nm r">' + cupEsc(p.b) + '</span></div>';
+    }).join("");
+}
+
+// ── 4 · Final ────────────────────────────────────────────────────
+function fillFinalForm() {
+    $("f_t1").value = st.finalTeam1;
+    $("f_t2").value = st.finalTeam2;
+    $("l1_t1").value = st.leg1 && cupIsNum(st.leg1.t1) ? st.leg1.t1 : "";
+    $("l1_t2").value = st.leg1 && cupIsNum(st.leg1.t2) ? st.leg1.t2 : "";
+    $("l2_t1").value = st.leg2 && cupIsNum(st.leg2.t1) ? st.leg2.t1 : "";
+    $("l2_t2").value = st.leg2 && cupIsNum(st.leg2.t2) ? st.leg2.t2 : "";
+    $("f_tie").setAttribute("data-saved", st.tiebreakWinner || "");
+}
+
+function updateNameList() {
+    var all = [];
+    st.pool.concat(st.drawn, leagueTeams).forEach(function (n) { if (all.indexOf(n) === -1) all.push(n); });
+    $("teamNames").innerHTML = all.map(function (n) { return '<option value="' + cupEsc(n) + '"></option>'; }).join("");
+}
+
+function currentFinalInput() {
+    var t1 = cupName($("f_t1").value), t2 = cupName($("f_t2").value);
+    var a = readNum("l1_t1"), b = readNum("l1_t2"), c = readNum("l2_t1"), d = readNum("l2_t2");
+    return {
+        finalTeam1: t1, finalTeam2: t2,
+        leg1: (a !== null && b !== null) ? { t1: a, t2: b } : null,
+        leg2: (c !== null && d !== null) ? { t1: c, t2: d } : null,
+        tiebreakWinner: $("f_tie").value
+    };
+}
+
+function updatePreview() {
+    var inp = currentFinalInput();
+    var n1 = inp.finalTeam1 || "TEAM 1", n2 = inp.finalTeam2 || "TEAM 2";
+    $("n_l1a").textContent = n1; $("n_l1b").textContent = n2;
+    $("n_l2a").textContent = n2; $("n_l2b").textContent = n1;
+
+    var fs = cupFinalState(inp);
+
+    // tie-break chooser only appears when the legs end level
+    $("tieWrap").hidden = !fs.tie;
+    if (fs.tie) {
+        var saved = $("f_tie").value || $("f_tie").getAttribute("data-saved") || "";
+        $("f_tie").innerHTML = '<option value="">— choose the winner —</option>' +
+            [fs.t1, fs.t2].map(function (n) { return '<option value="' + cupEsc(n) + '"' + (n === saved ? " selected" : "") + '>' + cupEsc(n) + '</option>'; }).join("");
+        inp.tiebreakWinner = $("f_tie").value;
+        fs = cupFinalState(inp);
+    }
+
+    var text;
+    if (!fs.t1 || !fs.t2)      text = "Write both finalists to start.";
+    else if (!fs.complete)     text = "Aggregate so far: <b>" + cupEsc(fs.t1) + " " + fs.agg1 + " – " + fs.agg2 + " " + cupEsc(fs.t2) + "</b> · waiting for both legs…";
+    else if (fs.winner)        text = "Aggregate: <b>" + cupEsc(fs.t1) + " " + fs.agg1 + " – " + fs.agg2 + " " + cupEsc(fs.t2) + "</b> → 🏆 Cup winner: <b>" + cupEsc(fs.winner) + "</b>";
+    else                       text = "Aggregate: <b>" + fs.agg1 + " – " + fs.agg2 + "</b> — level. Choose the decider winner above.";
+    $("preview").innerHTML = text;
+}
+["f_t1", "f_t2", "l1_t1", "l1_t2", "l2_t1", "l2_t2"].forEach(function (id) { $(id).addEventListener("input", updatePreview); });
+$("f_tie").addEventListener("change", function () { $("f_tie").setAttribute("data-saved", $("f_tie").value); updatePreview(); });
+
+// ── Save play-off + final ────────────────────────────────────────
+$("saveAllBtn").addEventListener("click", function () {
+    var inp = currentFinalInput();
+
+    if ((inp.leg1 || inp.leg2) && (!inp.finalTeam1 || !inp.finalTeam2)) { showMsg("❌ Write both finalists before adding leg results.", false); return; }
+    if (inp.finalTeam1 && inp.finalTeam1 === inp.finalTeam2) { showMsg("❌ The two finalists can't be the same team.", false); return; }
+
+    if ((readNum("l1_t1") === null) !== (readNum("l1_t2") === null) || (readNum("l2_t1") === null) !== (readNum("l2_t2") === null)) {
+        showMsg("❌ Fill BOTH scores of a leg, or leave both empty.", false); return;
+    }
+
+    var results = {}, bad = false;
+    cupPairs(st.drawn).forEach(function (p, i) {
+        if (!p.b) return;
+        var a = readNum("po_" + i + "_a"), b = readNum("po_" + i + "_b");
+        if ((a === null) !== (b === null)) bad = true;
+        if (a !== null && b !== null) results[i] = { a: a, b: b };
+    });
+    if (bad) { showMsg("❌ Fill BOTH scores of a play-off, or leave both empty.", false); return; }
+
+    var fs = cupFinalState(inp);
+    if (!fs.tie) inp.tiebreakWinner = "";
+    var winner = cupFinalState(inp).winner;
+    var wonAt = winner ? ((st.winner === winner && st.wonAt) ? st.wonAt : new Date().toISOString()) : "";
+
+    cupSave({
+        playoffResults: results,
+        finalTeam1: inp.finalTeam1, finalTeam2: inp.finalTeam2,
+        leg1: inp.leg1, leg2: inp.leg2,
+        tiebreakWinner: inp.tiebreakWinner,
+        winner: winner, wonAt: wonAt
+    }).then(function () {
+        showMsg(winner ? "✅ Saved — 🏆 CUP WON: " + winner : "✅ Saved.", true);
+    }).catch(fail);
+});
+
+// ── Reset tools ──────────────────────────────────────────────────
+$("resetDrawBtn").addEventListener("click", function () {
+    if (!confirm("Put every drawn team back on the wheel and clear the play-off scores?")) return;
+    cupTx(function (d) { return { pool: d.pool.concat(d.drawn), drawn: [], playoffResults: {} }; })
+        .then(function () { lastDrawnKey = null; renderPlayoffInputs(); showMsg("✅ Draw reset — all teams are back on the wheel.", true); })
+        .catch(fail);
+});
+$("clearFinalBtn").addEventListener("click", function () {
+    if (!confirm("Clear the finalists, both legs and the cup winner?")) return;
+    cupSave({ finalTeam1: "", finalTeam2: "", leg1: null, leg2: null, tiebreakWinner: "", winner: "", wonAt: "" })
+        .then(function () {
+            ["f_t1", "f_t2", "l1_t1", "l1_t2", "l2_t1", "l2_t2"].forEach(function (id) { $(id).value = ""; });
+            $("f_tie").setAttribute("data-saved", ""); $("f_tie").value = "";
+            updatePreview(); showMsg("✅ Final and winner cleared.", true);
+        })
+        .catch(fail);
+});
+</script>
+</body>
+</html>

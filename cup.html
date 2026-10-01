@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cups — Season 1</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="cup.css"/>
+</head>
+<body>
+
+<!-- ══ 5-second intro ══ -->
+<div class="intro" id="intro">
+    <div class="beam b1"></div>
+    <div class="beam b2"></div>
+    <div class="intro-core">
+        <div class="intro-kicker">FC27</div>
+        <div class="intro-title" aria-label="Cups"><span>C</span><span>U</span><span>P</span><span>S</span></div>
+        <div class="intro-season">SEASON 1</div>
+        <div class="intro-line"></div>
+    </div>
+    <div class="intro-progress"><i></i></div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<div class="container cup-page" id="cupMain">
+    <header class="cup-head">
+        <h1 class="title">🏆 CUPS</h1>
+        <div class="cup-season">SEASON 1</div>
+    </header>
+
+    <!-- Eron only -->
+    <div class="admin-bar" id="adminBar" hidden>
+        <button onclick="location.href='cup-settings.html'">⚙️ Cup Settings</button>
+    </div>
+
+    <!-- Cup is OFF -->
+    <section id="comingSoon" hidden>
+        <div class="soon">
+            <div class="soon-icon">🏆</div>
+            <div class="soon-title gold-text">COMING SOON</div>
+            <div class="soon-sub" id="soonSub">STARTING GAMEWEEK 10</div>
+        </div>
+    </section>
+
+    <!-- Cup is ON -->
+    <section id="liveCup" hidden>
+        <div class="champion-banner" id="championBanner" hidden>
+            <div class="cb-rays"></div>
+            <div class="cb-kicker">CUP WON</div>
+            <div class="cb-trophy">🏆</div>
+            <div class="cb-name gold-text" id="cbName"></div>
+            <div class="cb-sub">CUPS · SEASON 1 CHAMPIONS</div>
+        </div>
+
+        <div class="bracket" id="bracket">
+            <svg id="bracketLines" aria-hidden="true"></svg>
+
+            <div class="bcol">
+                <div class="bcol-title">PLAY-OFF</div>
+                <div class="bcol-body" id="playoffList"></div>
+            </div>
+
+            <div class="bcol">
+                <div class="bcol-title">FINAL · HOME &amp; AWAY</div>
+                <div class="bcol-body" id="finalCard"></div>
+            </div>
+
+            <div class="bcol">
+                <div class="bcol-title">CHAMPION</div>
+                <div class="bcol-body" id="champCard"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="status err" id="loadErr" style="margin-top:20px;"></div>
+
+    <div class="btn-row">
+        <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script src="cup-core.js"></script>
+<script>
+// All three coaches can view the cup; only Eron gets the settings button.
+var me = requireCoachLogin(false);
+var $ = function (id) { return document.getElementById(id); };
+var lastWinnerCelebrated = null;
+
+// ── 5-second intro, then reveal the page ─────────────────────────
+setTimeout(function () {
+    $("intro").classList.add("leave");
+    $("cupMain").classList.add("show");
+    setTimeout(function () { $("intro").style.display = "none"; drawLines(); }, 700);
+}, 5000);
+
+// ── Live data ────────────────────────────────────────────────────
+if (me) {
+    cupWaitDB(function () {
+        cupRef().onSnapshot(function (snap) {
+            $("loadErr").style.display = "none";
+            render(cupMerge(snap));
+        }, function (err) {
+            $("loadErr").textContent = "❌ Could not load the cup: " + err.message;
+            $("loadErr").style.display = "block";
+        });
+    });
+}
+
+function render(d) {
+    $("adminBar").hidden   = !(me && me.isAdmin);
+    $("comingSoon").hidden = d.enabled;
+    $("liveCup").hidden    = !d.enabled;
+    $("soonSub").textContent = "STARTING GAMEWEEK " + d.startGameweek;
+    if (d.enabled) renderBracket(d);
+}
+
+function playoffCard(pair, idx, total, d) {
+    var r = d.playoffResults[idx];
+    var has = !!(r && cupIsNum(r.a) && cupIsNum(r.b));
+    var aWin = has && r.a > r.b, bWin = has && r.b > r.a;
+    var bTbd = !pair.b;
+    var bName = pair.b ? cupEsc(pair.b) : (d.pool.length ? "To be drawn…" : "BYE");
+    var tag = total > 1 ? "PLAY-OFF " + (idx + 1) : "PLAY-OFF";
+    return '<div class="match">' +
+        '<div class="match-tag">' + tag + '</div>' +
+        '<div class="team-row' + (aWin ? " win" : bWin ? " lose" : "") + '"><span class="tn">' + cupEsc(pair.a) + '</span><span class="ts">' + (has ? r.a : "–") + '</span></div>' +
+        '<div class="vs">VS</div>' +
+        '<div class="team-row' + (bWin ? " win" : aWin ? " lose" : "") + (bTbd ? " tbd" : "") + '"><span class="tn">' + bName + '</span><span class="ts">' + (has && pair.b ? r.b : "–") + '</span></div>' +
+        '</div>';
+}
+
+function renderBracket(d) {
+    var fs = cupFinalState(d);
+    var winner = fs.winner;
+
+    // Play-offs: every 2 drawn teams face each other
+    var pairs = cupPairs(d.drawn);
+    if (!pairs.length) {
+        $("playoffList").innerHTML =
+            '<div class="match"><div class="match-tag">PLAY-OFF</div>' +
+            '<div class="team-row tbd"><span class="tn">Waiting for the lucky spin…</span><span class="ts">–</span></div>' +
+            '<div class="vs">VS</div>' +
+            '<div class="team-row tbd"><span class="tn">Waiting for the lucky spin…</span><span class="ts">–</span></div></div>';
+    } else {
+        $("playoffList").innerHTML = pairs.map(function (p, i) { return playoffCard(p, i, pairs.length, d); }).join("");
+    }
+
+    // Final (home & away)
+    var t1 = fs.t1 ? cupEsc(fs.t1) : "TBD", t2 = fs.t2 ? cupEsc(fs.t2) : "TBD";
+    var l1 = fs.has1 ? d.leg1.t1 + " – " + d.leg1.t2 : "– : –";
+    var l2 = fs.has2 ? d.leg2.t2 + " – " + d.leg2.t1 : "– : –";
+    var anyLeg = fs.has1 || fs.has2;
+    var w1 = winner && winner === fs.t1, w2 = winner && winner === fs.t2;
+    $("finalCard").innerHTML =
+        '<div class="match final">' +
+        '<div class="match-tag">FINAL</div>' +
+        '<div class="team-row' + (w1 ? " win" : w2 ? " lose" : "") + (fs.t1 ? "" : " tbd") + '"><span class="tn">' + t1 + '</span><span class="ts">' + (anyLeg ? fs.agg1 : "–") + '</span></div>' +
+        '<div class="vs">VS</div>' +
+        '<div class="team-row' + (w2 ? " win" : w1 ? " lose" : "") + (fs.t2 ? "" : " tbd") + '"><span class="tn">' + t2 + '</span><span class="ts">' + (anyLeg ? fs.agg2 : "–") + '</span></div>' +
+        '<div class="legs">' +
+            '<div class="leg"><span>Leg 1 · Home (' + t1 + ')</span><b>' + l1 + '</b></div>' +
+            '<div class="leg"><span>Leg 2 · Away (' + t2 + ' home)</span><b>' + l2 + '</b></div>' +
+            (fs.tie && !winner ? '<div class="leg"><span>Level on aggregate</span><b>awaiting decider</b></div>' : "") +
+        '</div></div>';
+
+    // Champion
+    $("champCard").innerHTML =
+        '<div class="champ' + (winner ? " won" : "") + '"><div class="ct">🏆</div>' +
+        '<div class="cn">' + (winner ? cupEsc(winner) : "TBD") + '</div></div>';
+
+    // Celebration banner + confetti
+    $("championBanner").hidden = !winner;
+    if (winner) {
+        $("cbName").textContent = winner;
+        if (lastWinnerCelebrated !== winner) { lastWinnerCelebrated = winner; launchConfetti(9000); }
+    } else {
+        lastWinnerCelebrated = null;
+    }
+
+    requestAnimationFrame(drawLines);
+}
+
+// ── Bracket connector lines ──────────────────────────────────────
+function drawLines() {
+    var wrap = $("bracket"), svg = $("bracketLines");
+    if (!wrap || !svg) return;
+    svg.innerHTML = "";
+    if (window.innerWidth <= 760 || wrap.offsetParent === null) return;
+
+    var wr = wrap.getBoundingClientRect();
+    svg.setAttribute("width", wr.width);
+    svg.setAttribute("height", wr.height);
+    svg.setAttribute("viewBox", "0 0 " + wr.width + " " + wr.height);
+
+    function right(el) { var r = el.getBoundingClientRect(); return { x: r.right - wr.left, y: r.top + r.height / 2 - wr.top }; }
+    function left(el)  { var r = el.getBoundingClientRect(); return { x: r.left  - wr.left, y: r.top + r.height / 2 - wr.top }; }
+    function link(a, b, cls) {
+        var mx = (a.x + b.x) / 2;
+        var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("d", "M" + a.x + " " + a.y + " C" + mx + " " + a.y + " " + mx + " " + b.y + " " + b.x + " " + b.y);
+        p.setAttribute("class", "bline " + (cls || ""));
+        svg.appendChild(p);
+    }
+
+    var finalEl = document.querySelector("#finalCard .match");
+    var champEl = document.querySelector("#champCard .champ");
+    if (finalEl) {
+        document.querySelectorAll("#playoffList .match").forEach(function (m) { link(right(m), left(finalEl)); });
+        if (champEl) link(right(finalEl), left(champEl), champEl.classList.contains("won") ? "gold" : "");
+    }
+}
+window.addEventListener("resize", function () { requestAnimationFrame(drawLines); });
+
+// ── Party: confetti ──────────────────────────────────────────────
+function launchConfetti(durationMs) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var c = $("confetti"), ctx = c.getContext("2d");
+    var W = c.width = window.innerWidth, H = c.height = window.innerHeight;
+    var colors = ["#ffd54a", "#00c853", "#ffffff", "#ff5a5f", "#4fc3f7", "#ffb300"];
+    function piece(top) {
+        return {
+            x: Math.random() * W,
+            y: top ? -20 - Math.random() * 60 : Math.random() * H * -0.6,
+            w: 6 + Math.random() * 6, h: 9 + Math.random() * 10,
+            vy: 2 + Math.random() * 3.6, vx: -1.4 + Math.random() * 2.8,
+            rot: Math.random() * 6.28, vr: -0.22 + Math.random() * 0.44,
+            color: colors[(Math.random() * colors.length) | 0]
+        };
+    }
+    var parts = [];
+    for (var i = 0; i < 170; i++) parts.push(piece(false));
+    var start = performance.now();
+    (function frame(now) {
+        var t = now - start;
+        ctx.clearRect(0, 0, W, H);
+        parts.forEach(function (p) {
+            p.x += p.vx + Math.sin((p.y + p.rot * 40) / 40) * 0.6;
+            p.y += p.vy; p.rot += p.vr;
+            if (p.y > H + 20) { if (t < durationMs * 0.7) Object.assign(p, piece(true)); else p.dead = true; }
+            if (p.dead) return;
+            ctx.save();
+            ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+        });
+        if (t < durationMs && parts.some(function (p) { return !p.dead; })) requestAnimationFrame(frame);
+        else ctx.clearRect(0, 0, W, H);
+    })(start);
+}
+</script>
+</body>
+</html>

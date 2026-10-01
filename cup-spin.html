@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Lucky Spin — Cups Season 1</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="cup.css"/>
+</head>
+<body>
+<div class="container cup-page">
+    <h1 class="title">🎡 Lucky Spin</h1>
+    <p class="muted" id="hint" style="margin-top:-14px;"></p>
+
+    <div class="status" id="msg"></div>
+
+    <div class="wheel-stage">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel" width="760" height="760"></canvas>
+        <div class="wheel-hub">🏆</div>
+    </div>
+
+    <div class="spin-controls">
+        <button class="spin-btn" id="spinBtn" disabled>SPIN</button>
+    </div>
+
+    <div class="spin-result" id="result" hidden>
+        <div class="sr-team gold-text" id="srTeam"></div>
+        <div class="sr-line" id="srLine"></div>
+    </div>
+
+    <div class="form-card draw-list">
+        <h3>Draw order</h3>
+        <div id="drawList"><div class="empty-note">Nobody drawn yet.</div></div>
+    </div>
+
+    <div class="btn-row">
+        <button class="back-btn" onclick="location.href='cup-settings.html'">⚙️ Cup Settings</button>
+        <button class="back-btn" onclick="location.href='cup.html'">🏆 View Cup</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script src="cup-core.js"></script>
+<script>
+// Eron-only page
+var me = requireCoachLogin(true);
+var $ = function (id) { return document.getElementById(id); };
+
+var st = null;            // latest cup document
+var spinning = false;
+var rotation = 0;         // total degrees the wheel has turned
+var needsRender = false;  // a database update arrived mid-spin
+
+var COLORS = ["#0a7a3c", "#b8860b", "#17608f", "#8e2a3a", "#5b3f9e", "#0f766e", "#a3520f", "#2b4c7e"];
+
+// ── Drawing the wheel ────────────────────────────────────────────
+function drawWheel(teams) {
+    var cv = $("wheel"), ctx = cv.getContext("2d");
+    var S = cv.width, R = S / 2;
+    ctx.clearRect(0, 0, S, S);
+
+    var n = teams.length;
+    if (!n) {
+        ctx.beginPath(); ctx.arc(R, R, R - 6, 0, Math.PI * 2);
+        ctx.fillStyle = "#0b1524"; ctx.fill();
+        ctx.lineWidth = 8; ctx.strokeStyle = "#26405e"; ctx.stroke();
+        return;
+    }
+
+    var seg = (Math.PI * 2) / n;
+    for (var i = 0; i < n; i++) {
+        var a0 = -Math.PI / 2 + i * seg, a1 = a0 + seg;
+        ctx.beginPath(); ctx.moveTo(R, R); ctx.arc(R, R, R - 6, a0, a1); ctx.closePath();
+        // avoid two touching slices sharing a colour (first + last when n is odd)
+        var ci = i % COLORS.length;
+        if (n > 1 && i === n - 1 && ci === 0) ci = 3;
+        ctx.fillStyle = COLORS[ci]; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.stroke();
+
+        ctx.save();
+        ctx.translate(R, R); ctx.rotate(a0 + seg / 2);
+        ctx.textAlign = "right"; ctx.fillStyle = "#fff";
+        var fs = Math.max(20, Math.min(46, (2 * Math.PI * R / n) * 0.34));
+        var maxW = R * 0.62;
+        ctx.font = "700 " + fs + 'px "Barlow Condensed", "Arial Narrow", sans-serif';
+        while (ctx.measureText(teams[i]).width > maxW && fs > 14) {
+            fs -= 1;
+            ctx.font = "700 " + fs + 'px "Barlow Condensed", "Arial Narrow", sans-serif';
+        }
+        ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 6;
+        ctx.fillText(teams[i], R - 40, fs * 0.34);
+        ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(R, R, R - 6, 0, Math.PI * 2);
+    ctx.lineWidth = 10; ctx.strokeStyle = "#ffd54a"; ctx.stroke();
+}
+
+function resetWheelRotation() {
+    var w = $("wheel");
+    w.style.transition = "none";
+    rotation = 0;
+    w.style.transform = "rotate(0deg)";
+    void w.offsetWidth; // flush so the next spin animates from 0
+}
+
+// ── Page state ───────────────────────────────────────────────────
+function renderAll() {
+    var pool = st.pool;
+    drawWheel(pool);
+    $("spinBtn").disabled = spinning || !pool.length;
+
+    if (pool.length) {
+        $("hint").textContent = pool.length + (pool.length === 1 ? " team" : " teams") + " left on the wheel";
+        $("spinBtn").textContent = "SPIN";
+    } else if (st.drawn.length) {
+        $("hint").textContent = "Every team has been drawn 🎉";
+        $("spinBtn").textContent = "DONE";
+    } else {
+        $("hint").textContent = "No teams on the wheel yet — add them in Cup Settings.";
+        $("spinBtn").textContent = "SPIN";
+    }
+
+    var pairs = cupPairs(st.drawn);
+    $("drawList").innerHTML = pairs.length ? pairs.map(function (p, i) {
+        return '<div class="score-pair">' +
+            '<span class="tag">' + (pairs.length > 1 ? "PLAY-OFF " + (i + 1) : "PLAY-OFF") + '</span>' +
+            '<span class="nm">' + cupEsc(p.a) + '</span>' +
+            '<span class="dash">vs</span>' +
+            '<span class="nm r">' + (p.b ? cupEsc(p.b) : '<i style="color:var(--text-mute)">waiting…</i>') + '</span></div>';
+    }).join("") : '<div class="empty-note">Nobody drawn yet.</div>';
+}
+
+if (me) {
+    cupWaitDB(function () {
+        cupRef().onSnapshot(function (snap) {
+            st = cupMerge(snap);
+            if (spinning) { needsRender = true; return; }   // never redraw mid-spin
+            resetWheelRotation();
+            renderAll();
+        }, function (err) {
+            $("msg").textContent = "❌ " + err.message; $("msg").className = "status err";
+        });
+    });
+}
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { if (st && !spinning) renderAll(); });
+}
+
+// ── Spinning ─────────────────────────────────────────────────────
+$("spinBtn").addEventListener("click", function () {
+    if (spinning || !st || !st.pool.length) return;
+    spinning = true;
+    $("spinBtn").disabled = true;
+    $("result").hidden = true;
+    $("msg").className = "status";
+
+    var teams = st.pool.slice();
+    var drawnBefore = st.drawn.slice();
+    var n = teams.length;
+
+    // 1. Pick the winner fairly at random
+    var idx = cupRandomInt(n);
+    var picked = teams[idx];
+
+    // 2. Work out how far to turn so the pointer ends up inside that slice.
+    //    A wheel point at angle θ (clockwise from the top) sits under the
+    //    pointer when the total rotation R satisfies  -R ≡ θ (mod 360).
+    var seg = 360 / n;
+    var jitter = (cupRandomFloat() - 0.5) * seg * 0.7;   // land anywhere inside the slice, not dead centre
+    var target = (idx + 0.5) * seg + jitter;
+    var current = ((rotation % 360) + 360) % 360;
+    var need = ((-target - current) % 360 + 360) % 360;
+    rotation = rotation + need + 360 * (5 + cupRandomInt(3));
+
+    var w = $("wheel");
+    w.style.transition = "transform 6s cubic-bezier(0.12, 0.67, 0.12, 1)";
+    w.style.transform = "rotate(" + rotation + "deg)";
+
+    var finished = false;
+    function finish() {
+        if (finished) return;
+        finished = true;
+        w.removeEventListener("transitionend", finish);
+
+        // 3. Save: take the team off the wheel and add it to the draw order
+        cupTx(function (d) {
+            if (d.pool.indexOf(picked) === -1) throw new Error(picked + " was already drawn.");
+            return {
+                pool: d.pool.filter(function (t) { return t !== picked; }),
+                drawn: d.drawn.concat(picked)
+            };
+        }).then(function () {
+            st.pool = st.pool.filter(function (t) { return t !== picked; });
+            if (st.drawn.indexOf(picked) === -1) st.drawn.push(picked);
+            var newLen = drawnBefore.length + 1;
+            $("srTeam").textContent = picked;
+            $("srLine").innerHTML = (newLen % 2 === 0)
+                ? "Play-Off set: <b>" + cupEsc(drawnBefore[newLen - 2]) + "</b> vs <b>" + cupEsc(picked) + "</b>"
+                : "Drawn pick #" + newLen + " — waiting for an opponent";
+            $("result").hidden = false;
+        }).catch(function (err) {
+            $("msg").textContent = "❌ " + err.message; $("msg").className = "status err";
+        }).then(function () {
+            spinning = false;
+            needsRender = false;
+            if (st) { resetWheelRotation(); renderAll(); }
+        });
+    }
+    w.addEventListener("transitionend", finish);
+    setTimeout(finish, 6300);   // safety net if the browser skips transitionend
+});
+</script>
+</body>
+</html>
