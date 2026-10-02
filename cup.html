@@ -4,8 +4,14 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Cups — Season 1</title>
+    <link rel="stylesheet" href="cup-fallback.css"/>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="cup.css"/>
+    <style>
+        /* hard guarantees: these can never be overridden by another stylesheet */
+        [hidden]{display:none!important}
+        .cup-page.show{opacity:1!important;visibility:visible!important}
+    </style>
 </head>
 <body>
 
@@ -36,7 +42,7 @@
     </div>
 
     <!-- Cup is OFF -->
-    <section id="comingSoon" hidden>
+    <section id="comingSoon">
         <div class="soon">
             <div class="soon-icon">🏆</div>
             <div class="soon-title gold-text">COMING SOON</div>
@@ -86,9 +92,10 @@
 <script src="firebase.js"></script>
 <script src="auth.js"></script>
 <script src="cup-core.js"></script>
+<script src="cup-fallback.js"></script>
 <script>
 // All three coaches can view the cup; only Eron gets the settings button.
-var me = requireCoachLogin(false);
+var me = cupRequireLogin(false);
 var $ = function (id) { return document.getElementById(id); };
 var lastWinnerCelebrated = null;
 
@@ -98,25 +105,31 @@ setTimeout(function () {
     $("cupMain").classList.add("show");
     setTimeout(function () { $("intro").style.display = "none"; drawLines(); }, 700);
 }, 5000);
+// safety: whatever happens, the intro can never block the page
+setTimeout(function () { $("intro").style.display = "none"; $("cupMain").classList.add("show"); }, 7000);
 
 // ── Live data ────────────────────────────────────────────────────
+function showLoadErr(err) {
+    $("loadErr").textContent = "❌ Could not load the cup: " + (err && err.message ? err.message : err);
+    $("loadErr").style.display = "block";
+}
 if (me) {
-    cupWaitDB(function () {
-        cupRef().onSnapshot(function (snap) {
-            $("loadErr").style.display = "none";
-            render(cupMerge(snap));
-        }, function (err) {
-            $("loadErr").textContent = "❌ Could not load the cup: " + err.message;
-            $("loadErr").style.display = "block";
-        });
-    });
+    // "Coming Soon · Starting Gameweek 10" is already on screen; live data replaces it
+    try {
+        cupWaitDB(function () {
+            cupRef().onSnapshot(function (snap) {
+                $("loadErr").style.display = "none";
+                render(cupMerge(snap));
+            }, showLoadErr);
+        }, showLoadErr);
+    } catch (e) { showLoadErr(e); }
 }
 
 function render(d) {
     $("adminBar").hidden   = !(me && me.isAdmin);
     $("comingSoon").hidden = d.enabled;
     $("liveCup").hidden    = !d.enabled;
-    $("soonSub").textContent = "STARTING GAMEWEEK " + d.startGameweek;
+    $("soonSub").textContent = "STARTING GAMEWEEK " + (d.startGameweek || 10);
     if (d.enabled) renderBracket(d);
 }
 
