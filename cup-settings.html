@@ -4,8 +4,37 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Cup Settings — Season 1</title>
+    <!-- Runs FIRST: stops any other script from filtering keys in text boxes
+         (this is what makes a box accept "numbers only") -->
+    <script>
+    (function () {
+        function isText(el) {
+            if (!el || !el.tagName) return false;
+            var t = el.tagName.toUpperCase();
+            if (t === "TEXTAREA") return true;
+            if (t !== "INPUT") return false;
+            var ty = (el.getAttribute("type") || "text").toLowerCase();
+            return ty === "text" || ty === "search";
+        }
+        ["keydown", "keypress", "beforeinput"].forEach(function (evt) {
+            window.addEventListener(evt, function (e) {
+                if (isText(e.target)) e.stopImmediatePropagation();
+            }, true);
+        });
+    })();
+    </script>
+    <link rel="stylesheet" href="cup-fallback.css"/>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="cup.css"/>
+    <style>
+        [hidden]{display:none!important}
+        /* every box on this page must be typeable and clickable */
+        .cup-settings input, .cup-settings select, .cup-settings textarea{
+            -webkit-user-select:text!important; user-select:text!important;
+            pointer-events:auto!important; opacity:1!important;
+        }
+        .cup-settings input[type=text]{ text-transform:none!important; letter-spacing:normal!important; }
+    </style>
 </head>
 <body>
 <div class="container cup-page cup-settings">
@@ -133,10 +162,17 @@
 <script src="firebase.js"></script>
 <script src="auth.js"></script>
 <script src="cup-core.js"></script>
+<script src="cup-fallback.js"></script>
 <script>
 // Eron-only page
-var me = requireCoachLogin(true);
+var me = cupRequireLogin(true);   // Eron (admin) only
 var $ = function (id) { return document.getElementById(id); };
+
+// unlock every box, in case another script marked one read-only / disabled
+document.querySelectorAll("input,select,textarea").forEach(function (el) {
+    el.removeAttribute("readonly"); el.removeAttribute("disabled");
+    if (el.type === "text") { el.setAttribute("inputmode", "text"); el.removeAttribute("pattern"); }
+});
 
 var st = null;              // latest cup document
 var leagueTeams = [];       // names from the league's "teams" collection
@@ -178,7 +214,7 @@ if (me) {
             updateNameList();
             updatePreview();
         }, fail);
-    });
+    }, fail);
 }
 
 // ── 1 · ON / OFF + gameweek ──────────────────────────────────────
@@ -237,7 +273,7 @@ function addTeams(names) {
 }
 
 $("addTeamBtn").addEventListener("click", function () { addTeams($("newTeam").value.split(",")); });
-$("newTeam").addEventListener("keydown", function (e) { if (e.key === "Enter") addTeams($("newTeam").value.split(",")); });
+$("newTeam").addEventListener("keyup", function (e) { if (e.key === "Enter") addTeams($("newTeam").value.split(",")); });
 
 $("poolChips").addEventListener("click", function (e) {
     var b = e.target.closest("[data-remove]");
