@@ -302,6 +302,8 @@
   <!-- ══ NAV BUTTONS ══ -->
   <div class="buttons">
     <button onclick="location.href='table.html'">🏆 Table</button>
+    <!-- Cups: visible to ALL coaches (Arin, Lawin, Eron) -->
+    <button style="border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='cup.html'">🏆 Cups</button>
     <button class="admin-only-btn" style="display:none;" onclick="location.href='matchweek.html'">⚽ Match Week</button>
     <button class="admin-only-btn" style="display:none;border-color:rgba(0,200,83,0.4);color:#00c853;" onclick="location.href='ai-generate.html'">📸 AI Generate</button>
     <button onclick="location.href='history.html'">📜 History</button>
@@ -314,12 +316,11 @@
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.4);color:#ffd600;" onclick="location.href='champions.html'">🏆 Champions</button>
     <button class="admin-only-btn" style="display:none;border-color:rgba(0,200,83,0.3);color:#00c853;" onclick="location.href='news.html'">📰 ئەخبارەکان</button>
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,183,77,0.4);color:#ffb74d;" onclick="location.href='records.html'">🏅 History Records</button>
- <button onclick="location.href='cup.html'"> 🗡 CUPS</button>
+
     <!-- Eron-only admin tools -->
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='score-admin-coach.html'">📊 Score Admin Coach</button>
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='fix-table.html'">📝 Change Table Point</button>
     <button class="admin-only-btn" style="display:none;border-color:rgba(255,214,0,0.5);color:#ffd600;" onclick="location.href='team-manager.html'">👥 Team Manager</button>
-     <button class="admin-only-btn" style="display:none;border-color:rgba(255,183,77,0.4);color:#ffb74d;" onclick="location.href='cup-settings.html'"> 🗡 CUPS SETTING</button>
   </div>
 </div>
 
@@ -409,7 +410,7 @@ function showLoggedInUI(coach) {
 }
 
 var TEAM_PALETTE = ["nc-1","nc-2","nc-3"];
-var TEAM_FLAGS = ["🔴","🔵","⚪","🟢⚪","🟠⚫","🔵⚪","🟣⚪","🔴⚫"];
+var TEAM_FLAGS = ["🟡⚫","🔵🔴","🔴🔵","🟢⚪","🟠⚫","🔵⚪","🟣⚪","🔴⚫"];
 
 function renderTeamsStrip(names) {
   var grid = document.getElementById("teamsGrid");
