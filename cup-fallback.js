@@ -78,6 +78,16 @@
     });
     def("cupSave", function (patch) { return G.cupTx(function () { return patch; }); });
 
+
+    // ── random numbers for the Lucky Spin ────────────────────────
+    def("cupRandomFloat", function () {
+        try {
+            var a = new Uint32Array(1); G.crypto.getRandomValues(a);
+            return a[0] / 4294967296;
+        } catch (e) { return Math.random(); }
+    });
+    def("cupRandomInt", function (n) { return Math.floor(G.cupRandomFloat() * n); });
+
     // ── final (home & away) maths ────────────────────────────────
     def("cupFinalState", function (d) {
         var t1 = d.finalTeam1 || "", t2 = d.finalTeam2 || "";
