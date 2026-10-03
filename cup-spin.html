@@ -4,13 +4,18 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Lucky Spin — Cups Season 1</title>
+    <link rel="stylesheet" href="cup-fallback.css"/>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="cup.css"/>
+    <style>
+        [hidden]{display:none!important}
+        .cup-page{opacity:1!important;visibility:visible!important}
+    </style>
 </head>
 <body>
 <div class="container cup-page">
     <h1 class="title">🎡 Lucky Spin</h1>
-    <p class="muted" id="hint" style="margin-top:-14px;"></p>
+    <p class="muted" id="hint" style="margin-top:-14px;">Loading teams…</p>
 
     <div class="status" id="msg"></div>
 
@@ -45,10 +50,19 @@
 <script src="firebase.js"></script>
 <script src="auth.js"></script>
 <script src="cup-core.js"></script>
+<script src="cup-fallback.js"></script>
 <script>
-// Eron-only page
-var me = requireCoachLogin(true);
 var $ = function (id) { return document.getElementById(id); };
+
+// show any script error on the page instead of silently doing nothing
+function showErr(err) {
+    $("msg").textContent = "❌ " + (err && err.message ? err.message : err);
+    $("msg").className = "status err";
+}
+window.addEventListener("error", function (e) { showErr(e.message); });
+
+// Eron-only page
+var me = cupRequireLogin(true);
 
 var st = null;            // latest cup document
 var spinning = false;
@@ -130,7 +144,7 @@ function renderAll() {
             '<span class="tag">' + (pairs.length > 1 ? "PLAY-OFF " + (i + 1) : "PLAY-OFF") + '</span>' +
             '<span class="nm">' + cupEsc(p.a) + '</span>' +
             '<span class="dash">vs</span>' +
-            '<span class="nm r">' + (p.b ? cupEsc(p.b) : '<i style="color:var(--text-mute)">waiting…</i>') + '</span></div>';
+            '<span class="nm r">' + (p.b ? cupEsc(p.b) : '<i style="color:#4d6a85">waiting…</i>') + '</span></div>';
     }).join("") : '<div class="empty-note">Nobody drawn yet.</div>';
 }
 
@@ -141,10 +155,8 @@ if (me) {
             if (spinning) { needsRender = true; return; }   // never redraw mid-spin
             resetWheelRotation();
             renderAll();
-        }, function (err) {
-            $("msg").textContent = "❌ " + err.message; $("msg").className = "status err";
-        });
-    });
+        }, showErr);
+    }, showErr);
 }
 if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { if (st && !spinning) renderAll(); });
@@ -167,8 +179,6 @@ $("spinBtn").addEventListener("click", function () {
     var picked = teams[idx];
 
     // 2. Work out how far to turn so the pointer ends up inside that slice.
-    //    A wheel point at angle θ (clockwise from the top) sits under the
-    //    pointer when the total rotation R satisfies  -R ≡ θ (mod 360).
     var seg = 360 / n;
     var jitter = (cupRandomFloat() - 0.5) * seg * 0.7;   // land anywhere inside the slice, not dead centre
     var target = (idx + 0.5) * seg + jitter;
@@ -202,9 +212,7 @@ $("spinBtn").addEventListener("click", function () {
                 ? "Play-Off set: <b>" + cupEsc(drawnBefore[newLen - 2]) + "</b> vs <b>" + cupEsc(picked) + "</b>"
                 : "Drawn pick #" + newLen + " — waiting for an opponent";
             $("result").hidden = false;
-        }).catch(function (err) {
-            $("msg").textContent = "❌ " + err.message; $("msg").className = "status err";
-        }).then(function () {
+        }).catch(showErr).then(function () {
             spinning = false;
             needsRender = false;
             if (st) { resetWheelRotation(); renderAll(); }
