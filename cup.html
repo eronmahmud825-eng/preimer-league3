@@ -1,91 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Cups — Season 1</title>
-    <link rel="stylesheet" href="cup-fallback.css"/>
-    <link rel="stylesheet" href="style.css"/>
-    <link rel="stylesheet" href="cup.css"/>
-    <style>
-        /* hard guarantees: these can never be overridden by another stylesheet */
-        [hidden]{display:none!important}
-        .cup-page.show{opacity:1!important;visibility:visible!important}
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cups — Season 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#050a12;--card:#0f1b2d;--line:#1f3452;--mute:#6f8aa8;--gold:#ffd54a;--green:#19e07a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#0b2a1d 0,transparent 60%),var(--bg);color:#fff;font-family:Barlow,system-ui,sans-serif;min-height:100vh}
+.gold{background:linear-gradient(180deg,#fff3b0,#ffd54a 55%,#ff9f00);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cond{font-family:'Barlow Condensed',sans-serif;letter-spacing:.2em;text-transform:uppercase}
+
+.intro{position:fixed;inset:0;z-index:9999;background:#020507;display:flex;align-items:center;justify-content:center;transition:opacity .7s}
+.intro.leave{opacity:0;pointer-events:none}
+.intro-core{text-align:center;animation:up 1s both}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.intro-title{font-family:'Bebas Neue';font-size:clamp(4rem,20vw,8rem);color:var(--gold);letter-spacing:.08em;line-height:1}
+.intro-bar{position:absolute;bottom:12%;left:50%;width:min(280px,60vw);height:2px;transform:translateX(-50%);background:#ffffff14;overflow:hidden}
+.intro-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--gold));animation:bar 5s linear forwards}
+@keyframes bar{to{width:100%}}
+#confetti{position:fixed;inset:0;z-index:9000;pointer-events:none}
+
+.wrap{max-width:1040px;margin:0 auto;padding:22px 16px 46px;opacity:0;transition:opacity .7s}
+.wrap.show{opacity:1}
+.hero{text-align:center;margin-bottom:18px}
+.hero .k{color:#2f6b52;font-size:.78rem}
+.hero h1{margin:2px 0 10px;font-family:'Bebas Neue';font-size:clamp(2.6rem,11vw,4.4rem);letter-spacing:.05em;font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:30px;border:1px solid #ffd54a55;background:#ffd54a14;color:var(--gold);font-size:.8rem}
+.pill.done{border-color:#19e07a66;background:#19e07a14;color:var(--green)}
+.pill i{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.adm{display:block;margin:14px auto 0;padding:9px 18px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:#fff;font:600 .85rem Barlow;cursor:pointer}
+
+.soon{text-align:center;padding:70px 10px}
+.soon .ic{font-size:4rem;animation:fl 3s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-8px)}}
+.soon .t{font-family:'Bebas Neue';font-size:clamp(2.6rem,11vw,4.6rem);letter-spacing:.06em}
+.soon .s{color:#9fb8d0;letter-spacing:.3em;font-family:'Barlow Condensed';margin-top:4px}
+
+.champ-banner{text-align:center;padding:26px 14px;margin-bottom:20px;border:1px solid #ffd54a66;border-radius:20px;background:linear-gradient(135deg,#231b00,var(--card))}
+.champ-banner .tr{font-size:3.2rem}
+.champ-banner .n{font-family:'Bebas Neue';font-size:clamp(2.4rem,10vw,4.2rem);letter-spacing:.05em}
+
+.next{position:relative;overflow:hidden;border:1px solid #ffd54a55;border-radius:22px;padding:20px 16px;margin-bottom:26px;background:linear-gradient(160deg,#16253b,#0b1422);box-shadow:0 0 40px #ffd54a14}
+.next .tagrow{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.74rem}
+.next .tagrow b{color:var(--gold);font-weight:700}
+.next .tagrow span{color:var(--mute)}
+.pitch{position:relative;margin:16px 0 12px;border-radius:16px;background:repeating-linear-gradient(90deg,#0c4a2c 0 38px,#0e5532 38px 76px);border:1px solid #1d7a4a;overflow:hidden}
+.pitch svg{position:absolute;inset:0;width:100%;height:100%}
+.pitch .ln{fill:none;stroke:#ffffff44;stroke-width:1.4}
+.pm{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:30px 12px;text-align:center}
+.pm .tm{font-family:'Bebas Neue';font-size:clamp(1.5rem,7vw,2.4rem);line-height:1.05;letter-spacing:.03em;text-shadow:0 2px 8px #000a}
+.pm .role{display:block;font:600 .66rem 'Barlow Condensed';letter-spacing:.25em;color:#bff5d6;margin-top:4px}
+.pm .vs{font-family:'Bebas Neue';font-size:1.5rem;color:var(--gold)}
+.venue{text-align:center}
+.venue .st{font-family:'Bebas Neue';font-size:1.7rem;letter-spacing:.06em}
+.venue .gw{color:var(--mute);font-size:.8rem}
+.need{margin-top:14px;padding:12px 14px;border-radius:12px;background:#ffffff08;border:1px dashed var(--line);font-size:.86rem;color:#c3d3e4;line-height:1.5}
+.need b{color:#fff}
+
+.sec{font-size:.74rem;color:#3b5878;text-align:center;margin:0 0 12px;font-weight:600}
+.bracket{position:relative;display:grid;grid-template-columns:1fr 1.2fr .8fr;gap:54px;align-items:center;margin-bottom:30px}
+#lines{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.bl{fill:none;stroke:var(--line);stroke-width:2}
+.bl.g{stroke:var(--gold)}
+.col{position:relative;z-index:1}
+.col-body{display:flex;flex-direction:column;gap:16px}
+.match{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.match.final{border-color:#ffd54a66}
+.mt{font-size:.66rem;color:#3b5878;margin-bottom:8px}
+.final .mt{color:var(--gold)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:#08111d;border:1px solid var(--line);border-radius:10px;font-weight:600}
+.row .s{font-family:'Bebas Neue';font-size:1.4rem;color:#9fb8d0;min-width:26px;text-align:right}
+.row.win{border-color:var(--green);background:#19e07a14}
+.row.win .s{color:var(--green)}
+.row.lose{opacity:.55}
+.row.tbd .n{color:#4d6a85;font-weight:500}
+.vsl{text-align:center;font-size:.64rem;letter-spacing:.25em;color:#3b5878;margin:6px 0}
+.agg{width:100%;margin-top:12px;border-collapse:collapse;font-size:.8rem}
+.agg th{font:600 .62rem 'Barlow Condensed';letter-spacing:.2em;color:var(--mute);padding:4px 6px;text-align:center}
+.agg th:first-child,.agg td:first-child{text-align:left}
+.agg td{padding:6px;text-align:center;border-top:1px solid var(--line);color:#c3d3e4}
+.agg td.t{font-weight:700;color:#fff}
+.agg td.pend{color:#4d6a85}
+.agg td.tot{font-family:'Bebas Neue';font-size:1.2rem;color:var(--gold)}
+.trophy{text-align:center;padding:22px 10px;border:1px dashed var(--line);border-radius:18px;background:var(--card)}
+.trophy .ct{font-size:2.8rem;filter:grayscale(1);opacity:.45}
+.trophy .cn{font-family:'Bebas Neue';font-size:1.7rem;letter-spacing:.05em;color:#4d6a85;margin-top:4px}
+.trophy.won{border:1px solid var(--gold);box-shadow:0 0 34px #ffd54a30;background:linear-gradient(135deg,#231b00,var(--card))}
+.trophy.won .ct{filter:none;opacity:1}
+.trophy.won .cn{color:var(--gold)}
+
+.res{display:grid;gap:10px;max-width:640px;margin:0 auto 26px}
+.r{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.r .rt{grid-column:1/-1;display:flex;justify-content:space-between;font-size:.66rem;color:var(--mute)}
+.badge{padding:2px 9px;border-radius:20px;font-size:.62rem;background:#19e07a1a;color:var(--green)}
+.badge.up{background:#ffd54a1a;color:var(--gold)}
+.r .tn{font-weight:600;font-size:.95rem;line-height:1.5}
+.r .sc{font-family:'Bebas Neue';font-size:1.4rem;line-height:1.5;text-align:right}
+.back{display:block;margin:0 auto;padding:12px 26px;background:var(--card);border:1px solid var(--line);border-radius:12px;color:#fff;font:600 .92rem Barlow;cursor:pointer}
+.err{display:none;max-width:560px;margin:18px auto 0;padding:12px 16px;border-radius:10px;background:#ff6b6b1f;border:1px solid #ff6b6b66;color:#ff9a9a;text-align:center;font-size:.86rem}
+@media(max-width:760px){.bracket{grid-template-columns:1fr;gap:26px}#lines{display:none}}
+</style>
 </head>
 <body>
 
-<!-- ══ 5-second intro ══ -->
 <div class="intro" id="intro">
-    <div class="beam b1"></div>
-    <div class="beam b2"></div>
-    <div class="intro-core">
-        <div class="intro-kicker">FC27</div>
-        <div class="intro-title" aria-label="Cups"><span>C</span><span>U</span><span>P</span><span>S</span></div>
-        <div class="intro-season">SEASON 1</div>
-        <div class="intro-line"></div>
-    </div>
-    <div class="intro-progress"><i></i></div>
+  <div class="intro-core"><div class="cond" style="color:#19e07a99;font-size:.8rem">FC27</div><div class="intro-title">CUPS</div><div class="cond" style="color:#ffffff55">SEASON 1</div></div>
+  <div class="intro-bar"><i></i></div>
 </div>
-
 <canvas id="confetti"></canvas>
 
-<div class="container cup-page" id="cupMain">
-    <header class="cup-head">
-        <h1 class="title">🏆 CUPS</h1>
-        <div class="cup-season">SEASON 1</div>
-    </header>
+<main class="wrap" id="cupMain">
+  <header class="hero">
+    <div class="cond k">FC27 · Cups</div>
+    <h1 class="gold">🏆 Season 1</h1>
+    <div class="pill cond" id="pill" hidden></div>
+    <div id="adminBar" hidden><button class="adm" onclick="location.href='cup-settings.html'">⚙️ Cup Settings</button></div>
+  </header>
 
-    <!-- Eron only -->
-    <div class="admin-bar" id="adminBar" hidden>
-        <button onclick="location.href='cup-settings.html'">⚙️ Cup Settings</button>
+  <section id="comingSoon">
+    <div class="soon"><div class="ic">🏆</div><div class="t gold">COMING SOON</div><div class="s" id="soonSub">STARTING GAMEWEEK 10</div></div>
+  </section>
+
+  <section id="liveCup" hidden>
+    <div class="champ-banner" id="banner" hidden>
+      <div class="cond" style="color:var(--gold);font-size:.8rem">Cup Won</div>
+      <div class="tr">🏆</div><div class="n gold" id="bName"></div>
+      <div class="cond" style="color:var(--mute);font-size:.72rem">Cups · Season 1 Champions</div>
     </div>
 
-    <!-- Cup is OFF -->
-    <section id="comingSoon">
-        <div class="soon">
-            <div class="soon-icon">🏆</div>
-            <div class="soon-title gold-text">COMING SOON</div>
-            <div class="soon-sub" id="soonSub">STARTING GAMEWEEK 10</div>
-        </div>
-    </section>
+    <div class="next" id="next" hidden></div>
 
-    <!-- Cup is ON -->
-    <section id="liveCup" hidden>
-        <div class="champion-banner" id="championBanner" hidden>
-            <div class="cb-rays"></div>
-            <div class="cb-kicker">CUP WON</div>
-            <div class="cb-trophy">🏆</div>
-            <div class="cb-name gold-text" id="cbName"></div>
-            <div class="cb-sub">CUPS · SEASON 1 CHAMPIONS</div>
-        </div>
-
-        <div class="bracket" id="bracket">
-            <svg id="bracketLines" aria-hidden="true"></svg>
-
-            <div class="bcol">
-                <div class="bcol-title">PLAY-OFF</div>
-                <div class="bcol-body" id="playoffList"></div>
-            </div>
-
-            <div class="bcol">
-                <div class="bcol-title">FINAL · HOME &amp; AWAY</div>
-                <div class="bcol-body" id="finalCard"></div>
-            </div>
-
-            <div class="bcol">
-                <div class="bcol-title">CHAMPION</div>
-                <div class="bcol-body" id="champCard"></div>
-            </div>
-        </div>
-    </section>
-
-    <div class="status err" id="loadErr" style="margin-top:20px;"></div>
-
-    <div class="btn-row">
-        <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+    <h2 class="sec cond">Road to the Cup</h2>
+    <div class="bracket" id="bracket">
+      <svg id="lines" aria-hidden="true"></svg>
+      <div class="col"><div class="col-body" id="playoffs"></div></div>
+      <div class="col"><div class="col-body" id="finalCard"></div></div>
+      <div class="col"><div class="col-body" id="champCard"></div></div>
     </div>
-</div>
+
+    <h2 class="sec cond">Results &amp; fixtures</h2>
+    <div class="res" id="results"></div>
+  </section>
+
+  <div class="err" id="loadErr"></div>
+  <div style="margin-top:22px"><button class="back" onclick="location.href='index.html'">⬅ Back</button></div>
+</main>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -94,178 +157,161 @@
 <script src="cup-core.js"></script>
 <script src="cup-fallback.js"></script>
 <script>
-// All three coaches can view the cup; only Eron gets the settings button.
-var me = cupRequireLogin(false);
 var $ = function (id) { return document.getElementById(id); };
-var lastWinnerCelebrated = null;
+var me = cupRequireLogin(false);          // Arin, Lawin and Eron can all watch
+var esc = cupEsc, lastWinner = null;
 
-// ── 5-second intro, then reveal the page ─────────────────────────
+// Final, 2nd leg: the home side is the SECOND finalist. Change here if it moves.
+var LEG2 = { gameweek: 16, stadium: "Parc des Princes", city: "Paris" };
+
 setTimeout(function () {
-    $("intro").classList.add("leave");
-    $("cupMain").classList.add("show");
-    setTimeout(function () { $("intro").style.display = "none"; drawLines(); }, 700);
+  $("intro").classList.add("leave"); $("cupMain").classList.add("show");
+  setTimeout(function () { $("intro").style.display = "none"; drawLines(); }, 700);
 }, 5000);
-// safety: whatever happens, the intro can never block the page
 setTimeout(function () { $("intro").style.display = "none"; $("cupMain").classList.add("show"); }, 7000);
 
-// ── Live data ────────────────────────────────────────────────────
-function showLoadErr(err) {
-    $("loadErr").textContent = "❌ Could not load the cup: " + (err && err.message ? err.message : err);
-    $("loadErr").style.display = "block";
-}
+function showErr(e) { $("loadErr").textContent = "❌ Could not load the cup: " + (e && e.message ? e.message : e); $("loadErr").style.display = "block"; }
 if (me) {
-    // "Coming Soon · Starting Gameweek 10" is already on screen; live data replaces it
-    try {
-        cupWaitDB(function () {
-            cupRef().onSnapshot(function (snap) {
-                $("loadErr").style.display = "none";
-                render(cupMerge(snap));
-            }, showLoadErr);
-        }, showLoadErr);
-    } catch (e) { showLoadErr(e); }
+  try {
+    cupWaitDB(function () {
+      cupRef().onSnapshot(function (s) { $("loadErr").style.display = "none"; render(cupMerge(s)); }, showErr);
+    }, showErr);
+  } catch (e) { showErr(e); }
 }
+
+function num(r, k) { return !!(r && cupIsNum(r[k])); }
 
 function render(d) {
-    $("adminBar").hidden   = !(me && me.isAdmin);
-    $("comingSoon").hidden = d.enabled;
-    $("liveCup").hidden    = !d.enabled;
-    $("soonSub").textContent = "STARTING GAMEWEEK " + (d.startGameweek || 10);
-    if (d.enabled) renderBracket(d);
+  $("adminBar").hidden = !(me && me.isAdmin);
+  $("comingSoon").hidden = d.enabled;
+  $("liveCup").hidden = !d.enabled;
+  $("soonSub").textContent = "STARTING GAMEWEEK " + (d.startGameweek || 10);
+  if (!d.enabled) { $("pill").hidden = true; return; }
+
+  var fs = cupFinalState(d), winner = fs.winner, pairs = cupPairs(d.drawn), left = 0;
+  pairs.forEach(function (p, i) { if (p.b && !(num(d.playoffResults[i], "a") && num(d.playoffResults[i], "b"))) left++; });
+  if (fs.t1 && fs.t2) left += (fs.has1 ? 0 : 1) + (fs.has2 ? 0 : 1);
+  var pill = $("pill"); pill.hidden = false;
+  pill.className = "pill cond" + (winner ? " done" : "");
+  pill.innerHTML = winner ? "Cup decided" : "<i></i>" + (left === 1 ? "1 game left" : left + " games left");
+
+  renderNext(d, fs);
+  renderBracket(d, fs, pairs, winner);
+  renderResults(d, fs, pairs);
+
+  $("banner").hidden = !winner;
+  if (winner) { $("bName").textContent = winner; if (lastWinner !== winner) { lastWinner = winner; confetti(9000); } }
+  else lastWinner = null;
+  requestAnimationFrame(drawLines);
 }
 
-function playoffCard(pair, idx, total, d) {
-    var r = d.playoffResults[idx];
-    var has = !!(r && cupIsNum(r.a) && cupIsNum(r.b));
-    var aWin = has && r.a > r.b, bWin = has && r.b > r.a;
-    var bTbd = !pair.b;
-    var bName = pair.b ? cupEsc(pair.b) : (d.pool.length ? "To be drawn…" : "BYE");
-    var tag = total > 1 ? "PLAY-OFF " + (idx + 1) : "PLAY-OFF";
-    return '<div class="match">' +
-        '<div class="match-tag">' + tag + '</div>' +
-        '<div class="team-row' + (aWin ? " win" : bWin ? " lose" : "") + '"><span class="tn">' + cupEsc(pair.a) + '</span><span class="ts">' + (has ? r.a : "–") + '</span></div>' +
-        '<div class="vs">VS</div>' +
-        '<div class="team-row' + (bWin ? " win" : aWin ? " lose" : "") + (bTbd ? " tbd" : "") + '"><span class="tn">' + bName + '</span><span class="ts">' + (has && pair.b ? r.b : "–") + '</span></div>' +
-        '</div>';
-}
-
-function renderBracket(d) {
-    var fs = cupFinalState(d);
-    var winner = fs.winner;
-
-    // Play-offs: every 2 drawn teams face each other
-    var pairs = cupPairs(d.drawn);
-    if (!pairs.length) {
-        $("playoffList").innerHTML =
-            '<div class="match"><div class="match-tag">PLAY-OFF</div>' +
-            '<div class="team-row tbd"><span class="tn">Waiting for the lucky spin…</span><span class="ts">–</span></div>' +
-            '<div class="vs">VS</div>' +
-            '<div class="team-row tbd"><span class="tn">Waiting for the lucky spin…</span><span class="ts">–</span></div></div>';
-    } else {
-        $("playoffList").innerHTML = pairs.map(function (p, i) { return playoffCard(p, i, pairs.length, d); }).join("");
+// ── Up-next hero card ────────────────────────────────────────────
+function renderNext(d, fs) {
+  var box = $("next");
+  if (fs.winner || !fs.t1 || !fs.t2 || (fs.has1 && fs.has2)) { box.hidden = true; return; }
+  var leg2 = fs.has1, home = leg2 ? fs.t2 : fs.t1, away = leg2 ? fs.t1 : fs.t2;
+  var diff = fs.agg1 - fs.agg2, need = "";
+  if (leg2) {
+    if (diff === 0) need = "Level at <b>" + fs.agg1 + "–" + fs.agg2 + "</b> on aggregate. <b>Win the 2nd leg and the cup is yours.</b> A draw means a decider.";
+    else {
+      var lead = diff > 0 ? fs.t1 : fs.t2, chase = diff > 0 ? fs.t2 : fs.t1, k = Math.abs(diff);
+      need = "<b>" + esc(lead) + "</b> lead by " + k + " on aggregate. <b>" + esc(chase) + "</b> must win by " + (k + 1) + "+ goals to take the cup; winning by exactly " + k + " forces a decider.";
     }
-
-    // Final (home & away)
-    var t1 = fs.t1 ? cupEsc(fs.t1) : "TBD", t2 = fs.t2 ? cupEsc(fs.t2) : "TBD";
-    var l1 = fs.has1 ? d.leg1.t1 + " – " + d.leg1.t2 : "– : –";
-    var l2 = fs.has2 ? d.leg2.t2 + " – " + d.leg2.t1 : "– : –";
-    var anyLeg = fs.has1 || fs.has2;
-    var w1 = winner && winner === fs.t1, w2 = winner && winner === fs.t2;
-    $("finalCard").innerHTML =
-        '<div class="match final">' +
-        '<div class="match-tag">FINAL</div>' +
-        '<div class="team-row' + (w1 ? " win" : w2 ? " lose" : "") + (fs.t1 ? "" : " tbd") + '"><span class="tn">' + t1 + '</span><span class="ts">' + (anyLeg ? fs.agg1 : "–") + '</span></div>' +
-        '<div class="vs">VS</div>' +
-        '<div class="team-row' + (w2 ? " win" : w1 ? " lose" : "") + (fs.t2 ? "" : " tbd") + '"><span class="tn">' + t2 + '</span><span class="ts">' + (anyLeg ? fs.agg2 : "–") + '</span></div>' +
-        '<div class="legs">' +
-            '<div class="leg"><span>Leg 1 · Home (' + t1 + ')</span><b>' + l1 + '</b></div>' +
-            '<div class="leg"><span>Leg 2 · Away (' + t2 + ' home)</span><b>' + l2 + '</b></div>' +
-            (fs.tie && !winner ? '<div class="leg"><span>Level on aggregate</span><b>awaiting decider</b></div>' : "") +
-        '</div></div>';
-
-    // Champion
-    $("champCard").innerHTML =
-        '<div class="champ' + (winner ? " won" : "") + '"><div class="ct">🏆</div>' +
-        '<div class="cn">' + (winner ? cupEsc(winner) : "TBD") + '</div></div>';
-
-    // Celebration banner + confetti
-    $("championBanner").hidden = !winner;
-    if (winner) {
-        $("cbName").textContent = winner;
-        if (lastWinnerCelebrated !== winner) { lastWinnerCelebrated = winner; launchConfetti(9000); }
-    } else {
-        lastWinnerCelebrated = null;
-    }
-
-    requestAnimationFrame(drawLines);
+  } else need = "First leg of the final: both sides start level.";
+  box.hidden = false;
+  box.innerHTML =
+    '<div class="tagrow cond"><b>Up next · Final · ' + (leg2 ? "Leg 2" : "Leg 1") + '</b><span>' + (leg2 ? "Gameweek " + LEG2.gameweek : "Home &amp; away") + '</span></div>' +
+    '<div class="pitch"><svg viewBox="0 0 300 120" preserveAspectRatio="none"><rect class="ln" x="4" y="4" width="292" height="112"/><line class="ln" x1="150" y1="4" x2="150" y2="116"/><circle class="ln" cx="150" cy="60" r="18"/><rect class="ln" x="4" y="30" width="40" height="60"/><rect class="ln" x="256" y="30" width="40" height="60"/></svg>' +
+    '<div class="pm"><div class="tm">' + esc(home) + '<span class="role">HOME</span></div><div class="vs">VS</div><div class="tm">' + esc(away) + '<span class="role">AWAY</span></div></div></div>' +
+    (leg2 ? '<div class="venue"><div class="st">📍 ' + esc(LEG2.stadium) + '</div><div class="gw">' + esc(LEG2.city) + ' · Gameweek ' + LEG2.gameweek + ' · Aggregate ' + fs.agg1 + '–' + fs.agg2 + '</div></div>' : '') +
+    '<div class="need">' + need + '</div>';
 }
 
-// ── Bracket connector lines ──────────────────────────────────────
+// ── Bracket diagram ──────────────────────────────────────────────
+function playoffCard(p, i, total, d) {
+  var r = d.playoffResults[i], has = num(r, "a") && num(r, "b");
+  var aw = has && r.a > r.b, bw = has && r.b > r.a;
+  var bn = p.b ? esc(p.b) : (d.pool.length ? "To be drawn…" : "BYE");
+  return '<div class="match"><div class="mt cond">' + (total > 1 ? "Play-off " + (i + 1) : "Play-off") + '</div>' +
+    '<div class="row' + (aw ? " win" : bw ? " lose" : "") + '"><span class="n">' + esc(p.a) + '</span><span class="s">' + (has ? r.a : "–") + '</span></div>' +
+    '<div class="vsl">VS</div>' +
+    '<div class="row' + (bw ? " win" : aw ? " lose" : "") + (p.b ? "" : " tbd") + '"><span class="n">' + bn + '</span><span class="s">' + (has && p.b ? r.b : "–") + '</span></div></div>';
+}
+
+function renderBracket(d, fs, pairs, winner) {
+  $("playoffs").innerHTML = pairs.length ? pairs.map(function (p, i) { return playoffCard(p, i, pairs.length, d); }).join("") :
+    '<div class="match"><div class="mt cond">Play-off</div><div class="row tbd"><span class="n">Waiting for the lucky spin…</span></div></div>';
+
+  var w1 = winner && winner === fs.t1, w2 = winner && winner === fs.t2, any = fs.has1 || fs.has2;
+  function cell(has, v) { return has ? '<td>' + v + '</td>' : '<td class="pend">–</td>'; }
+  $("finalCard").innerHTML = '<div class="match final"><div class="mt cond">Final · Home &amp; Away</div>' +
+    '<div class="row' + (w1 ? " win" : w2 ? " lose" : "") + (fs.t1 ? "" : " tbd") + '"><span class="n">' + esc(fs.t1 || "TBD") + '</span><span class="s">' + (any ? fs.agg1 : "–") + '</span></div>' +
+    '<div class="vsl">VS</div>' +
+    '<div class="row' + (w2 ? " win" : w1 ? " lose" : "") + (fs.t2 ? "" : " tbd") + '"><span class="n">' + esc(fs.t2 || "TBD") + '</span><span class="s">' + (any ? fs.agg2 : "–") + '</span></div>' +
+    '<table class="agg"><tr><th></th><th>LEG 1</th><th>LEG 2</th><th>AGG</th></tr>' +
+    '<tr><td class="t">' + esc(fs.t1 || "TBD") + '</td>' + cell(fs.has1, fs.has1 && d.leg1.t1) + cell(fs.has2, fs.has2 && d.leg2.t1) + '<td class="tot">' + (any ? fs.agg1 : "–") + '</td></tr>' +
+    '<tr><td class="t">' + esc(fs.t2 || "TBD") + '</td>' + cell(fs.has1, fs.has1 && d.leg1.t2) + cell(fs.has2, fs.has2 && d.leg2.t2) + '<td class="tot">' + (any ? fs.agg2 : "–") + '</td></tr></table>' +
+    (fs.tie && !winner ? '<div class="need" style="margin-top:10px">Level on aggregate: awaiting decider</div>' : "") + '</div>';
+
+  $("champCard").innerHTML = '<div class="trophy' + (winner ? " won" : "") + '"><div class="ct">🏆</div><div class="cn">' + (winner ? esc(winner) : "TBD") + '</div></div>';
+}
+
+// ── Results & fixtures list ──────────────────────────────────────
+function renderResults(d, fs, pairs) {
+  var rows = [];
+  function row(tag, a, sa, b, sb, played) {
+    rows.push('<div class="r"><div class="rt cond"><span>' + tag + '</span><span class="badge cond' + (played ? "" : " up") + '">' + (played ? "FT" : "Upcoming") + '</span></div>' +
+      '<div class="tn">' + esc(a) + '</div><div class="sc">' + (played ? sa : "–") + '</div>' +
+      '<div class="tn">' + esc(b) + '</div><div class="sc">' + (played ? sb : "–") + '</div></div>');
+  }
+  pairs.forEach(function (p, i) {
+    var r = d.playoffResults[i], has = num(r, "a") && num(r, "b");
+    if (p.b) row("Play-off" + (pairs.length > 1 ? " " + (i + 1) : ""), p.a, has && r.a, p.b, has && r.b, has);
+  });
+  if (fs.t1 && fs.t2) {
+    row("Final · Leg 1 · Home: " + esc(fs.t1), fs.t1, fs.has1 && d.leg1.t1, fs.t2, fs.has1 && d.leg1.t2, fs.has1);
+    row("Final · Leg 2 · GW " + LEG2.gameweek + " · " + esc(LEG2.stadium), fs.t2, fs.has2 && d.leg2.t2, fs.t1, fs.has2 && d.leg2.t1, fs.has2);
+  }
+  $("results").innerHTML = rows.join("") || '<div class="r"><div class="tn">No matches yet.</div></div>';
+}
+
+// ── Connector lines (desktop) ────────────────────────────────────
 function drawLines() {
-    var wrap = $("bracket"), svg = $("bracketLines");
-    if (!wrap || !svg) return;
-    svg.innerHTML = "";
-    if (window.innerWidth <= 760 || wrap.offsetParent === null) return;
-
-    var wr = wrap.getBoundingClientRect();
-    svg.setAttribute("width", wr.width);
-    svg.setAttribute("height", wr.height);
-    svg.setAttribute("viewBox", "0 0 " + wr.width + " " + wr.height);
-
-    function right(el) { var r = el.getBoundingClientRect(); return { x: r.right - wr.left, y: r.top + r.height / 2 - wr.top }; }
-    function left(el)  { var r = el.getBoundingClientRect(); return { x: r.left  - wr.left, y: r.top + r.height / 2 - wr.top }; }
-    function link(a, b, cls) {
-        var mx = (a.x + b.x) / 2;
-        var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        p.setAttribute("d", "M" + a.x + " " + a.y + " C" + mx + " " + a.y + " " + mx + " " + b.y + " " + b.x + " " + b.y);
-        p.setAttribute("class", "bline " + (cls || ""));
-        svg.appendChild(p);
-    }
-
-    var finalEl = document.querySelector("#finalCard .match");
-    var champEl = document.querySelector("#champCard .champ");
-    if (finalEl) {
-        document.querySelectorAll("#playoffList .match").forEach(function (m) { link(right(m), left(finalEl)); });
-        if (champEl) link(right(finalEl), left(champEl), champEl.classList.contains("won") ? "gold" : "");
-    }
+  var wrap = $("bracket"), svg = $("lines");
+  if (!wrap || !svg) return;
+  svg.innerHTML = "";
+  if (window.innerWidth <= 760 || wrap.offsetParent === null) return;
+  var wr = wrap.getBoundingClientRect();
+  svg.setAttribute("width", wr.width); svg.setAttribute("height", wr.height);
+  function R(e) { var r = e.getBoundingClientRect(); return { x: r.right - wr.left, y: r.top + r.height / 2 - wr.top }; }
+  function L(e) { var r = e.getBoundingClientRect(); return { x: r.left - wr.left, y: r.top + r.height / 2 - wr.top }; }
+  function link(a, b, c) {
+    var m = (a.x + b.x) / 2, p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", "M" + a.x + " " + a.y + " C" + m + " " + a.y + " " + m + " " + b.y + " " + b.x + " " + b.y);
+    p.setAttribute("class", "bl " + (c || "")); svg.appendChild(p);
+  }
+  var f = document.querySelector("#finalCard .match"), c = document.querySelector("#champCard .trophy");
+  if (!f) return;
+  document.querySelectorAll("#playoffs .match").forEach(function (m) { link(R(m), L(f)); });
+  if (c) link(R(f), L(c), c.classList.contains("won") ? "g" : "");
 }
 window.addEventListener("resize", function () { requestAnimationFrame(drawLines); });
 
-// ── Party: confetti ──────────────────────────────────────────────
-function launchConfetti(durationMs) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var c = $("confetti"), ctx = c.getContext("2d");
-    var W = c.width = window.innerWidth, H = c.height = window.innerHeight;
-    var colors = ["#ffd54a", "#00c853", "#ffffff", "#ff5a5f", "#4fc3f7", "#ffb300"];
-    function piece(top) {
-        return {
-            x: Math.random() * W,
-            y: top ? -20 - Math.random() * 60 : Math.random() * H * -0.6,
-            w: 6 + Math.random() * 6, h: 9 + Math.random() * 10,
-            vy: 2 + Math.random() * 3.6, vx: -1.4 + Math.random() * 2.8,
-            rot: Math.random() * 6.28, vr: -0.22 + Math.random() * 0.44,
-            color: colors[(Math.random() * colors.length) | 0]
-        };
-    }
-    var parts = [];
-    for (var i = 0; i < 170; i++) parts.push(piece(false));
-    var start = performance.now();
-    (function frame(now) {
-        var t = now - start;
-        ctx.clearRect(0, 0, W, H);
-        parts.forEach(function (p) {
-            p.x += p.vx + Math.sin((p.y + p.rot * 40) / 40) * 0.6;
-            p.y += p.vy; p.rot += p.vr;
-            if (p.y > H + 20) { if (t < durationMs * 0.7) Object.assign(p, piece(true)); else p.dead = true; }
-            if (p.dead) return;
-            ctx.save();
-            ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-            ctx.fillStyle = p.color;
-            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-            ctx.restore();
-        });
-        if (t < durationMs && parts.some(function (p) { return !p.dead; })) requestAnimationFrame(frame);
-        else ctx.clearRect(0, 0, W, H);
-    })(start);
+// ── Confetti ─────────────────────────────────────────────────────
+function confetti(ms) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var c = $("confetti"), x = c.getContext("2d"), W = c.width = innerWidth, H = c.height = innerHeight;
+  var cols = ["#ffd54a", "#19e07a", "#fff", "#ff6b6b", "#4fc3f7"], ps = [], t0 = performance.now();
+  for (var i = 0; i < 170; i++) ps.push({ x: Math.random() * W, y: -Math.random() * H * .6, w: 6 + Math.random() * 6, h: 9 + Math.random() * 9, vy: 2 + Math.random() * 3.6, vx: -1.4 + Math.random() * 2.8, r: Math.random() * 6, vr: -.2 + Math.random() * .4, c: cols[i % 5] });
+  (function f(now) {
+    var t = now - t0; x.clearRect(0, 0, W, H);
+    ps.forEach(function (p) {
+      p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      if (p.y > H + 20 && t < ms * .7) { p.y = -20; p.x = Math.random() * W; }
+      x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); x.restore();
+    });
+    if (t < ms) requestAnimationFrame(f); else x.clearRect(0, 0, W, H);
+  })(t0);
 }
 </script>
 </body>
